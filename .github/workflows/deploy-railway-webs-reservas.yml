@@ -1,0 +1,40 @@
+name: 🚀 Deploy Status - Webs de Reservas
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'webs de reservas/**'
+      - '.github/workflows/deploy-railway-webs-reservas.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy-status:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+    
+    - name: 📊 Información del despliegue
+      run: |
+        echo "## 🚀 Estado del Despliegue - Webs de Reservas" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Proyecto:** Webs de Reservas" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Autor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Mensaje:** ${{ github.event.head_commit.message }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Código pusheado correctamente" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "🔗 Si tienes Railway conectado, el despliegue debería iniciarse automáticamente." >> $GITHUB_STEP_SUMMARY
+    
+    - name: 📝 Listar archivos modificados del proyecto
+      run: |
+        echo "## 📝 Archivos modificados (Webs de Reservas)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep "webs de reservas" | head -20 | while read file; do
+          echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+        done

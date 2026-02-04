@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gestión de Citas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div x-data="dashboard()" x-cloak x-init="init()">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+                    <button @click="logout()" class="text-gray-600 hover:text-gray-900">
+                        Cerrar sesión
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <nav class="flex space-x-8">
+                    <button 
+                        @click="activeTab = 'appointments'"
+                        :class="activeTab === 'appointments' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                        class="py-4 px-1 font-medium"
+                    >
+                        Citas
+                    </button>
+                    <button 
+                        @click="activeTab = 'config'"
+                        :class="activeTab === 'config' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                        class="py-4 px-1 font-medium"
+                    >
+                        Configuración
+                    </button>
+                    <button 
+                        @click="activeTab = 'hours'"
+                        :class="activeTab === 'hours' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                        class="py-4 px-1 font-medium"
+                    >
+                        Horarios
+                    </button>
+                    <button 
+                        @click="activeTab = 'blocked'"
+                        :class="activeTab === 'blocked' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                        class="py-4 px-1 font-medium"
+                    >
+                        Bloqueos
+                    </button>
+                    <button 
+                        @click="activeTab = 'users'"
+                        :class="activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                        class="py-4 px-1 font-medium"
+                    >
+                        Usuarios
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Tab: Appointments -->
+            <div x-show="activeTab === 'appointments'">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">Citas</h2>
+                        <button @click="loadAppointments()" class="text-blue-600 hover:text-blue-700">
+                            Actualizar
+                        </button>
+                    </div>
+
+                    <!-- Filtros -->
+                    <div class="mb-6 flex gap-4">
+                        <input 
+                            type="date" 
+                            x-model="filters.startDate"
+                            @change="loadAppointments()"
+                            class="px-4 py-2 border border-gray-300 rounded-lg"
+                            placeholder="Fecha inicio"
+                        >
+                        <input 
+                            type="date" 
+                            x-model="filters.endDate"
+                            @change="loadAppointments()"
+                            class="px-4 py-2 border border-gray-300 rounded-lg"
+                            placeholder="Fecha fin"
+                        >
+                    </div>
+
+                    <!-- Lista de citas -->
+                    <div class="space-y-4">
+                        <template x-for="appointment in appointments" :key="appointment.id">
+                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900" x-text="appointment.client_name"></h3>
+                                        <p class="text-sm text-gray-600" x-text="appointment.client_email"></p>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            <span x-text="formatDate(appointment.appointment_date)"></span> - 
+                                            <span x-text="formatTime(appointment.appointment_date)"></span>
+                                        </p>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            Duración: <span x-text="appointment.duration"></span> minutos
+                                        </p>
+                                    </div>
+                                    <button 
+                                        @click="cancelAppointment(appointment.id)"
+                                        class="text-red-600 hover:text-red-700 text-sm font-medium"
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                        <p x-show="appointments.length === 0" class="text-gray-500 text-center py-8">
+                            No hay citas en este rango de fechas
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Config -->
+            <div x-show="activeTab === 'config'">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Configuración del Negocio</h2>
+                    
+                    <form @submit.prevent="saveConfig()" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Nombre del negocio
+                            </label>
+                            <input 
+                                type="text" 
+                                x-model="config.businessName"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Teléfono
+                            </label>
+                            <input 
+                                type="tel" 
+                                x-model="config.businessPhone"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Email
+                            </label>
+                            <input 
+                                type="email" 
+                                x-model="config.businessEmail"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Duración de citas (minutos)
+                            </label>
+                            <input 
+                                type="number" 
+                                x-model="config.appointmentDuration"
+                                min="15"
+                                step="5"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                required
+                            >
+                            <p class="text-xs text-gray-500 mt-1">
+                                Ejemplo: 50 minutos para sesiones estándar, 20 minutos para consultas cortas
+                            </p>
+                        </div>
+
+                        <button 
+                            type="submit"
+                            :disabled="savingConfig"
+                            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            <span x-show="!savingConfig">Guardar configuración</span>
+                            <span x-show="savingConfig">Guardando...</span>
+                        </button>
+
+                        <div x-show="configMessage" class="p-4 rounded-lg" 
+                             :class="configMessage.includes('correctamente') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                             x-text="configMessage">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab: Hours -->
+            <div x-show="activeTab === 'hours'">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Horarios de Atención</h2>
+                    
+                    <div class="space-y-4">
+                        <template x-for="(dayName, dayIndex) in ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']" :key="dayIndex">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="font-semibold text-gray-900" x-text="dayName"></h3>
+                                    <button 
+                                        @click="addTimeRange(dayIndex)"
+                                        class="text-blue-600 hover:text-blue-700 text-sm"
+                                    >
+                                        + Añadir horario
+                                    </button>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <template x-for="(range, rangeIndex) in (openingHours[dayIndex] || [])" :key="rangeIndex">
+                                        <div class="flex items-center gap-2">
+                                            <input 
+                                                type="number" 
+                                                x-model="range[0]"
+                                                min="0"
+                                                max="23"
+                                                class="w-20 px-2 py-1 border border-gray-300 rounded"
+                                                placeholder="Inicio"
+                                            >
+                                            <span>-</span>
+                                            <input 
+                                                type="number" 
+                                                x-model="range[1]"
+                                                min="0"
+                                                max="23"
+                                                class="w-20 px-2 py-1 border border-gray-300 rounded"
+                                                placeholder="Fin"
+                                            >
+                                            <span class="text-sm text-gray-600">h</span>
+                                            <button 
+                                                @click="removeTimeRange(dayIndex, rangeIndex)"
+                                                class="text-red-600 hover:text-red-700 text-sm"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <p x-show="!openingHours[dayIndex] || openingHours[dayIndex].length === 0" class="text-sm text-gray-500">
+                                        Día cerrado
+                                    </p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <button 
+                        @click="saveHours()"
+                        :disabled="savingHours"
+                        class="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    >
+                        <span x-show="!savingHours">Guardar horarios</span>
+                        <span x-show="savingHours">Guardando...</span>
+                    </button>
+
+                    <div x-show="hoursMessage" class="mt-4 p-4 rounded-lg" 
+                         :class="hoursMessage.includes('correctamente') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                         x-text="hoursMessage">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Blocked -->
+            <div x-show="activeTab === 'blocked'">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">Horarios Bloqueados</h2>
+                        <button 
+                            @click="showBlockForm = !showBlockForm"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                        >
+                            + Bloquear horario
+                        </button>
+                    </div>
+
+                    <!-- Formulario para bloquear -->
+                    <div x-show="showBlockForm" class="mb-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <h3 class="font-semibold mb-4">Nuevo bloqueo</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Fecha y hora inicio
+                                </label>
+                                <input 
+                                    type="datetime-local" 
+                                    x-model="blockForm.startTime"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Fecha y hora fin
+                                </label>
+                                <input 
+                                    type="datetime-local" 
+                                    x-model="blockForm.endTime"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                >
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Motivo (opcional)
+                            </label>
+                            <input 
+                                type="text" 
+                                x-model="blockForm.reason"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                placeholder="Ej: Vacaciones, cita externa..."
+                            >
+                        </div>
+                        <div class="flex gap-2">
+                            <button 
+                                @click="saveBlock()"
+                                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                            >
+                                Guardar bloqueo
+                            </button>
+                            <button 
+                                @click="showBlockForm = false; blockForm = { startTime: '', endTime: '', reason: '' }"
+                                class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Lista de bloqueos -->
+                    <div class="space-y-4">
+                        <template x-for="block in blockedSlots" :key="block.id">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="font-semibold text-gray-900">
+                                            <span x-text="formatDate(block.start_time)"></span> 
+                                            <span x-text="formatTime(block.start_time)"></span>
+                                            - 
+                                            <span x-text="formatTime(block.end_time)"></span>
+                                        </p>
+                                        <p x-show="block.reason" class="text-sm text-gray-600 mt-1" x-text="block.reason"></p>
+                                    </div>
+                                    <button 
+                                        @click="deleteBlock(block.id)"
+                                        class="text-red-600 hover:text-red-700 text-sm font-medium"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                        <p x-show="blockedSlots.length === 0" class="text-gray-500 text-center py-8">
+                            No hay horarios bloqueados
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Users -->
+            <div x-show="activeTab === 'users'">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">Usuarios</h2>
+                        <button 
+                            @click="showUserForm = !showUserForm"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                        >
+                            + Crear usuario
+                        </button>
+                    </div>
+
+                    <!-- Formulario para crear usuario -->
+                    <div x-show="showUserForm" class="mb-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <h3 class="font-semibold mb-4">Nuevo usuario</h3>
+                        <form @submit.prevent="createUser()" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Nombre
+                                </label>
+                                <input 
+                                    type="text" 
+                                    x-model="userForm.name"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    required
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Email
+                                </label>
+                                <input 
+                                    type="email" 
+                                    x-model="userForm.email"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    required
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Contraseña (mínimo 6 caracteres)
+                                </label>
+                                <input 
+                                    type="password" 
+                                    x-model="userForm.password"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                    required
+                                    minlength="6"
+                                >
+                            </div>
+                            <div class="flex gap-2">
+                                <button 
+                                    type="submit"
+                                    :disabled="creatingUser"
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                    <span x-show="!creatingUser">Crear usuario</span>
+                                    <span x-show="creatingUser">Creando...</span>
+                                </button>
+                                <button 
+                                    type="button"
+                                    @click="showUserForm = false; userForm = { name: '', email: '', password: '' }"
+                                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                            <div x-show="userMessage" class="p-4 rounded-lg" 
+                                 :class="userMessage.includes('correctamente') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                                 x-text="userMessage">
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Lista de usuarios -->
+                    <div class="space-y-4">
+                        <template x-for="user in users" :key="user.id">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900" x-text="user.name"></h3>
+                                        <p class="text-sm text-gray-600" x-text="user.email"></p>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            Creado: <span x-text="formatDate(user.created_at)"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+        function dashboard() {
+            return {
+                activeTab: 'appointments',
+                appointments: [],
+                config: {},
+                openingHours: {},
+                blockedSlots: [],
+                users: [],
+                filters: {
+                    startDate: '',
+                    endDate: ''
+                },
+                showBlockForm: false,
+                showUserForm: false,
+                blockForm: {
+                    startTime: '',
+                    endTime: '',
+                    reason: ''
+                },
+                userForm: {
+                    name: '',
+                    email: '',
+                    password: ''
+                },
+                savingConfig: false,
+                savingHours: false,
+                creatingUser: false,
+                configMessage: '',
+                hoursMessage: '',
+                userMessage: '',
+
+                async init() {
+                    await Promise.all([
+                        this.loadAppointments(),
+                        this.loadConfig(),
+                        this.loadHours(),
+                        this.loadBlockedSlots(),
+                        this.loadUsers()
+                    ]);
+                },
+
+                async loadAppointments() {
+                    try {
+                        let url = '/dashboard/api/appointments';
+                        const params = [];
+                        if (this.filters.startDate) params.push(`startDate=${this.filters.startDate}`);
+                        if (this.filters.endDate) params.push(`endDate=${this.filters.endDate}`);
+                        if (params.length > 0) url += '?' + params.join('&');
+
+                        const response = await fetch(url);
+                        const data = await response.json();
+                        this.appointments = data.appointments || [];
+                    } catch (error) {
+                        console.error('Error cargando citas:', error);
+                    }
+                },
+
+                async loadConfig() {
+                    try {
+                        const response = await fetch('/dashboard/api/config');
+                        const data = await response.json();
+                        this.config = data;
+                        // Convertir openingHours a objeto con índices numéricos
+                        if (data.openingHours) {
+                            this.openingHours = {};
+                            Object.keys(data.openingHours).forEach(key => {
+                                this.openingHours[parseInt(key)] = data.openingHours[key];
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error cargando configuración:', error);
+                    }
+                },
+
+                async loadHours() {
+                    try {
+                        const response = await fetch('/dashboard/api/opening-hours');
+                        const data = await response.json();
+                        if (data.openingHours) {
+                            this.openingHours = {};
+                            Object.keys(data.openingHours).forEach(key => {
+                                this.openingHours[parseInt(key)] = data.openingHours[key];
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error cargando horarios:', error);
+                    }
+                },
+
+                async loadBlockedSlots() {
+                    try {
+                        const response = await fetch('/dashboard/api/blocked-slots');
+                        const data = await response.json();
+                        this.blockedSlots = data.blockedSlots || [];
+                    } catch (error) {
+                        console.error('Error cargando bloqueos:', error);
+                    }
+                },
+
+                async loadUsers() {
+                    try {
+                        const response = await fetch('/dashboard/api/users');
+                        const data = await response.json();
+                        this.users = data.users || [];
+                    } catch (error) {
+                        console.error('Error cargando usuarios:', error);
+                    }
+                },
+
+                async cancelAppointment(id) {
+                    if (!confirm('¿Estás seguro de cancelar esta cita?')) return;
+
+                    try {
+                        const response = await fetch(`/dashboard/api/appointments/${id}/cancel`, {
+                            method: 'POST'
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            await this.loadAppointments();
+                        }
+                    } catch (error) {
+                        console.error('Error cancelando cita:', error);
+                        alert('Error al cancelar la cita');
+                    }
+                },
+
+                async saveConfig() {
+                    this.savingConfig = true;
+                    this.configMessage = '';
+
+                    try {
+                        const response = await fetch('/dashboard/api/config', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.config)
+                        });
+                        const data = await response.json();
+                        this.configMessage = data.success ? 'Configuración guardada correctamente' : data.error;
+                    } catch (error) {
+                        this.configMessage = 'Error guardando configuración';
+                    } finally {
+                        this.savingConfig = false;
+                    }
+                },
+
+                addTimeRange(dayIndex) {
+                    if (!this.openingHours[dayIndex]) {
+                        this.openingHours[dayIndex] = [];
+                    }
+                    this.openingHours[dayIndex].push([9, 18]);
+                },
+
+                removeTimeRange(dayIndex, rangeIndex) {
+                    this.openingHours[dayIndex].splice(rangeIndex, 1);
+                    if (this.openingHours[dayIndex].length === 0) {
+                        delete this.openingHours[dayIndex];
+                    }
+                },
+
+                async saveHours() {
+                    this.savingHours = true;
+                    this.hoursMessage = '';
+
+                    try {
+                        const response = await fetch('/dashboard/api/opening-hours', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ openingHours: this.openingHours })
+                        });
+                        const data = await response.json();
+                        this.hoursMessage = data.success ? 'Horarios guardados correctamente' : data.error;
+                    } catch (error) {
+                        this.hoursMessage = 'Error guardando horarios';
+                    } finally {
+                        this.savingHours = false;
+                    }
+                },
+
+                async saveBlock() {
+                    if (!this.blockForm.startTime || !this.blockForm.endTime) {
+                        alert('Por favor, completa fecha de inicio y fin');
+                        return;
+                    }
+
+                    try {
+                        // Convertir datetime-local a ISO
+                        const startISO = new Date(this.blockForm.startTime).toISOString();
+                        const endISO = new Date(this.blockForm.endTime).toISOString();
+
+                        const response = await fetch('/dashboard/api/blocked-slots', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                startTime: startISO,
+                                endTime: endISO,
+                                reason: this.blockForm.reason
+                            })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            this.blockForm = { startTime: '', endTime: '', reason: '' };
+                            this.showBlockForm = false;
+                            await this.loadBlockedSlots();
+                        } else {
+                            alert(data.error || 'Error guardando bloqueo');
+                        }
+                    } catch (error) {
+                        console.error('Error guardando bloqueo:', error);
+                        alert('Error al guardar el bloqueo');
+                    }
+                },
+
+                async deleteBlock(id) {
+                    if (!confirm('¿Estás seguro de eliminar este bloqueo?')) return;
+
+                    try {
+                        const response = await fetch(`/dashboard/api/blocked-slots/${id}`, {
+                            method: 'DELETE'
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            await this.loadBlockedSlots();
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando bloqueo:', error);
+                        alert('Error al eliminar el bloqueo');
+                    }
+                },
+
+                async createUser() {
+                    this.creatingUser = true;
+                    this.userMessage = '';
+
+                    try {
+                        const response = await fetch('/dashboard/api/users', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.userForm)
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            this.userMessage = 'Usuario creado correctamente';
+                            this.userForm = { name: '', email: '', password: '' };
+                            this.showUserForm = false;
+                            await this.loadUsers();
+                        } else {
+                            this.userMessage = data.error || 'Error creando usuario';
+                        }
+                    } catch (error) {
+                        this.userMessage = 'Error creando usuario';
+                    } finally {
+                        this.creatingUser = false;
+                    }
+                },
+
+                async logout() {
+                    try {
+                        await fetch('/dashboard/logout', { method: 'POST' });
+                        window.location.href = '/login';
+                    } catch (error) {
+                        window.location.href = '/login';
+                    }
+                },
+
+                formatDate(dateString) {
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('es-ES', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                },
+
+                formatTime(dateString) {
+                    const date = new Date(dateString);
+                    return date.toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>

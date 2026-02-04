@@ -1,0 +1,4 @@
+# Railway ignore file - Ignorar archivos de la raíz del repositorio
+../package-lock.json
+../package.json
+../node_modules

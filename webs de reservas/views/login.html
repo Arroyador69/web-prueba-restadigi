@@ -60,6 +60,10 @@
                     <span x-show="!submitting">Iniciar sesión</span>
                     <span x-show="submitting">Iniciando sesión...</span>
                 </button>
+
+                <p class="text-center text-sm text-gray-500 mt-4">
+                    <a href="/reset-password" class="text-blue-600 hover:underline">¿Olvidaste tu contraseña? Restablecer</a>
+                </p>
             </form>
         </div>
     </div>
@@ -85,16 +89,16 @@
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify(this.form)
+                            body: JSON.stringify(this.form),
+                            credentials: 'same-origin'
                         });
 
-                        const data = await response.json();
+                        const data = await response.json().catch(() => ({ error: 'Respuesta inválida del servidor' }));
 
                         if (data.error) {
                             this.error = data.error;
                         } else {
-                            // Redirigir al dashboard
-                            window.location.href = '/dashboard';
+                            window.location.replace('/dashboard');
                         }
                     } catch (error) {
                         console.error('Error en login:', error);

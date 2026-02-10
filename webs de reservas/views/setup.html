@@ -114,26 +114,26 @@
                     try {
                         const response = await fetch('/api/setup/first-user', {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(this.form)
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.form),
+                            credentials: 'same-origin'
                         });
 
-                        const data = await response.json();
+                        const data = await response.json().catch(() => ({ error: 'El servidor no respondió correctamente' }));
 
-                        if (data.error) {
+                        if (!response.ok) {
+                            this.error = data.error || 'Error ' + response.status;
+                        } else if (data.error) {
                             this.error = data.error;
                         } else {
-                            this.success = data.message || 'Usuario creado correctamente. Redirigiendo...';
-                            // Redirigir después de 2 segundos
+                            this.success = data.message || 'Usuario creado. Redirigiendo al login...';
                             setTimeout(() => {
-                                window.location.href = '/dashboard';
+                                window.location.replace('/login');
                             }, 2000);
                         }
                     } catch (error) {
                         console.error('Error creando usuario:', error);
-                        this.error = 'Error al crear usuario. Por favor, intenta de nuevo.';
+                        this.error = 'Error de conexión. Comprueba la URL y vuelve a intentarlo.';
                     } finally {
                         this.submitting = false;
                     }

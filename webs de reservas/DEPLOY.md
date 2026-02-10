@@ -109,20 +109,6 @@ O usa un servicio externo como [cron-job.org](https://cron-job.org) que llame a 
 
 ---
 
-## ⚠️ Por qué NO Vercel
-
-**Vercel NO es adecuado** para esta aplicación porque:
-
-- ❌ Vercel es serverless (funciones sin estado)
-- ❌ SQLite necesita sistema de archivos persistente
-- ❌ Cada invocación tendría su propia instancia de BD
-- ❌ Los datos se perderían entre invocaciones
-
-**Solución si quieres usar Vercel:**
-Tendrías que migrar a PostgreSQL o MongoDB, lo cual requiere cambios significativos en el código.
-
----
-
 ## 📊 Comparación de Opciones
 
 | Plataforma | SQLite | Precio | Facilidad | Recomendado |
@@ -130,7 +116,6 @@ Tendrías que migrar a PostgreSQL o MongoDB, lo cual requiere cambios significat
 | **Railway** | ✅ Sí | Gratis/$5 | ⭐⭐⭐⭐⭐ | ✅ **SÍ** |
 | **Render** | ✅ Sí | Gratis/$7 | ⭐⭐⭐⭐ | ✅ Sí |
 | **Fly.io** | ✅ Sí | Gratis | ⭐⭐⭐ | Opcional |
-| **Vercel** | ❌ No | Gratis | ⭐⭐⭐⭐⭐ | ❌ No |
 | **Heroku** | ✅ Sí | $7+ | ⭐⭐⭐ | Caro |
 
 ---

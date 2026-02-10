@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { runQuery, getQuery, allQuery } = require('../utils/db');
 const { getBusinessConfig, getOpeningHours, getAppointmentDuration } = require('../utils/helpers');
+const { sendTestEmail } = require('../utils/email');
 const { requireAuth } = require('../middleware/auth');
 
 // Aplicar autenticación a todas las rutas del dashboard
@@ -243,6 +244,33 @@ router.get('/api/users', async (req, res) => {
     res.json({ users });
   } catch (error) {
     res.status(500).json({ error: 'Error obteniendo usuarios' });
+  }
+});
+
+// Enviar email de prueba (verificar SMTP)
+router.post('/api/test-email', async (req, res) => {
+  try {
+    // Destino: priorizar EMAIL_FROM (donde quieres recibir la prueba), luego email del negocio en BD
+    let to = process.env.EMAIL_FROM;
+    if (!to) {
+      try {
+        const businessConfig = await getBusinessConfig();
+        to = businessConfig.businessEmail || null;
+      } catch (e) {
+        console.warn('No se pudo leer config del negocio:', e.message);
+      }
+    }
+    if (!to) {
+      return res.status(400).json({ error: 'Añade EMAIL_FROM en Railway o configura el email del negocio en Configuración.' });
+    }
+    await sendTestEmail(to);
+    res.json({ success: true, message: `Email de prueba enviado a ${to}. Revisa la bandeja (y spam).` });
+  } catch (error) {
+    console.error('Error en test-email:', error);
+    const msg = error.message || '';
+    res.status(500).json({
+      error: msg ? `No se pudo enviar: ${msg}` : 'No se pudo enviar. Revisa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS y EMAIL_FROM en Railway.'
+    });
   }
 });
 

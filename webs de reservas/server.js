@@ -12,6 +12,9 @@ const dashboardRoutes = require('./routes/dashboard');
 // Inicializar Express
 const app = express();
 
+// Necesario en Railway/proxy: que Express confíe en HTTPS del cliente
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -22,8 +25,10 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // true en producción con HTTPS
-    maxAge: 24 * 60 * 60 * 1000 // 24 horas
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000, // 24 horas
+    sameSite: 'lax',
+    httpOnly: true
   }
 }));
 
@@ -43,6 +48,10 @@ app.get('/login', (req, res) => {
 
 app.get('/setup', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'setup.html'));
+});
+
+app.get('/reset-password', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'reset-password.html'));
 });
 
 app.get('/dashboard', (req, res) => {

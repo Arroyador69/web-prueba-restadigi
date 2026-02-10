@@ -200,6 +200,23 @@
                              :class="configMessage.includes('correctamente') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
                              x-text="configMessage">
                         </div>
+
+                        <div class="border-t pt-6 mt-6">
+                            <h3 class="font-semibold text-gray-900 mb-2">Probar envío de emails</h3>
+                            <p class="text-sm text-gray-500 mb-3">Se enviará un email de prueba al correo del negocio (arriba). Sirve para comprobar que SMTP está bien configurado.</p>
+                            <button 
+                                type="button"
+                                @click="sendTestEmail()"
+                                :disabled="testEmailSending"
+                                class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50 text-sm"
+                            >
+                                <span x-show="!testEmailSending">Enviar email de prueba</span>
+                                <span x-show="testEmailSending">Enviando...</span>
+                            </button>
+                            <p x-show="testEmailMessage" class="mt-2 text-sm p-2 rounded"
+                               :class="testEmailMessage.includes('enviado') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                               x-text="testEmailMessage"></p>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -498,6 +515,8 @@
                 configMessage: '',
                 hoursMessage: '',
                 userMessage: '',
+                testEmailSending: false,
+                testEmailMessage: '',
 
                 async init() {
                     await Promise.all([
@@ -610,6 +629,28 @@
                         this.configMessage = 'Error guardando configuración';
                     } finally {
                         this.savingConfig = false;
+                    }
+                },
+
+                async sendTestEmail() {
+                    this.testEmailMessage = '';
+                    this.testEmailSending = true;
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 15000);
+                    try {
+                        const response = await fetch('/dashboard/api/test-email', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            signal: controller.signal
+                        });
+                        clearTimeout(timeout);
+                        const data = await response.json().catch(() => ({}));
+                        this.testEmailMessage = data.message || data.error || (response.ok ? 'Email de prueba enviado.' : 'Error del servidor.');
+                    } catch (e) {
+                        clearTimeout(timeout);
+                        this.testEmailMessage = e.name === 'AbortError' ? 'Tiempo de espera agotado. Revisa SMTP en Railway.' : 'Error de conexión.';
+                    } finally {
+                        this.testEmailSending = false;
                     }
                 },
 

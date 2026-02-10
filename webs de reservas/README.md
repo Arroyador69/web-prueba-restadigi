@@ -210,15 +210,6 @@ El sistema puede enviar recordatorios automáticos. Para activarlos:
 4. Configura variables de entorno (ver DEPLOY.md)
 5. ¡Listo!
 
-### ⚠️ Por qué NO Vercel
-
-Vercel NO es adecuado porque:
-- ❌ Es serverless (sin estado persistente)
-- ❌ SQLite necesita sistema de archivos persistente
-- ❌ Los datos se perderían entre invocaciones
-
-Si quieres usar Vercel, necesitarías migrar a PostgreSQL (requiere cambios en el código).
-
 ### Otras Opciones
 
 - **Render**: Similar a Railway, también funciona bien con SQLite

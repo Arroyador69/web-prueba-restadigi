@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { runQuery, allQuery, getQuery } = require('../utils/db');
 const { getBusinessConfig, getAvailableTimeSlots, getAppointmentDuration } = require('../utils/helpers');
-const { sendConfirmationEmail } = require('../utils/email');
+const { sendConfirmationEmail, sendNotificationToPsychologist } = require('../utils/email');
 
 // Landing pública
 router.get('/', async (req, res) => {
@@ -115,7 +115,10 @@ router.post('/api/book', async (req, res) => {
     };
 
     await sendConfirmationEmail(appointment).catch(err => {
-      console.error('Error enviando email (pero la cita se guardó):', err);
+      console.error('Error enviando email al paciente (pero la cita se guardó):', err);
+    });
+    await sendNotificationToPsychologist(appointment).catch(err => {
+      console.error('Error enviando notificación al psicólogo:', err);
     });
 
     res.json({
@@ -134,7 +137,7 @@ router.post('/api/book', async (req, res) => {
 
 // ⚠️ ENDPOINT TEMPORAL: Crear primer usuario (solo si no hay usuarios)
 // Este endpoint solo funciona si la base de datos está vacía de usuarios
-// Útil para crear el primer usuario en Vercel u otros entornos serverless
+// Útil para crear el primer usuario desde el navegador (Railway, etc.)
 router.post('/api/setup/first-user', async (req, res) => {
   try {
     // Verificar si ya hay usuarios
@@ -185,6 +188,51 @@ router.post('/api/setup/first-user', async (req, res) => {
   } catch (error) {
     console.error('Error creando primer usuario:', error);
     res.status(500).json({ error: 'Error creando usuario' });
+  }
+});
+
+// Listar emails de usuarios (solo para comprobar; requiere RESET_PASSWORD_SECRET)
+router.get('/api/check-users', (req, res) => {
+  const secret = process.env.RESET_PASSWORD_SECRET;
+  if (!secret || req.query.secret !== secret) {
+    return res.status(403).json({ error: 'No autorizado' });
+  }
+  allQuery('SELECT id, email, name, created_at FROM users ORDER BY id')
+    .then(users => res.json({ users }))
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({ error: 'Error leyendo usuarios' });
+    });
+});
+
+// Restablecer contraseña (solo si RESET_PASSWORD_SECRET está definido en Railway)
+// Uso: pon RESET_PASSWORD_SECRET en Variables de Railway, llama a este endpoint, luego quita la variable
+router.post('/api/reset-password', async (req, res) => {
+  const secret = process.env.RESET_PASSWORD_SECRET;
+  if (!secret) {
+    return res.status(503).json({ error: 'Restablecimiento de contraseña no configurado' });
+  }
+  try {
+    const { email, newPassword, secret: bodySecret } = req.body;
+    if (bodySecret !== secret) {
+      return res.status(403).json({ error: 'Clave incorrecta' });
+    }
+    if (!email || !newPassword) {
+      return res.status(400).json({ error: 'Email y nueva contraseña son requeridos' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    }
+    const user = await getQuery('SELECT id FROM users WHERE email = ?', [email]);
+    if (!user) {
+      return res.status(404).json({ error: 'No existe ningún usuario con ese email' });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await runQuery('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id]);
+    res.json({ success: true, message: 'Contraseña actualizada. Ya puedes iniciar sesión.' });
+  } catch (error) {
+    console.error('Error restableciendo contraseña:', error);
+    res.status(500).json({ error: 'Error al restablecer contraseña' });
   }
 });
 

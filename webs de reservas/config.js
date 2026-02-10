@@ -39,9 +39,9 @@ module.exports = {
     }
   },
   
-  // Configuración de emails
+  // Configuración de emails (Gmail exige que "from" = cuenta que hace login; si no, rechaza)
   emailConfig: {
-    from: process.env.EMAIL_FROM || "contacto@tudominio.com", // Email remitente
+    from: process.env.SMTP_USER || process.env.EMAIL_FROM || "contacto@tudominio.com", // Remitente = SMTP_USER en Gmail
     reminderDaysBefore: parseInt(process.env.REMINDER_DAYS_BEFORE) || 1, // Días antes de la cita para enviar recordatorio
   },
   

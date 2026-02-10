@@ -1,8 +1,13 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 const bcrypt = require('bcryptjs');
 
-const dbPath = path.join(__dirname, '..', 'database.db');
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '..', 'database.db');
+if (process.env.DATABASE_PATH) {
+  const dir = path.dirname(dbPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+}
 const db = new sqlite3.Database(dbPath);
 
 async function initDatabase() {

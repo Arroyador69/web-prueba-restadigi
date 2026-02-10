@@ -2,15 +2,7 @@
 nixPkgs = ["nodejs-18_x", "npm-9_x"]
 
 [phases.install]
-cmds = [
-  "echo '🔧 Eliminando package-lock.json de la raíz del repositorio...'",
-  "find .. -maxdepth 2 -name 'package-lock.json' ! -path './package-lock.json' -delete || true",
-  "find ../.. -maxdepth 1 -name 'package-lock.json' -delete || true",
-  "echo '✅ Verificando package-lock.json del proyecto...'",
-  "head -5 package-lock.json | grep 'plantilla-reservas' || (echo 'ERROR: package-lock.json incorrecto' && exit 1)",
-  "echo '✅ Instalando dependencias del proyecto...'",
-  "npm ci --ignore-scripts"
-]
+cmds = ["npm ci --ignore-scripts"]
 
 [phases.build]
 cmds = ["npm run build || true"]

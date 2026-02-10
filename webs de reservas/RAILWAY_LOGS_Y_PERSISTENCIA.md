@@ -1,5 +1,7 @@
 # Logs y persistencia en Railway
 
+> **Si Railway bloquea el deploy por Next.js:** ver [RAILWAY_LEER_PRIMERO.md](RAILWAY_LEER_PRIMERO.md).
+
 ## Si Railway bloquea el deploy por “Next.js vulnerable”
 
 Este proyecto **no usa Next.js** (es Express). El aviso sale porque Railway está construyendo desde la **raíz del repo**, donde hay (o Railway lee) un `package-lock.json` que sí tiene Next de otro proyecto.

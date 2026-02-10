@@ -41,6 +41,10 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
 
+app.get('/setup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'setup.html'));
+});
+
 app.get('/dashboard', (req, res) => {
   if (!req.session || !req.session.userId) {
     return res.redirect('/login');

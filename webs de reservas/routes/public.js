@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { runQuery, allQuery } = require('../utils/db');
+const bcrypt = require('bcryptjs');
+const { runQuery, allQuery, getQuery } = require('../utils/db');
 const { getBusinessConfig, getAvailableTimeSlots, getAppointmentDuration } = require('../utils/helpers');
 const { sendConfirmationEmail } = require('../utils/email');
 
@@ -128,6 +129,62 @@ router.post('/api/book', async (req, res) => {
       return res.status(400).json({ error: 'Este horario ya está reservado' });
     }
     res.status(500).json({ error: 'Error al reservar la cita' });
+  }
+});
+
+// ⚠️ ENDPOINT TEMPORAL: Crear primer usuario (solo si no hay usuarios)
+// Este endpoint solo funciona si la base de datos está vacía de usuarios
+// Útil para crear el primer usuario en Vercel u otros entornos serverless
+router.post('/api/setup/first-user', async (req, res) => {
+  try {
+    // Verificar si ya hay usuarios
+    const existingUsers = await allQuery('SELECT COUNT(*) as count FROM users');
+    const userCount = existingUsers[0]?.count || 0;
+
+    if (userCount > 0) {
+      return res.status(403).json({ 
+        error: 'Ya existen usuarios en el sistema. Usa el dashboard para crear más usuarios.' 
+      });
+    }
+
+    const { email, password, name } = req.body;
+
+    // Validaciones
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: 'Email, contraseña y nombre son requeridos' });
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Email inválido' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    }
+
+    // Verificar si el email ya existe (por si acaso)
+    const existingUser = await getQuery('SELECT id FROM users WHERE email = ?', [email]);
+    if (existingUser) {
+      return res.status(400).json({ error: 'Este email ya está registrado' });
+    }
+
+    // Hash de la contraseña y crear usuario
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await runQuery(
+      'INSERT INTO users (email, password, name) VALUES (?, ?, ?)',
+      [email, hashedPassword, name]
+    );
+
+    res.json({
+      success: true,
+      message: 'Primer usuario creado correctamente. Ahora puedes iniciar sesión en /dashboard',
+      user: { email, name }
+    });
+  } catch (error) {
+    console.error('Error creando primer usuario:', error);
+    res.status(500).json({ error: 'Error creando usuario' });
   }
 });
 

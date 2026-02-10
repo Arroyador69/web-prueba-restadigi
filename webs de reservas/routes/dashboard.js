@@ -250,7 +250,13 @@ router.get('/api/users', async (req, res) => {
 // Enviar email de prueba (verificar SMTP)
 router.post('/api/test-email', async (req, res) => {
   try {
-    // Destino: priorizar EMAIL_FROM (donde quieres recibir la prueba), luego email del negocio en BD
+    // Comprobar que las variables SMTP están en Railway
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return res.status(400).json({
+        error: 'Faltan SMTP_USER o SMTP_PASS en Railway (Variables del servicio web). Pon tu Gmail y la contraseña de aplicación.'
+      });
+    }
+    // Destino: priorizar EMAIL_FROM, luego email del negocio en BD
     let to = process.env.EMAIL_FROM;
     if (!to) {
       try {
@@ -261,16 +267,15 @@ router.post('/api/test-email', async (req, res) => {
       }
     }
     if (!to) {
-      return res.status(400).json({ error: 'Añade EMAIL_FROM en Railway o configura el email del negocio en Configuración.' });
+      return res.status(400).json({ error: 'Añade EMAIL_FROM en Railway (Variables) o guarda el Email del negocio arriba y Guardar configuración.' });
     }
     await sendTestEmail(to);
     res.json({ success: true, message: `Email de prueba enviado a ${to}. Revisa la bandeja (y spam).` });
   } catch (error) {
-    const msg = error.message || '';
-    console.error('Error en test-email:', msg, error);
-    res.status(500).json({
-      error: msg ? `No se pudo enviar: ${msg}` : 'No se pudo enviar. Revisa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS y EMAIL_FROM en Railway.'
-    });
+    const msg = error.message || error.response || (error.responseCode ? `Código ${error.responseCode}` : '') || '';
+    const detail = msg ? `: ${msg}` : '. Revisa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS y EMAIL_FROM en Railway.';
+    console.error('Error en test-email', detail, error);
+    res.status(500).json({ error: `No se pudo enviar${detail}` });
   }
 });
 

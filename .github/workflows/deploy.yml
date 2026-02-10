@@ -1,4 +1,6 @@
-name: Deploy (Railway + GitHub)
+# Deploy: Railway se encarga del deploy al hacer push (conexión repo en Railway).
+# No hace falta acción "railway/deploy" (no existe como acción pública).
+name: CI - Push a main
 
 on:
   push:
@@ -6,18 +8,13 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  NODE_VERSION: '18.x'
-
 jobs:
-  deploy-railway:
+  status:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Deploy to Railway
-      uses: railway/deploy@v1
-      with:
-        railway_token: ${{ secrets.RAILWAY_TOKEN }}
+    - name: Resumen
+      run: |
+        echo "## Push a main" >> $GITHUB_STEP_SUMMARY
+        echo "Railway desplegará automáticamente si tienes el repo conectado." >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

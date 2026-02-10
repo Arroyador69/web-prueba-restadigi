@@ -2,15 +2,18 @@
 
 ## Si Railway bloquea el deploy por “Next.js vulnerable”
 
-Este proyecto **no usa Next.js** (es Express). El aviso sale si Railway está construyendo desde la **raíz del repo**, donde puede haber otro `package-lock.json` con Next.
+Este proyecto **no usa Next.js** (es Express). El aviso sale porque Railway está construyendo desde la **raíz del repo**, donde hay (o Railway lee) un `package-lock.json` que sí tiene Next de otro proyecto.
 
-**Solución:** En Railway, servicio **web** → **Settings** (o **Config**):
+**Solución obligatoria:** decirle a Railway que use solo la carpeta de esta app.
 
-1. Busca **Root Directory** / **Source** / **Build directory**.
-2. Pon como raíz del proyecto: **`webs de reservas`** (o la carpeta donde esté tu `package.json` del sistema de reservas).
-3. Guarda y vuelve a desplegar.
+1. En **Railway** → tu proyecto → servicio **web**.
+2. Entra en **Settings** (o **Configure** / pestaña de configuración del servicio).
+3. Busca **“Root Directory”** o **“Source”** o **“Working Directory”**.
+4. En ese campo escribe exactamente: **`webs de reservas`**  
+   (con espacio, sin barra al final). Si tu repo tiene la app en otra carpeta, pon esa.
+5. **Guarda** (Save). Railway hará un nuevo deploy.
 
-Así Railway solo usa esa carpeta, no el resto del repo, y no verá el `package-lock.json` que tenga Next.
+A partir de ahí Railway solo usará los archivos de esa carpeta (incluido su `package-lock.json`, que no tiene Next) y el error de vulnerabilidad debería desaparecer. Si no ves la opción Root Directory, búscala en la configuración del **service** o en **Deploy**.
 
 ---
 

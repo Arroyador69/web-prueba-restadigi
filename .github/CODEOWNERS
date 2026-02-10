@@ -15,7 +15,6 @@
 *.sql @Arroyador69
 
 # Configuración de infraestructura
-/vercel.json @Arroyador69
 /next.config.ts @Arroyador69
 /package.json @Arroyador69
 /package-lock.json @Arroyador69

@@ -645,10 +645,15 @@
                         });
                         clearTimeout(timeout);
                         const data = await response.json().catch(() => ({}));
-                        this.testEmailMessage = data.message || data.error || (response.ok ? 'Email de prueba enviado.' : 'Error del servidor.');
+                        const serverError = data.error || (response.ok ? '' : 'Error del servidor.');
+                        this.testEmailMessage = data.message || serverError || (response.ok ? 'Email de prueba enviado.' : `Error ${response.status}`);
+                        if (!response.ok && serverError) {
+                            console.error('[Test email] Respuesta del servidor:', response.status, data);
+                        }
                     } catch (e) {
                         clearTimeout(timeout);
                         this.testEmailMessage = e.name === 'AbortError' ? 'Tiempo de espera agotado. Revisa SMTP en Railway.' : 'Error de conexión.';
+                        console.error('[Test email] Error:', e);
                     } finally {
                         this.testEmailSending = false;
                     }

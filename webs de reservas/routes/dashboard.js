@@ -266,8 +266,8 @@ router.post('/api/test-email', async (req, res) => {
     await sendTestEmail(to);
     res.json({ success: true, message: `Email de prueba enviado a ${to}. Revisa la bandeja (y spam).` });
   } catch (error) {
-    console.error('Error en test-email:', error);
     const msg = error.message || '';
+    console.error('Error en test-email:', msg, error);
     res.status(500).json({
       error: msg ? `No se pudo enviar: ${msg}` : 'No se pudo enviar. Revisa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS y EMAIL_FROM en Railway.'
     });

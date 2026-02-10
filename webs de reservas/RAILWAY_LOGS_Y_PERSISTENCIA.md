@@ -1,5 +1,19 @@
 # Logs y persistencia en Railway
 
+## Si Railway bloquea el deploy por “Next.js vulnerable”
+
+Este proyecto **no usa Next.js** (es Express). El aviso sale si Railway está construyendo desde la **raíz del repo**, donde puede haber otro `package-lock.json` con Next.
+
+**Solución:** En Railway, servicio **web** → **Settings** (o **Config**):
+
+1. Busca **Root Directory** / **Source** / **Build directory**.
+2. Pon como raíz del proyecto: **`webs de reservas`** (o la carpeta donde esté tu `package.json` del sistema de reservas).
+3. Guarda y vuelve a desplegar.
+
+Así Railway solo usa esa carpeta, no el resto del repo, y no verá el `package-lock.json` que tenga Next.
+
+---
+
 ## Dónde ver los logs
 
 1. Entra en **Railway** → tu proyecto.

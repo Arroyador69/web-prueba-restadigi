@@ -256,18 +256,16 @@ router.post('/api/test-email', async (req, res) => {
         error: 'Configura Resend (RESEND_API_KEY en Railway) o SMTP (SMTP_USER y SMTP_PASS). Ver EMAIL_SIN_DOMINIO.md.'
       });
     }
-    // Destino: priorizar EMAIL_FROM, luego email del negocio en BD
-    let to = process.env.EMAIL_FROM;
-    if (!to) {
-      try {
-        const businessConfig = await getBusinessConfig();
-        to = businessConfig.businessEmail || null;
-      } catch (e) {
-        console.warn('No se pudo leer config del negocio:', e.message);
-      }
+    // Destino: email del negocio (donde quieres recibir la prueba). EMAIL_FROM es el remitente, no el destinatario.
+    let to = null;
+    try {
+      const businessConfig = await getBusinessConfig();
+      to = (businessConfig.businessEmail || '').trim() || null;
+    } catch (e) {
+      console.warn('No se pudo leer config del negocio:', e.message);
     }
     if (!to) {
-      return res.status(400).json({ error: 'Añade EMAIL_FROM en Railway (Variables) o guarda el Email del negocio arriba y Guardar configuración.' });
+      return res.status(400).json({ error: 'Guarda el Email del negocio arriba y pulsa «Guardar configuración» antes de enviar la prueba.' });
     }
     await sendTestEmail(to);
     res.json({ success: true, message: `Email de prueba enviado a ${to}. Revisa la bandeja (y spam).` });

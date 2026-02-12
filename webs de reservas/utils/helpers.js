@@ -52,10 +52,6 @@ async function isTimeSlotAvailable(dateTime, duration) {
     return false;
   }
 
-  if (overlappingAppointments.length > 0) {
-    return false;
-  }
-
   // Verificar que no esté en un slot bloqueado
   const blockedSlots = await allQuery(
     `SELECT * FROM blocked_slots 
@@ -80,7 +76,15 @@ async function isTimeSlotAvailable(dateTime, duration) {
 
 // Obtener horas disponibles para un día específico
 async function getAvailableTimeSlots(date, duration) {
-  const targetDate = new Date(date);
+  // Interpretar YYYY-MM-DD como día civil para que el día de la semana sea correcto en cualquier timezone
+  const parts = String(date).trim().split('-');
+  if (parts.length !== 3) return [];
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10) - 1;
+  const d = parseInt(parts[2], 10);
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return [];
+  const targetDate = new Date(y, m, d);
+  if (isNaN(targetDate.getTime())) return [];
   const dayOfWeek = targetDate.getDay();
   
   const openingHours = await getOpeningHours();

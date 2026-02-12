@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node database/init.js && node server.js",
+    "build": "echo ok",
     "dev": "nodemon server.js",
     "init-db": "node database/init.js",
     "postinstall": "node database/init.js || true"

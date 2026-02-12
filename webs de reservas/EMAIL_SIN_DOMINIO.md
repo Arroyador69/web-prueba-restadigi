@@ -46,19 +46,31 @@ No necesitas dominio. Usas una cuenta de Gmail como remitente (ej. una cuenta so
 
 ---
 
-## Opción 2: Resend (API, sin SMTP)
+## Opción 2: Resend (API, sin SMTP) — recomendada en Railway
 
-Servicio de envío por API. Tienen plan gratuito (miles de emails al mes) y permiten enviar desde su dominio sin verificar uno propio.
+Servicio de envío por **API HTTPS**. Plan gratuito generoso; no depende de SMTP, así que evita timeouts en entornos como **Railway** (donde Gmail SMTP suele dar *connection timeout*).
 
 ### Pasos
 
-1. Regístrate en [resend.com](https://resend.com) y obtén una **API Key**.
+1. Regístrate en [resend.com](https://resend.com).
 
-2. El proyecto actual usa **Nodemailer con SMTP**. Para usar Resend sin dominio tienes dos caminos:
-   - **A) Usar SMTP de Resend** (si Resend lo ofrece con su dominio): configurar en Railway las variables SMTP que te den ellos (host, port, user, pass) y `EMAIL_FROM` con el remitente que te asignen.
-   - **B) Cambiar a la API de Resend** (requiere tocar código): instalar `resend`, sustituir en `utils/email.js` el envío por Nodemailer por llamadas a la API de Resend usando la API Key. El “from” puede ser algo como `onboarding@resend.dev` o el que permitan sin verificar dominio.
+2. **Dominio:**  
+   - **Pruebas:** puedes enviar desde `onboarding@resend.dev` (solo a tu email de registro).  
+   - **Producción:** en el dashboard de Resend añade y verifica tu dominio; luego el “from” será por ejemplo `reservas@tudominio.com`.
 
-Para no cambiar código ahora, la opción más simple sin dominio sigue siendo **Gmail (Opción 1)**.
+3. Crea una **API Key** en Resend (API Keys → Create API Key) y cópiala.
+
+4. **En Railway** (Variables del proyecto), añade:
+   - `RESEND_API_KEY` = la API Key de Resend.  
+   - `EMAIL_FROM` = remitente que vaya a usar (ej. `onboarding@resend.dev` para pruebas o `reservas@tudominio.com` si verificaste dominio).
+
+5. **Importante:** Si está definida `RESEND_API_KEY`, la app envía **todos** los correos (prueba, confirmación al paciente, notificación al psicólogo) por Resend. No hace falta configurar SMTP en ese caso.
+
+### Ventajas
+
+- No usa SMTP: evita bloqueos y timeouts en Railway.
+- Plan gratuito suficiente para demos y pocos clientes.
+- Sin dominio puedes probar con `onboarding@resend.dev`; con dominio verificado, correos “de tu negocio”.
 
 ---
 
@@ -66,7 +78,8 @@ Para no cambiar código ahora, la opción más simple sin dominio sigue siendo *
 
 | Opción | Dominio | Coste | Dificultad |
 |--------|--------|--------|------------|
-| **Gmail** | No hace falta | Gratis | Baja (solo variables de entorno) |
-| Resend (API) | No obligatorio | Plan gratis | Media (cambio de código si usas API) |
+| **Gmail** | No hace falta | Gratis | Baja (solo variables de entorno). Puede dar timeout en Railway. |
+| **Resend** | No obligatorio (pruebas con `onboarding@resend.dev`) | Plan gratis | Baja: solo `RESEND_API_KEY` + `EMAIL_FROM` en Railway. |
 
-Recomendación: **usar Gmail** con una cuenta dedicada y contraseña de aplicación. Cuando más adelante tengas dominio (o el cliente el suyo), puedes cambiar a ese dominio y SMTP manteniendo el mismo flujo (confirmación al paciente + notificación al psicólogo).
+**Si desplegaste en Railway:** usa **Resend** (añade `RESEND_API_KEY` y `EMAIL_FROM`) para evitar timeouts de SMTP. Para pruebas sin dominio, `EMAIL_FROM=onboarding@resend.dev`.  
+**Si corres en local o en un VPS donde SMTP funciona:** Gmail con contraseña de aplicación sigue siendo válido (mismas variables SMTP + `EMAIL_FROM`).

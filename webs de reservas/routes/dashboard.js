@@ -247,13 +247,13 @@ router.get('/api/users', async (req, res) => {
   }
 });
 
-// Enviar email de prueba (verificar SMTP)
+// Enviar email de prueba (Resend o SMTP)
 router.post('/api/test-email', async (req, res) => {
   try {
-    // Comprobar que las variables SMTP están en Railway
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    const useResend = !!process.env.RESEND_API_KEY;
+    if (!useResend && (!process.env.SMTP_USER || !process.env.SMTP_PASS)) {
       return res.status(400).json({
-        error: 'Faltan SMTP_USER o SMTP_PASS en Railway (Variables del servicio web). Pon tu Gmail y la contraseña de aplicación.'
+        error: 'Configura Resend (RESEND_API_KEY en Railway) o SMTP (SMTP_USER y SMTP_PASS). Ver EMAIL_SIN_DOMINIO.md.'
       });
     }
     // Destino: priorizar EMAIL_FROM, luego email del negocio en BD
@@ -273,7 +273,7 @@ router.post('/api/test-email', async (req, res) => {
     res.json({ success: true, message: `Email de prueba enviado a ${to}. Revisa la bandeja (y spam).` });
   } catch (error) {
     const msg = error.message || error.response || (error.responseCode ? `Código ${error.responseCode}` : '') || '';
-    const detail = msg ? `: ${msg}` : '. Revisa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS y EMAIL_FROM en Railway.';
+    const detail = msg ? `: ${msg}` : (process.env.RESEND_API_KEY ? '. Revisa RESEND_API_KEY y EMAIL_FROM en Railway.' : '. Revisa SMTP_* y EMAIL_FROM en Railway.');
     console.error('Error en test-email', detail, error);
     res.status(500).json({ error: `No se pudo enviar${detail}` });
   }

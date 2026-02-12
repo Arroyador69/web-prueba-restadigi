@@ -2,7 +2,33 @@ const nodemailer = require('nodemailer');
 const config = require('../config');
 const { getQuery } = require('./db');
 
-// Crear transporter de email
+// Si existe RESEND_API_KEY, usamos Resend (API HTTPS). Si no, SMTP (Gmail etc.).
+const useResend = !!process.env.RESEND_API_KEY;
+
+async function sendOneEmail(from, to, subject, html) {
+  if (useResend) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: from,
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        html
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || data.error || `Resend ${res.status}`);
+    return;
+  }
+  const transporter = getTransporter();
+  await transporter.sendMail({ from, to, subject, html });
+}
+
+// Crear transporter de email (solo si no usamos Resend)
 let transporter = null;
 
 function getTransporter() {
@@ -98,8 +124,7 @@ async function sendConfirmationEmail(appointment) {
       `
     };
 
-    const transporter = getTransporter();
-    await transporter.sendMail(mailOptions);
+    await sendOneEmail(mailOptions.from, mailOptions.to, mailOptions.subject, mailOptions.html);
     console.log(`✅ Email de confirmación enviado a ${appointment.client_email}`);
     return true;
   } catch (error) {
@@ -177,8 +202,7 @@ async function sendReminderEmail(appointment) {
       `
     };
 
-    const transporter = getTransporter();
-    await transporter.sendMail(mailOptions);
+    await sendOneEmail(mailOptions.from, mailOptions.to, mailOptions.subject, mailOptions.html);
     console.log(`✅ Email de recordatorio enviado a ${appointment.client_email}`);
     return true;
   } catch (error) {
@@ -250,8 +274,7 @@ async function sendNotificationToPsychologist(appointment) {
       `
     };
 
-    const transporter = getTransporter();
-    await transporter.sendMail(mailOptions);
+    await sendOneEmail(mailOptions.from, mailOptions.to, mailOptions.subject, mailOptions.html);
     console.log(`✅ Notificación de nueva reserva enviada a ${businessEmail}`);
     return true;
   } catch (error) {
@@ -260,27 +283,22 @@ async function sendNotificationToPsychologist(appointment) {
   }
 }
 
-// Enviar email de prueba (para verificar SMTP desde el dashboard)
-// Gmail exige que "from" sea la cuenta con la que te autenticas (SMTP_USER); si no, rechaza el envío.
+// Enviar email de prueba (Resend o SMTP según RESEND_API_KEY)
 async function sendTestEmail(toEmail) {
   try {
-    const fromAddress = config.smtpConfig.auth.user || config.emailConfig.from;
-    const mailOptions = {
-      from: fromAddress,
-      to: toEmail,
-      subject: 'Prueba de email - Sistema de reservas',
-      html: `
-        <p>Este es un email de prueba.</p>
-        <p>Si lo recibes, la configuración SMTP (Gmail, etc.) está correcta y podrás recibir:</p>
-        <ul>
-          <li>Confirmaciones de reserva a los pacientes</li>
-          <li>Notificaciones de nueva reserva al psicólogo</li>
-        </ul>
-        <p>Enviado desde el sistema de reservas.</p>
-      `
-    };
-    const t = getTransporter();
-    await t.sendMail(mailOptions);
+    const fromAddress = useResend
+      ? (process.env.EMAIL_FROM || 'onboarding@resend.dev')
+      : (config.smtpConfig.auth.user || config.emailConfig.from);
+    const html = `
+      <p>Este es un email de prueba.</p>
+      <p>Si lo recibes, el envío está configurado correctamente (Resend o SMTP).</p>
+      <ul>
+        <li>Confirmaciones de reserva a los pacientes</li>
+        <li>Notificaciones de nueva reserva al psicólogo</li>
+      </ul>
+      <p>Enviado desde el sistema de reservas.</p>
+    `;
+    await sendOneEmail(fromAddress, toEmail, 'Prueba de email - Sistema de reservas', html);
     console.log(`✅ Email de prueba enviado a ${toEmail}`);
     return true;
   } catch (error) {

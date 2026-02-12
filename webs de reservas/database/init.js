@@ -3,11 +3,13 @@ const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '..', 'database.db');
-if (process.env.DATABASE_PATH) {
-  const dir = path.dirname(dbPath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
+const volumeMount = process.env.RAILWAY_VOLUME_MOUNT_PATH;
+const explicitPath = process.env.DATABASE_PATH;
+const dbPath = explicitPath
+  || (volumeMount ? path.join(volumeMount, 'database.db') : null)
+  || path.join(__dirname, '..', 'database.db');
+const dir = path.dirname(dbPath);
+if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 const db = new sqlite3.Database(dbPath);
 
 async function initDatabase() {

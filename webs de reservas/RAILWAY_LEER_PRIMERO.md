@@ -27,11 +27,29 @@ En **Settings** → **Source** tienes **Rollouts** con “Wait for CI” activad
 
 ---
 
+## 3. Base de datos permanente (evitar perder usuario en cada push)
+
+**Por qué se borra todo:** Sin volumen, la base de datos vive dentro del contenedor y Railway **crea un contenedor nuevo en cada deploy**. Por eso cada push borra usuarios y datos.
+
+**Solución:** usar un **volumen** y guardar la BD ahí.
+
+1. En la **vista del proyecto** (donde ves el recuadro del servicio **web**), abre la paleta con **Cmd+K** (Mac) o **Ctrl+K** (Windows) y busca **“Volume”** o **“Add Volume”**.
+2. Crea un volumen y **conéctalo al servicio web**. En **Mount Path** pon: **`/app/data`**.
+3. (Opcional) En el servicio **web** → **Variables**, puedes añadir `DATABASE_PATH` = `/app/data/database.db`. Si no, la app usa la ruta del volumen automáticamente.
+4. Guarda y redespliega. En los **logs** del deploy busca: `💾 Base de datos: ... (volumen: ...)`. A partir de entonces la BD **persiste** entre pushes.
+
+**Crear el primer usuario (solo una vez después de esto):**  
+👉 **https://web-production-59f36.up.railway.app/setup**
+
+---
+
 ## Resumen
 
 | Dónde        | Qué poner / hacer                          |
 |-------------|---------------------------------------------|
 | Source      | **Root Directory** = `webs de reservas`    |
 | Rollouts    | Opcional: “Don’t wait for CI” si lo prefieres |
+| Persistencia| **Volume** mount `/app/data` + variable **`DATABASE_PATH`** = `/app/data/database.db` |
+| Crear usuario | https://web-production-59f36.up.railway.app/setup (tras configurar el volumen) |
 
-Cuando **Root Directory** esté en `webs de reservas`, el build usará el `package-lock.json` de esta app (sin Next) y el aviso de vulnerabilidades no debería volver a salir.
+Cuando **Root Directory** esté en `webs de reservas`, el build usará el `package-lock.json` de esta app (sin Next) y el aviso de vulnerabilidades no debería volver a salir. Con **volumen + DATABASE_PATH**, la base de datos y el usuario no se borran en cada push.

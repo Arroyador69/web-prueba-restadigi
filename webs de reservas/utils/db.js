@@ -2,18 +2,24 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-// En Railway: usar volumen persistente (ej. DATABASE_PATH=/app/data/database.db)
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '..', 'database.db');
+// En Railway: persistencia con volumen.
+// Prioridad: DATABASE_PATH > RAILWAY_VOLUME_MOUNT_PATH/database.db > ./database.db
+const volumeMount = process.env.RAILWAY_VOLUME_MOUNT_PATH;
+const explicitPath = process.env.DATABASE_PATH;
+const dbPath = explicitPath
+  || (volumeMount ? path.join(volumeMount, 'database.db') : null)
+  || path.join(__dirname, '..', 'database.db');
+if (process.env.NODE_ENV === 'production') {
+  console.log('💾 Base de datos:', dbPath, volumeMount ? '(volumen: ' + volumeMount + ')' : '(sin volumen)');
+}
 
-// Asegurar que el directorio existe (para Railway con volumen en /app/data)
-if (process.env.DATABASE_PATH) {
-  const dir = path.dirname(dbPath);
-  if (!fs.existsSync(dir)) {
-    try {
-      fs.mkdirSync(dir, { recursive: true });
-    } catch (e) {
-      console.warn('No se pudo crear directorio de BD:', dir, e.message);
-    }
+// Asegurar que el directorio existe (volumen o DATABASE_PATH)
+const dbDir = path.dirname(dbPath);
+if (dbDir && !fs.existsSync(dbDir)) {
+  try {
+    fs.mkdirSync(dbDir, { recursive: true });
+  } catch (e) {
+    console.warn('No se pudo crear directorio de BD:', dbDir, e.message);
   }
 }
 

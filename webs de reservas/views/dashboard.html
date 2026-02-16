@@ -4,78 +4,117 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Gestión de Citas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: rgba(37, 99, 235, 0.12);
+            --card-radius: 14px;
+            --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+            --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+            --transition-fast: 0.2s ease;
+            --transition-smooth: 0.25s ease;
+        }
+        body { font-family: 'Inter', system-ui, sans-serif; }
         [x-cloak] { display: none !important; }
+
+        /* Cards */
+        .card { border-radius: var(--card-radius); box-shadow: var(--shadow-card); transition: box-shadow var(--transition-smooth), transform var(--transition-fast); }
+        .card:hover { box-shadow: var(--shadow-card-hover); }
+        .card-body { padding: 1.35rem 1.5rem; }
+
+        /* Botones */
+        .btn-primary { background: var(--primary-color); color: #fff; border-radius: 10px; padding: 0.5rem 1rem; font-weight: 500; transition: background var(--transition-fast), transform 0.15s ease; border: none; }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+        .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary { background: #f1f5f9; color: #334155; border-radius: 10px; padding: 0.5rem 1rem; font-weight: 500; transition: background var(--transition-fast), color var(--transition-fast); border: none; }
+        .btn-secondary:hover { background: #e2e8f0; color: #1e293b; }
+        .btn-ghost { color: var(--primary-color); background: transparent; border: none; padding: 0.5rem 0.75rem; font-weight: 500; border-radius: 8px; transition: background var(--transition-fast); }
+        .btn-ghost:hover { background: var(--primary-light); }
+        .btn-link { background: none; border: none; cursor: pointer; padding: 0; font-size: inherit; color: var(--primary-color); font-weight: 500; transition: opacity var(--transition-fast); }
+        .btn-link:hover { opacity: 0.85; text-decoration: underline; }
+
+        /* Inputs */
+        .input-modern { width: 100%; padding: 0.5rem 1rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.9375rem; transition: border-color var(--transition-fast), box-shadow var(--transition-fast); }
+        .input-modern:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-light); }
+        .input-modern::placeholder { color: #94a3b8; }
+        select.input-modern { cursor: pointer; appearance: auto; }
+        textarea.input-modern { min-height: 2.5rem; resize: vertical; }
+
+        /* Navegación */
+        .nav-tab { padding: 0.875rem 1rem; font-weight: 500; border-radius: 10px; margin: 0 2px; color: #64748b; transition: background var(--transition-fast), color var(--transition-fast); border: none; background: transparent; cursor: pointer; }
+        .nav-tab:hover { color: #1e293b; background: #f1f5f9; }
+        .nav-tab-active { color: var(--primary-color); background: var(--primary-light); }
+        .nav-tab-active:hover { color: var(--primary-hover); background: var(--primary-light); }
+
+        /* Badges estado */
+        .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; }
+        .badge-confirmada { background: #dcfce7; color: #166534; }
+        .badge-cancelada { background: #fee2e2; color: #991b1b; }
+        .badge-pendiente { background: #fef9c3; color: #854d0e; }
+        .badge-pasada { background: #f1f5f9; color: #475569; }
+        .badge-no-asistio { background: #ffedd5; color: #9a3412; }
+
+        /* Tablas */
+        .table-modern { border-collapse: separate; border-spacing: 0; }
+        .table-modern thead th { background: #f8fafc; font-weight: 600; color: #475569; font-size: 0.8125rem; padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .table-modern tbody tr { transition: background var(--transition-fast); }
+        .table-modern tbody tr:hover { background: #f8fafc; }
+        .table-modern tbody td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; }
+        .table-modern tbody td a, .table-modern tbody td .btn-link { color: var(--primary-color); font-weight: 500; }
+        .table-modern tbody td a:hover, .table-modern tbody td .btn-link:hover { text-decoration: underline; }
+
+        /* Animación entrada */
+        .fade-in { animation: fadeIn 0.35s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in-delay-1 { animation-delay: 0.05s; opacity: 0; }
+        .fade-in-delay-2 { animation-delay: 0.1s; opacity: 0; }
+        .fade-in-delay-3 { animation-delay: 0.15s; opacity: 0; }
+        .fade-in-delay-4 { animation-delay: 0.2s; opacity: 0; }
+
+        /* Header */
+        .header-brand-initial { width: 42px; height: 42px; border-radius: 12px; background: var(--primary-color); color: #fff; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-[#f8fafc] min-h-screen">
     <div x-data="dashboard()" x-cloak x-init="init()">
-        <!-- Header -->
-        <header class="bg-white shadow-sm">
+        <!-- Header profesional -->
+        <header class="bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div class="flex justify-between items-center">
-                    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-                    <button @click="logout()" class="text-gray-600 hover:text-gray-900">
-                        Cerrar sesión
-                    </button>
+                <div class="flex justify-between items-center gap-4">
+                    <div class="flex items-center gap-4 min-w-0">
+                        <template x-if="negocio.logo_url">
+                            <img :src="negocio.logo_url" alt="Logo" class="h-10 w-10 object-contain rounded-xl flex-shrink-0">
+                        </template>
+                        <template x-if="!negocio.logo_url">
+                            <div class="header-brand-initial" x-text="(config.businessName || negocio.nombre || 'M').charAt(0).toUpperCase()"></div>
+                        </template>
+                        <div class="min-w-0">
+                            <h1 class="text-xl font-bold text-gray-900 truncate" x-text="config.businessName || negocio.nombre || 'Panel de gestión'"></h1>
+                            <p class="text-sm text-gray-500" x-show="config.businessName || negocio.nombre">Panel de gestión</p>
+                        </div>
+                    </div>
+                    <button @click="logout()" class="btn-ghost text-gray-600 hover:text-gray-900 flex-shrink-0">Cerrar sesión</button>
                 </div>
             </div>
         </header>
 
-        <!-- Navigation Tabs -->
-        <div class="bg-white border-b">
+        <!-- Navegación -->
+        <div class="bg-white border-b border-gray-100">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <nav class="flex flex-wrap gap-2 space-x-2">
-                    <button 
-                        @click="activeTab = 'inicio'; loadStats()"
-                        :class="activeTab === 'inicio' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
-                        class="py-4 px-1 font-medium"
-                    >
-                        Inicio
-                    </button>
-                    <button 
-                        @click="activeTab = 'appointments'"
-                        :class="activeTab === 'appointments' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
-                        class="py-4 px-1 font-medium"
-                    >
-                        Citas
-                    </button>
-                    <button 
-                        @click="activeTab = 'pacientes'; loadPacientes()"
-                        :class="activeTab === 'pacientes' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
-                        class="py-4 px-1 font-medium"
-                    >
-                        Pacientes
-                    </button>
-                    <button 
-                        @click="activeTab = 'config'"
-                        :class="activeTab === 'config' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
-                        class="py-4 px-1 font-medium"
-                    >
-                        Configuración
-                    </button>
-                    <button 
-                        @click="activeTab = 'hours'"
-                        :class="activeTab === 'hours' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
-                        class="py-4 px-1 font-medium"
-                    >
-                        Horarios
-                    </button>
-                    <button 
-                        @click="activeTab = 'blocked'"
-                        :class="activeTab === 'blocked' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
-                        class="py-4 px-1 font-medium"
-                    >
-                        Bloqueos
-                    </button>
-                    <button 
-                        @click="activeTab = 'users'"
-                        :class="activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
-                        class="py-4 px-1 font-medium"
-                    >
-                        Usuarios
-                    </button>
+                <nav class="flex flex-wrap gap-1 py-2">
+                    <button @click="activeTab = 'inicio'; loadStats()" class="nav-tab" :class="activeTab === 'inicio' && 'nav-tab-active'">Inicio</button>
+                    <button @click="activeTab = 'appointments'" class="nav-tab" :class="activeTab === 'appointments' && 'nav-tab-active'">Citas</button>
+                    <button @click="activeTab = 'pacientes'; loadPacientes()" class="nav-tab" :class="activeTab === 'pacientes' && 'nav-tab-active'">Pacientes</button>
+                    <button @click="activeTab = 'config'" class="nav-tab" :class="activeTab === 'config' && 'nav-tab-active'">Configuración</button>
+                    <button @click="activeTab = 'hours'" class="nav-tab" :class="activeTab === 'hours' && 'nav-tab-active'">Horarios</button>
+                    <button @click="activeTab = 'blocked'" class="nav-tab" :class="activeTab === 'blocked' && 'nav-tab-active'">Bloqueos</button>
+                    <button @click="activeTab = 'users'" class="nav-tab" :class="activeTab === 'users' && 'nav-tab-active'">Usuarios</button>
                 </nav>
             </div>
         </div>
@@ -83,23 +122,45 @@
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <!-- Tab: Inicio (estadísticas) -->
-            <div x-show="activeTab === 'inicio'">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white rounded-lg shadow p-5">
-                        <h3 class="text-sm font-medium text-gray-500">Sesiones este mes</h3>
-                        <p class="text-2xl font-bold text-gray-900 mt-1" x-text="stats.sesionesRealizadas ?? '—'"></p>
+            <div x-show="activeTab === 'inicio'" class="fade-in">
+                <p class="text-lg text-gray-700 mb-6" x-show="config.businessName || negocio.nombre">Bienvenido, <span class="font-semibold text-gray-900" x-text="config.businessName || negocio.nombre || ''"></span></p>
+                <p class="text-lg text-gray-700 mb-6" x-show="!config.businessName && !negocio.nombre">Resumen de tu consulta este mes</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+                    <div class="card bg-white fade-in fade-in-delay-1">
+                        <div class="card-body flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-[var(--primary-color)] bg-[var(--primary-light)]" aria-hidden="true">📅</div>
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-medium text-gray-500">Sesiones este mes</h3>
+                                <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="stats.sesionesRealizadas ?? '—'"></p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow p-5">
-                        <h3 class="text-sm font-medium text-gray-500">Facturación estimada (€)</h3>
-                        <p class="text-2xl font-bold text-gray-900 mt-1" x-text="stats.facturacionEstimada ?? '—'"></p>
+                    <div class="card bg-white fade-in fade-in-delay-2">
+                        <div class="card-body flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-[var(--primary-color)] bg-[var(--primary-light)]" aria-hidden="true">€</div>
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-medium text-gray-500">Facturación estimada (€)</h3>
+                                <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="stats.facturacionEstimada ?? '—'"></p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow p-5">
-                        <h3 class="text-sm font-medium text-gray-500">Cancelaciones</h3>
-                        <p class="text-2xl font-bold text-gray-900 mt-1" x-text="stats.cancelaciones ?? '—'"></p>
+                    <div class="card bg-white fade-in fade-in-delay-3">
+                        <div class="card-body flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-red-600 bg-red-50" aria-hidden="true">✕</div>
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-medium text-gray-500">Cancelaciones</h3>
+                                <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="stats.cancelaciones ?? '—'"></p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow p-5">
-                        <h3 class="text-sm font-medium text-gray-500">Pacientes activos (mes)</h3>
-                        <p class="text-2xl font-bold text-gray-900 mt-1" x-text="stats.pacientesActivos ?? '—'"></p>
+                    <div class="card bg-white fade-in fade-in-delay-4">
+                        <div class="card-body flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-emerald-600 bg-emerald-50" aria-hidden="true">👥</div>
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-medium text-gray-500">Pacientes activos (mes)</h3>
+                                <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="stats.pacientesActivos ?? '—'"></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <p class="text-sm text-gray-500" x-show="stats.periodo">Periodo: <span x-text="stats.periodo ? (stats.periodo.inicio + ' a ' + stats.periodo.fin) : ''"></span></p>
@@ -107,25 +168,13 @@
 
             <!-- Tab: Appointments -->
             <div x-show="activeTab === 'appointments'">
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="card bg-white p-6">
                     <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
                         <h2 class="text-2xl font-bold text-gray-900">Citas</h2>
                         <div class="flex items-center gap-2">
-                            <button 
-                                @click="openModalCita()"
-                                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                            >
-                                + Crear cita
-                            </button>
-                            <button 
-                                @click="appointmentViewMode = appointmentViewMode === 'calendar' ? 'list' : 'calendar'"
-                                class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
-                                x-text="appointmentViewMode === 'calendar' ? 'Vista lista' : 'Vista calendario'"
-                            >
-                            </button>
-                            <button @click="loadCitas()" class="text-blue-600 hover:text-blue-700">
-                                Actualizar
-                            </button>
+                            <button @click="openModalCita()" class="btn-primary">+ Crear cita</button>
+                            <button @click="appointmentViewMode = appointmentViewMode === 'calendar' ? 'list' : 'calendar'" class="btn-secondary" x-text="appointmentViewMode === 'calendar' ? 'Vista lista' : 'Vista calendario'"></button>
+                            <button @click="loadCitas()" class="btn-ghost">Actualizar</button>
                         </div>
                     </div>
 
@@ -133,13 +182,13 @@
                     <div x-show="appointmentViewMode === 'calendar'" class="overflow-x-auto">
                         <div class="flex justify-between items-center mb-4">
                             <div class="flex gap-2">
-                                <button @click="prevWeek()" class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100">← Semana anterior</button>
-                                <button @click="goToToday()" class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100">Hoy</button>
-                                <button @click="nextWeek()" class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100">Semana siguiente →</button>
+                                <button @click="prevWeek()" class="btn-secondary text-sm">← Semana anterior</button>
+                                <button @click="goToToday()" class="btn-secondary text-sm">Hoy</button>
+                                <button @click="nextWeek()" class="btn-secondary text-sm">Semana siguiente →</button>
                             </div>
                             <h3 class="font-semibold text-gray-800" x-text="getCalendarWeekLabel()"></h3>
                         </div>
-                        <p class="text-xs text-gray-500 mb-2">Leyenda: <span class="bg-green-100 px-1">confirmada</span> <span class="bg-gray-200 px-1">pasada</span> <span class="bg-red-100 px-1">cancelada</span> <span class="bg-yellow-100 px-1">pendiente</span> <span class="bg-orange-100 px-1">no asistió</span></p>
+                        <p class="text-xs text-gray-500 mb-2">Leyenda: <span class="badge badge-confirmada">confirmada</span> <span class="badge badge-pasada">pasada</span> <span class="badge badge-cancelada">cancelada</span> <span class="badge badge-pendiente">pendiente</span> <span class="badge badge-no-asistio">no asistió</span></p>
                         <table class="w-full border border-gray-200 text-sm" style="min-width: 800px;">
                             <thead>
                                 <tr class="bg-gray-100">
@@ -157,7 +206,7 @@
                                             <td class="border border-gray-200 p-1 align-top min-w-[120px]">
                                                 <template x-for="c in getCitasInCell(day.date, hour)" :key="c.id">
                                                     <div class="text-xs rounded p-2 mb-1 border cursor-pointer"
-                                                         :class="c.estado === 'confirmada' ? 'bg-green-100 border-green-300' : c.estado === 'pasada' ? 'bg-gray-100 border-gray-300' : c.estado === 'cancelada' ? 'bg-red-100 border-red-300' : c.estado === 'pendiente' ? 'bg-yellow-100 border-yellow-300' : 'bg-orange-100 border-orange-300'"
+                                                         :class="c.estado === 'confirmada' ? 'bg-emerald-50 border-emerald-200' : c.estado === 'pasada' ? 'bg-slate-100 border-slate-200' : c.estado === 'cancelada' ? 'bg-red-50 border-red-200' : c.estado === 'pendiente' ? 'bg-amber-50 border-amber-200' : 'bg-orange-50 border-orange-200'"
                                                          :title="(c.paciente_nombre || '') + (c.paciente_telefono ? ' · Tel: ' + c.paciente_telefono : '') + (c.tipo_sesion ? ' · ' + c.tipo_sesion : '')"
                                                          @click="openModalCita(c)">
                                                         <div class="font-medium text-gray-900" x-text="c.paciente_nombre"></div>
@@ -178,19 +227,19 @@
                     <!-- Vista lista (filtros solo en lista) -->
                     <div x-show="appointmentViewMode === 'list'">
                         <div class="mb-4 flex gap-4">
-                            <input type="date" x-model="filters.startDate" @change="loadCitas()" class="px-4 py-2 border border-gray-300 rounded-lg" placeholder="Fecha inicio">
-                            <input type="date" x-model="filters.endDate" @change="loadCitas()" class="px-4 py-2 border border-gray-300 rounded-lg" placeholder="Fecha fin">
+                            <input type="date" x-model="filters.startDate" @change="loadCitas()" class="input-modern" placeholder="Fecha inicio">
+                            <input type="date" x-model="filters.endDate" @change="loadCitas()" class="input-modern" placeholder="Fecha fin">
                         </div>
                         <div class="space-y-4">
                             <template x-for="c in citas" :key="c.id">
-                                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                                <div class="card bg-white p-4 hover:bg-gray-50/80">
                                     <div class="flex justify-between items-start">
                                         <div>
                                             <h3 class="font-semibold text-gray-900" x-text="c.paciente_nombre"></h3>
                                             <p class="text-sm text-gray-600" x-text="c.paciente_email"></p>
                                             <p x-show="c.paciente_telefono" class="text-sm text-gray-600" x-text="'Tel: ' + c.paciente_telefono"></p>
                                             <p class="text-sm text-gray-600 mt-1"><span x-text="c.fecha"></span> <span x-text="c.hora_inicio"></span> - <span x-text="c.hora_fin"></span></p>
-                                            <p class="text-xs mt-1"><span class="px-1 rounded" :class="c.estado === 'confirmada' ? 'bg-green-100' : c.estado === 'pasada' ? 'bg-gray-100' : c.estado === 'cancelada' ? 'bg-red-100' : 'bg-yellow-100'" x-text="c.estado"></span> <span x-show="c.tipo_sesion" x-text="' · ' + c.tipo_sesion"></span></p>
+                                            <p class="text-xs mt-1"><span class="badge" :class="c.estado === 'confirmada' ? 'badge-confirmada' : c.estado === 'pasada' ? 'badge-pasada' : c.estado === 'cancelada' ? 'badge-cancelada' : c.estado === 'pendiente' ? 'badge-pendiente' : 'badge-no-asistio'" x-text="c.estado"></span> <span x-show="c.tipo_sesion" x-text="' · ' + c.tipo_sesion"></span></p>
                                         </div>
                                         <div>
                                             <button @click="openModalCita(c)" class="text-blue-600 hover:underline mr-2">Editar</button>
@@ -211,7 +260,7 @@
                         <form @submit.prevent="saveModalCita()" class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Paciente *</label>
-                                <select x-model="modalCita.paciente_id" class="w-full px-4 py-2 border rounded-lg" required :disabled="!!modalCita.id">
+                                <select x-model="modalCita.paciente_id" class="input-modern" required :disabled="!!modalCita.id">
                                     <option value="">Selecciona paciente</option>
                                     <template x-for="p in listaPacientesParaCita" :key="p.id">
                                         <option :value="p.id" x-text="p.nombre + ' (' + p.email + ')'"></option>
@@ -219,17 +268,17 @@
                                 </select>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Fecha *</label><input type="date" x-model="modalCita.fecha" @change="loadSlotsCitaModal()" :min="getMinDateForNew()" class="w-full px-4 py-2 border rounded-lg" required></div>
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Hora *</label><select x-model="modalCita.hora_inicio" @change="setHoraFinFromSlot()" class="w-full px-4 py-2 border rounded-lg" required :disabled="!modalCita.fecha || slotsCitaModal.length === 0">
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Fecha *</label><input type="date" x-model="modalCita.fecha" @change="loadSlotsCitaModal()" :min="getMinDateForNew()" class="input-modern" required></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Hora *</label><select x-model="modalCita.hora_inicio" @change="setHoraFinFromSlot()" class="input-modern" required :disabled="!modalCita.fecha || slotsCitaModal.length === 0">
                                     <option value="">Elegir</option>
                                     <template x-for="s in slotsCitaModal" :key="s.hora_inicio"><option :value="s.hora_inicio" x-text="s.display || s.hora_inicio"></option></template>
                                 </select></div>
                             </div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Tipo sesión</label><select x-model="modalCita.tipo_sesion" class="w-full px-4 py-2 border rounded-lg"><option value="">—</option><option value="online">Online</option><option value="presencial">Presencial</option></select></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Notas</label><textarea x-model="modalCita.notas" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Tipo sesión</label><select x-model="modalCita.tipo_sesion" class="input-modern"><option value="">—</option><option value="online">Online</option><option value="presencial">Presencial</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Notas</label><textarea x-model="modalCita.notas" rows="2" class="input-modern"></textarea></div>
                             <div class="flex gap-2 justify-end">
-                                <button type="button" @click="modalCita.show = false" class="px-4 py-2 bg-gray-200 rounded-lg">Cancelar</button>
-                                <button type="submit" :disabled="savingModalCita" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"><span x-show="!savingModalCita">Guardar</span><span x-show="savingModalCita">Guardando...</span></button>
+                                <button type="button" @click="modalCita.show = false" class="btn-secondary">Cancelar</button>
+                                <button type="submit" :disabled="savingModalCita" class="btn-primary"><span x-show="!savingModalCita">Guardar</span><span x-show="savingModalCita">Guardando...</span></button>
                             </div>
                             <p x-show="modalCitaMessage" class="text-sm" :class="modalCitaMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="modalCitaMessage"></p>
                         </form>
@@ -244,8 +293,8 @@
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2">¿Eliminar esta cita?</h3>
                                 <p class="text-gray-600 mb-4">Esta acción no se puede deshacer. La cita se borrará permanentemente.</p>
                                 <div class="flex gap-2 justify-end">
-                                    <button @click="deleteModal.show = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancelar</button>
-                                    <button @click="deleteModal.step2 = true" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Sí, eliminar</button>
+                                    <button @click="deleteModal.show = false" class="btn-secondary">Cancelar</button>
+                                    <button @click="deleteModal.step2 = true" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">Sí, eliminar</button>
                                 </div>
                             </div>
                         </template>
@@ -253,10 +302,10 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Confirmación final</h3>
                                 <p class="text-gray-600 mb-2">Escribe <strong>ELIMINAR</strong> para confirmar:</p>
-                                <input type="text" x-model="deleteModal.confirmText" placeholder="ELIMINAR" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4" @keydown.enter.prevent="confirmDeleteCita()">
+                                <input type="text" x-model="deleteModal.confirmText" placeholder="ELIMINAR" class="input-modern mb-4" @keydown.enter.prevent="confirmDeleteCita()">
                                 <div class="flex gap-2 justify-end">
-                                    <button @click="deleteModal.show = false; deleteModal.step2 = false; deleteModal.confirmText = ''; deleteModal.id = null" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancelar</button>
-                                    <button @click="confirmDeleteCita()" :disabled="deleteModal.confirmText !== 'ELIMINAR'" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">Confirmar eliminación</button>
+                                    <button @click="deleteModal.show = false; deleteModal.step2 = false; deleteModal.confirmText = ''; deleteModal.id = null" class="btn-secondary">Cancelar</button>
+                                    <button @click="confirmDeleteCita()" :disabled="deleteModal.confirmText !== 'ELIMINAR'" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors duration-200">Confirmar eliminación</button>
                                 </div>
                             </div>
                         </template>
@@ -266,14 +315,14 @@
 
             <!-- Tab: Pacientes -->
             <div x-show="activeTab === 'pacientes'">
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="card bg-white p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold text-gray-900">Pacientes</h2>
-                        <button @click="showPacienteForm = !showPacienteForm" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">+ Nuevo paciente</button>
+                        <button @click="showPacienteForm = !showPacienteForm" class="btn-primary">+ Nuevo paciente</button>
                     </div>
                     <div class="mb-4 flex gap-2">
-                        <input type="text" x-model="pacienteBusqueda" @input.debounce.200ms="loadPacientes()" class="px-4 py-2 border border-gray-300 rounded-lg flex-1" placeholder="Buscar por nombre, email o teléfono">
-                        <select x-model="pacienteEstadoFilter" @change="loadPacientes()" class="px-4 py-2 border border-gray-300 rounded-lg">
+                        <input type="text" x-model="pacienteBusqueda" @input.debounce.200ms="loadPacientes()" class="input-modern flex-1" placeholder="Buscar por nombre, email o teléfono">
+                        <select x-model="pacienteEstadoFilter" @change="loadPacientes()" class="input-modern">
                             <option value="">Todos los estados</option>
                             <option value="activo">Activo</option>
                             <option value="en_proceso">En proceso</option>
@@ -281,33 +330,33 @@
                             <option value="inactivo">Inactivo</option>
                         </select>
                     </div>
-                    <div x-show="showPacienteForm" class="mb-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div x-show="showPacienteForm" class="mb-6 card bg-gray-50/80 p-4 border border-gray-100">
                         <h3 class="font-semibold mb-4">Nuevo paciente</h3>
                         <form @submit.prevent="createPaciente()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label><input type="text" x-model="pacienteForm.nombre" class="w-full px-4 py-2 border rounded-lg" required></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Email *</label><input type="email" x-model="pacienteForm.email" class="w-full px-4 py-2 border rounded-lg" required></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label><input type="tel" x-model="pacienteForm.telefono" class="w-full px-4 py-2 border rounded-lg"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Estado</label><select x-model="pacienteForm.estado" class="w-full px-4 py-2 border rounded-lg"><option value="activo">Activo</option><option value="en_proceso">En proceso</option><option value="alta_terapeutica">Alta terapéutica</option><option value="inactivo">Inactivo</option></select></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Precio sesión (€)</label><input type="number" step="0.01" x-model="pacienteForm.precio_sesion" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label><input type="text" x-model="pacienteForm.nombre" class="input-modern" required></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Email *</label><input type="email" x-model="pacienteForm.email" class="input-modern" required></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label><input type="tel" x-model="pacienteForm.telefono" class="input-modern"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Estado</label><select x-model="pacienteForm.estado" class="input-modern"><option value="activo">Activo</option><option value="en_proceso">En proceso</option><option value="alta_terapeutica">Alta terapéutica</option><option value="inactivo">Inactivo</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Precio sesión (€)</label><input type="number" step="0.01" x-model="pacienteForm.precio_sesion" class="input-modern"></div>
                             <div class="md:col-span-2 flex gap-2">
-                                <button type="submit" :disabled="creatingPaciente" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">Crear</button>
-                                <button type="button" @click="showPacienteForm = false" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">Cancelar</button>
+                                <button type="submit" :disabled="creatingPaciente" class="btn-primary">Crear</button>
+                                <button type="button" @click="showPacienteForm = false" class="btn-secondary">Cancelar</button>
                             </div>
                             <p x-show="pacienteMessage" class="md:col-span-2 text-sm" :class="pacienteMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="pacienteMessage"></p>
                         </form>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full border border-gray-200 text-sm">
-                            <thead><tr class="bg-gray-100"><th class="border p-2 text-left">Nombre</th><th class="border p-2 text-left">Email</th><th class="border p-2 text-left">Teléfono</th><th class="border p-2 text-left">Estado</th><th class="border p-2 text-right">Acciones</th></tr></thead>
+                    <div class="overflow-x-auto rounded-xl border border-gray-100">
+                        <table class="table-modern w-full text-sm">
+                            <thead><tr><th class="rounded-tl-xl">Nombre</th><th>Email</th><th>Teléfono</th><th>Estado</th><th class="text-right rounded-tr-xl">Acciones</th></tr></thead>
                             <tbody>
                                 <template x-for="p in pacientes" :key="p.id">
-                                    <tr class="border-b hover:bg-gray-50">
-                                        <td class="p-2 font-medium" x-text="p.nombre"></td>
-                                        <td class="p-2" x-text="p.email"></td>
-                                        <td class="p-2" x-text="p.telefono || '—'"></td>
-                                        <td class="p-2"><span class="px-2 py-0.5 rounded text-xs" :class="{ 'bg-green-100': p.estado==='activo', 'bg-yellow-100': p.estado==='en_proceso', 'bg-gray-100': p.estado==='inactivo' }" x-text="p.estado"></span></td>
-                                        <td class="p-2 text-right">
-                                            <button @click="openFichaPaciente(p.id)" class="text-blue-600 hover:underline mr-2">Ficha</button>
+                                    <tr>
+                                        <td class="font-medium" x-text="p.nombre"></td>
+                                        <td x-text="p.email"></td>
+                                        <td x-text="p.telefono || '—'"></td>
+                                        <td><span class="badge" :class="p.estado==='activo' ? 'badge-confirmada' : p.estado==='en_proceso' ? 'badge-pendiente' : p.estado==='alta_terapeutica' ? 'badge-pasada' : 'badge-pasada'" x-text="p.estado"></span></td>
+                                        <td class="text-right">
+                                            <button @click="openFichaPaciente(p.id)" class="btn-link mr-2">Ficha</button>
                                             <button @click="exportPaciente(p.id)" class="text-gray-600 hover:underline mr-2">Exportar</button>
                                             <button @click="confirmDeletePaciente(p)" class="text-red-600 hover:underline">Eliminar</button>
                                         </td>
@@ -342,8 +391,8 @@
                                     </ul>
                                 </div>
                                 <div class="flex gap-2 pt-4">
-                                    <button @click="fichaPaciente.show = false; activeTab = 'pacientes'; editarPacienteId = fichaPaciente.paciente.id" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Editar</button>
-                                    <button @click="downloadFichaJson()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">Exportar JSON</button>
+                                    <button @click="fichaPaciente.show = false; activeTab = 'pacientes'; editarPacienteId = fichaPaciente.paciente.id" class="btn-primary">Editar</button>
+                                    <button @click="downloadFichaJson()" class="btn-secondary">Exportar JSON</button>
                                 </div>
                             </div>
                         </template>
@@ -353,68 +402,31 @@
 
             <!-- Tab: Config -->
             <div x-show="activeTab === 'config'">
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="card bg-white p-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">Configuración del Negocio</h2>
                     
                     <form @submit.prevent="saveConfig()" class="space-y-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Nombre del negocio
-                            </label>
-                            <input 
-                                type="text" 
-                                x-model="config.businessName"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                required
-                            >
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del negocio</label>
+                            <input type="text" x-model="config.businessName" class="input-modern" required>
                         </div>
-
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Teléfono
-                            </label>
-                            <input 
-                                type="tel" 
-                                x-model="config.businessPhone"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                required
-                            >
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                            <input type="tel" x-model="config.businessPhone" class="input-modern" required>
                         </div>
-
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Email
-                            </label>
-                            <input 
-                                type="email" 
-                                x-model="config.businessEmail"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                required
-                            >
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" x-model="config.businessEmail" class="input-modern" required>
                         </div>
-
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Duración de citas (minutos)
-                            </label>
-                            <input 
-                                type="number" 
-                                x-model="config.appointmentDuration"
-                                min="15"
-                                step="5"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                required
-                            >
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Duración de citas (minutos)</label>
+                            <input type="number" x-model="config.appointmentDuration" min="15" step="5" class="input-modern" required>
                             <p class="text-xs text-gray-500 mt-1">
                                 Ejemplo: 50 minutos para sesiones estándar, 20 minutos para consultas cortas
                             </p>
                         </div>
 
-                        <button 
-                            type="submit"
-                            :disabled="savingConfig"
-                            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                        >
+                        <button type="submit" :disabled="savingConfig" class="btn-primary">
                             <span x-show="!savingConfig">Guardar configuración</span>
                             <span x-show="savingConfig">Guardando...</span>
                         </button>
@@ -446,13 +458,13 @@
                         <h3 class="font-semibold text-gray-900 mb-4">Configuración SMTP</h3>
                         <p class="text-sm text-gray-500 mb-4">Opcional. Si la rellenas, los emails (confirmaciones, recordatorios) se enviarán con esta cuenta. Si no, se usan variables de entorno (SMTP_*) o Resend.</p>
                         <form @submit.prevent="saveSmtp()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Host SMTP</label><input type="text" x-model="negocio.smtp_host" class="w-full px-4 py-2 border rounded-lg" placeholder="smtp.gmail.com"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Puerto</label><input type="number" x-model="negocio.smtp_port" class="w-full px-4 py-2 border rounded-lg" placeholder="587"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label><input type="text" x-model="negocio.smtp_user" class="w-full px-4 py-2 border rounded-lg" placeholder="tu@email.com"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label><input type="password" x-model="negocio.smtp_password" class="w-full px-4 py-2 border rounded-lg" placeholder="••••••••"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Email remitente</label><input type="email" x-model="negocio.email_remitente" class="w-full px-4 py-2 border rounded-lg" placeholder="noreply@tudominio.com"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Nombre remitente</label><input type="text" x-model="negocio.nombre_remitente" class="w-full px-4 py-2 border rounded-lg" placeholder="Mi Negocio"></div>
-                            <div class="md:col-span-2"><button type="submit" :disabled="savingSmtp" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">Guardar SMTP</button><span x-show="smtpMessage" class="ml-2 text-sm" :class="smtpMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="smtpMessage"></span></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Host SMTP</label><input type="text" x-model="negocio.smtp_host" class="input-modern" placeholder="smtp.gmail.com"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Puerto</label><input type="number" x-model="negocio.smtp_port" class="input-modern" placeholder="587"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label><input type="text" x-model="negocio.smtp_user" class="input-modern" placeholder="tu@email.com"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label><input type="password" x-model="negocio.smtp_password" class="input-modern" placeholder="••••••••"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Email remitente</label><input type="email" x-model="negocio.email_remitente" class="input-modern" placeholder="noreply@tudominio.com"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Nombre remitente</label><input type="text" x-model="negocio.nombre_remitente" class="input-modern" placeholder="Mi Negocio"></div>
+                            <div class="md:col-span-2"><button type="submit" :disabled="savingSmtp" class="btn-primary">Guardar SMTP</button><span x-show="smtpMessage" class="ml-2 text-sm" :class="smtpMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="smtpMessage"></span></div>
                         </form>
                     </div>
 
@@ -460,9 +472,9 @@
                         <h3 class="font-semibold text-gray-900 mb-2">Plantilla de recordatorio (email automático día anterior)</h3>
                         <p class="text-sm text-gray-500 mb-2">Variables: <code class="bg-gray-100 px-1">{{nombre_paciente}}</code>, <code class="bg-gray-100 px-1">{{fecha}}</code>, <code class="bg-gray-100 px-1">{{hora}}</code>, <code class="bg-gray-100 px-1">{{nombre_negocio}}</code></p>
                         <form @submit.prevent="savePlantillaRecordatorio()" class="space-y-4">
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Asunto</label><input type="text" x-model="plantillaRecordatorio.asunto" class="w-full px-4 py-2 border rounded-lg" placeholder="Recordatorio: cita el {{fecha}} a las {{hora}}"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Cuerpo</label><textarea x-model="plantillaRecordatorio.cuerpo" rows="5" class="w-full px-4 py-2 border rounded-lg" placeholder="Hola {{nombre_paciente}},&#10;Te recordamos tu cita en {{nombre_negocio}} el {{fecha}} a las {{hora}}.&#10;Saludos."></textarea></div>
-                            <button type="submit" :disabled="savingPlantilla" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">Guardar plantilla</button>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Asunto</label><input type="text" x-model="plantillaRecordatorio.asunto" class="input-modern" placeholder="Recordatorio: cita el {{fecha}} a las {{hora}}"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Cuerpo</label><textarea x-model="plantillaRecordatorio.cuerpo" rows="5" class="input-modern" placeholder="Hola {{nombre_paciente}}, Te recordamos tu cita en {{nombre_negocio}} el {{fecha}} a las {{hora}}. Saludos."></textarea></div>
+                            <button type="submit" :disabled="savingPlantilla" class="btn-primary">Guardar plantilla</button>
                             <span x-show="plantillaMessage" class="ml-2 text-sm" :class="plantillaMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="plantillaMessage"></span>
                         </form>
                     </div>
@@ -471,10 +483,10 @@
                         <h3 class="font-semibold text-gray-900 mb-2">Textos legales (RGPD)</h3>
                         <p class="text-sm text-gray-500 mb-4">Se muestran en la landing y el usuario debe aceptarlos para reservar. Se guarda el consentimiento (fecha, IP, versión) al hacer la reserva.</p>
                         <form @submit.prevent="saveTextosLegales()" class="space-y-4">
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Política de privacidad</label><textarea x-model="textosLegales.politica_privacidad" rows="4" class="w-full px-4 py-2 border rounded-lg" placeholder="Texto de la política de privacidad..."></textarea></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Consentimiento</label><textarea x-model="textosLegales.consentimiento" rows="4" class="w-full px-4 py-2 border rounded-lg" placeholder="Texto del consentimiento para el tratamiento de datos..."></textarea></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Versión</label><input type="text" x-model="textosLegales.version" class="w-24 px-4 py-2 border rounded-lg" placeholder="1"></div>
-                            <button type="submit" :disabled="savingTextosLegales" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">Guardar textos legales</button>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Política de privacidad</label><textarea x-model="textosLegales.politica_privacidad" rows="4" class="input-modern" placeholder="Texto de la política de privacidad..."></textarea></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Consentimiento</label><textarea x-model="textosLegales.consentimiento" rows="4" class="input-modern" placeholder="Texto del consentimiento para el tratamiento de datos..."></textarea></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Versión</label><input type="text" x-model="textosLegales.version" class="input-modern w-24" placeholder="1"></div>
+                            <button type="submit" :disabled="savingTextosLegales" class="btn-primary">Guardar textos legales</button>
                             <span x-show="textosLegalesMessage" class="ml-2 text-sm" :class="textosLegalesMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="textosLegalesMessage"></span>
                         </form>
                     </div>
@@ -483,12 +495,12 @@
 
             <!-- Tab: Hours -->
             <div x-show="activeTab === 'hours'">
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="card bg-white p-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">Horarios de Atención</h2>
                     
                     <div class="space-y-4">
                         <template x-for="(dayName, dayIndex) in ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']" :key="dayIndex">
-                            <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="card bg-white/80 border border-gray-100 p-4">
                                 <div class="flex items-center justify-between mb-3">
                                     <h3 class="font-semibold text-gray-900" x-text="dayName"></h3>
                                     <button 
@@ -502,23 +514,9 @@
                                 <div class="space-y-2">
                                     <template x-for="(range, rangeIndex) in (openingHours[dayIndex] || [])" :key="rangeIndex">
                                         <div class="flex items-center gap-2">
-                                            <input 
-                                                type="number" 
-                                                x-model="range[0]"
-                                                min="0"
-                                                max="23"
-                                                class="w-20 px-2 py-1 border border-gray-300 rounded"
-                                                placeholder="Inicio"
-                                            >
+                                            <input type="number" x-model="range[0]" min="0" max="23" class="input-modern w-20" placeholder="Inicio">
                                             <span>-</span>
-                                            <input 
-                                                type="number" 
-                                                x-model="range[1]"
-                                                min="0"
-                                                max="23"
-                                                class="w-20 px-2 py-1 border border-gray-300 rounded"
-                                                placeholder="Fin"
-                                            >
+                                            <input type="number" x-model="range[1]" min="0" max="23" class="input-modern w-20" placeholder="Fin">
                                             <span class="text-sm text-gray-600">h</span>
                                             <button 
                                                 @click="removeTimeRange(dayIndex, rangeIndex)"
@@ -536,11 +534,7 @@
                         </template>
                     </div>
 
-                    <button 
-                        @click="saveHours()"
-                        :disabled="savingHours"
-                        class="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                    >
+                    <button @click="saveHours()" :disabled="savingHours" class="mt-6 btn-primary">
                         <span x-show="!savingHours">Guardar horarios</span>
                         <span x-show="savingHours">Guardando...</span>
                     </button>
@@ -554,73 +548,41 @@
 
             <!-- Tab: Blocked -->
             <div x-show="activeTab === 'blocked'">
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="card bg-white p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold text-gray-900">Horarios Bloqueados</h2>
-                        <button 
-                            @click="showBlockForm = !showBlockForm"
-                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                        >
-                            + Bloquear horario
-                        </button>
+                        <button @click="showBlockForm = !showBlockForm" class="btn-primary">+ Bloquear horario</button>
                     </div>
 
                     <!-- Formulario para bloquear -->
-                    <div x-show="showBlockForm" class="mb-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div x-show="showBlockForm" class="mb-6 card bg-gray-50/80 border border-gray-100 p-4">
                         <h3 class="font-semibold mb-4">Nuevo bloqueo</h3>
                         <div class="grid grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                     Fecha y hora inicio
                                 </label>
-                                <input 
-                                    type="datetime-local" 
-                                    x-model="blockForm.startTime"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                >
+                                <input type="datetime-local" x-model="blockForm.startTime" class="input-modern">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Fecha y hora fin
-                                </label>
-                                <input 
-                                    type="datetime-local" 
-                                    x-model="blockForm.endTime"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                >
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha y hora fin</label>
+                                <input type="datetime-local" x-model="blockForm.endTime" class="input-modern">
                             </div>
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Motivo (opcional)
-                            </label>
-                            <input 
-                                type="text" 
-                                x-model="blockForm.reason"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                placeholder="Ej: Vacaciones, cita externa..."
-                            >
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Motivo (opcional)</label>
+                            <input type="text" x-model="blockForm.reason" class="input-modern" placeholder="Ej: Vacaciones, cita externa...">
                         </div>
                         <div class="flex gap-2">
-                            <button 
-                                @click="saveBlock()"
-                                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                            >
-                                Guardar bloqueo
-                            </button>
-                            <button 
-                                @click="showBlockForm = false; blockForm = { startTime: '', endTime: '', reason: '' }"
-                                class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
-                            >
-                                Cancelar
-                            </button>
+                            <button @click="saveBlock()" class="btn-primary">Guardar bloqueo</button>
+                            <button @click="showBlockForm = false; blockForm = { startTime: '', endTime: '', reason: '' }" class="btn-secondary">Cancelar</button>
                         </div>
                     </div>
 
                     <!-- Lista de bloqueos -->
                     <div class="space-y-4">
                         <template x-for="block in blockedSlots" :key="block.id">
-                            <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="card bg-white border border-gray-100 p-4">
                                 <div class="flex justify-between items-start">
                                     <div>
                                         <p class="font-semibold text-gray-900">
@@ -649,71 +611,34 @@
 
             <!-- Tab: Users -->
             <div x-show="activeTab === 'users'">
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="card bg-white p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold text-gray-900">Usuarios</h2>
-                        <button 
-                            @click="showUserForm = !showUserForm"
-                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                        >
-                            + Crear usuario
-                        </button>
+                        <button @click="showUserForm = !showUserForm" class="btn-primary">+ Crear usuario</button>
                     </div>
 
                     <!-- Formulario para crear usuario -->
-                    <div x-show="showUserForm" class="mb-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div x-show="showUserForm" class="mb-6 card bg-gray-50/80 border border-gray-100 p-4">
                         <h3 class="font-semibold mb-4">Nuevo usuario</h3>
                         <form @submit.prevent="createUser()" class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Nombre
-                                </label>
-                                <input 
-                                    type="text" 
-                                    x-model="userForm.name"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                    required
-                                >
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                                <input type="text" x-model="userForm.name" class="input-modern" required>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Email
-                                </label>
-                                <input 
-                                    type="email" 
-                                    x-model="userForm.email"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                    required
-                                >
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input type="email" x-model="userForm.email" class="input-modern" required>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Contraseña (mínimo 6 caracteres)
-                                </label>
-                                <input 
-                                    type="password" 
-                                    x-model="userForm.password"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                    required
-                                    minlength="6"
-                                >
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña (mínimo 6 caracteres)</label>
+                                <input type="password" x-model="userForm.password" class="input-modern" required minlength="6">
                             </div>
                             <div class="flex gap-2">
-                                <button 
-                                    type="submit"
-                                    :disabled="creatingUser"
-                                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                                >
+                                <button type="submit" :disabled="creatingUser" class="btn-primary">
                                     <span x-show="!creatingUser">Crear usuario</span>
                                     <span x-show="creatingUser">Creando...</span>
                                 </button>
-                                <button 
-                                    type="button"
-                                    @click="showUserForm = false; userForm = { name: '', email: '', password: '' }"
-                                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
-                                >
-                                    Cancelar
-                                </button>
+                                <button type="button" @click="showUserForm = false; userForm = { name: '', email: '', password: '' }" class="btn-secondary">Cancelar</button>
                             </div>
                             <div x-show="userMessage" class="p-4 rounded-lg" 
                                  :class="userMessage.includes('correctamente') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
@@ -725,7 +650,7 @@
                     <!-- Lista de usuarios -->
                     <div class="space-y-4">
                         <template x-for="user in users" :key="user.id">
-                            <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="card bg-white border border-gray-100 p-4">
                                 <div class="flex justify-between items-start">
                                     <div>
                                         <h3 class="font-semibold text-gray-900" x-text="user.name"></h3>

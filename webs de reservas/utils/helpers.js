@@ -10,14 +10,26 @@ async function getBusinessConfig() {
   return configObj;
 }
 
-// Obtener horarios de apertura desde BD
-async function getOpeningHours() {
-  const hours = await allQuery('SELECT day_of_week, start_hour, end_hour FROM opening_hours ORDER BY day_of_week, start_hour');
+// Obtener horarios de apertura desde BD (negocioId opcional: si se pasa, filtra por negocio_id)
+async function getOpeningHours(negocioId) {
+  let query = 'SELECT day_of_week, start_hour, end_hour FROM opening_hours';
+  const params = [];
+  if (negocioId != null && negocioId !== undefined) {
+    query += ' WHERE negocio_id = ?';
+    params.push(negocioId);
+  }
+  query += ' ORDER BY day_of_week, start_hour';
+  let hours;
+  try {
+    hours = await allQuery(query, params);
+  } catch (e) {
+    if (/no such column/i.test(e.message)) {
+      hours = await allQuery('SELECT day_of_week, start_hour, end_hour FROM opening_hours ORDER BY day_of_week, start_hour');
+    } else throw e;
+  }
   const hoursObj = {};
   hours.forEach(h => {
-    if (!hoursObj[h.day_of_week]) {
-      hoursObj[h.day_of_week] = [];
-    }
+    if (!hoursObj[h.day_of_week]) hoursObj[h.day_of_week] = [];
     hoursObj[h.day_of_week].push([h.start_hour, h.end_hour]);
   });
   return hoursObj;

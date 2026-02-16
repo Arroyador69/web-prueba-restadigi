@@ -10,7 +10,11 @@ const dbPath = explicitPath
   || (volumeMount ? path.join(volumeMount, 'database.db') : null)
   || path.join(__dirname, '..', 'database.db');
 if (process.env.NODE_ENV === 'production') {
-  console.log('💾 Base de datos:', dbPath, volumeMount ? '(volumen: ' + volumeMount + ')' : '(sin volumen)');
+  const onVolume = !!(explicitPath || volumeMount);
+  console.log('💾 Base de datos:', dbPath, onVolume ? '(persistente)' : '(NO PERSISTENTE)');
+  if (!onVolume) {
+    console.warn('⚠️ Los datos se perderán en cada deploy. Añade un Volume con mount /app/data y variable DATABASE_PATH=/app/data/database.db');
+  }
 }
 
 // Asegurar que el directorio existe (volumen o DATABASE_PATH)

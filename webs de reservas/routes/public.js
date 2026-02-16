@@ -4,6 +4,11 @@ const bcrypt = require('bcryptjs');
 const { runQuery, allQuery, getQuery } = require('../utils/db');
 const { getBusinessConfig, getAvailableTimeSlots, getAppointmentDuration } = require('../utils/helpers');
 const { sendConfirmationEmail, sendNotificationToPsychologist } = require('../utils/email');
+const pacientesService = require('../lib/pacientes');
+const citasService = require('../lib/citas');
+const negocioService = require('../lib/negocio');
+
+const NEGOCIO_ID = 1;
 
 // Landing pública
 router.get('/', async (req, res) => {
@@ -25,26 +30,31 @@ router.get('/api/config', async (req, res) => {
   }
 });
 
-// Obtener horas disponibles para una fecha
+// Textos legales públicos (para checkbox RGPD en landing)
+router.get('/api/textos-legales', async (req, res) => {
+  try {
+    const { getQuery } = require('../utils/db');
+    const row = await getQuery('SELECT politica_privacidad, consentimiento, version FROM textos_legales WHERE negocio_id = 1');
+    res.json(row || { politica_privacidad: '', consentimiento: '', version: '1' });
+  } catch (error) {
+    res.json({ politica_privacidad: '', consentimiento: '', version: '1' });
+  }
+});
+
+// Obtener horas disponibles para una fecha (usa tabla citas + horarios del negocio)
 router.get('/api/available-slots', async (req, res) => {
   try {
     const { date } = req.query;
     if (!date) {
       return res.status(400).json({ error: 'Fecha requerida' });
     }
-
-    const duration = await getAppointmentDuration();
-    const slots = await getAvailableTimeSlots(date, duration);
-
+    const duration = await negocioService.getDuracionCitaDefault(NEGOCIO_ID);
+    const slots = await citasService.getSlotsDisponibles(NEGOCIO_ID, date, duration);
     res.json({
-      slots: slots.map(slot => {
-        const hours = slot.getHours().toString().padStart(2, '0');
-        const minutes = slot.getMinutes().toString().padStart(2, '0');
-        return {
-          time: `${hours}:${minutes}`, // Formato HH:MM simple
-          display: slot.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-        };
-      })
+      slots: slots.map(s => ({
+        time: s.hora_inicio,
+        display: (s.display || s.hora_inicio).slice(0, 5)
+      }))
     });
   } catch (error) {
     console.error('Error obteniendo slots:', error);
@@ -52,85 +62,90 @@ router.get('/api/available-slots', async (req, res) => {
   }
 });
 
-// Crear nueva reserva
+// Crear nueva reserva (paciente + cita + consentimiento RGPD)
 router.post('/api/book', async (req, res) => {
   try {
-    const { name, email, date, time } = req.body;
+    const { name, email, date, time, telefono, acepta_legal } = req.body;
 
-    // Validaciones básicas
     if (!name || !email || !date || !time) {
       return res.status(400).json({ error: 'Todos los campos son requeridos' });
     }
+    if (!acepta_legal) {
+      return res.status(400).json({ error: 'Debes aceptar la política de privacidad y el consentimiento para reservar.' });
+    }
 
-    // Validar email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: 'Email inválido' });
     }
 
-    // Combinar fecha y hora (time viene en formato HH:MM)
-    // Crear fecha en zona horaria local
-    const [hours, minutes] = time.split(':');
+    const [hours, minutes] = String(time).split(':');
     if (!hours || !minutes) {
       return res.status(400).json({ error: 'Formato de hora inválido' });
     }
-    
-    // Crear fecha local (sin conversión de zona horaria)
-    const appointmentDateTime = new Date(`${date}T${hours}:${minutes}:00`);
-    
-    // Verificar que la fecha sea válida
-    if (isNaN(appointmentDateTime.getTime())) {
-      return res.status(400).json({ error: 'Fecha u hora inválida' });
-    }
-    
-    // Verificar que la fecha no sea pasada
-    const now = new Date();
-    if (appointmentDateTime < now) {
-      return res.status(400).json({ error: 'No se pueden reservar citas en el pasado' });
+    const hora_inicio = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+    const duration = await negocioService.getDuracionCitaDefault(NEGOCIO_ID);
+    const [h, m] = hora_inicio.split(':').map(Number);
+    const endMin = h * 60 + m + duration;
+    const hora_fin = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
+
+    const paciente = await pacientesService.getOrCreateByEmail(NEGOCIO_ID, {
+      nombre: name.trim(),
+      email: email.trim().toLowerCase(),
+      telefono: telefono ? String(telefono).trim() : null
+    });
+
+    try {
+      const { id } = await citasService.create(NEGOCIO_ID, {
+        paciente_id: paciente.id,
+        fecha: date,
+        hora_inicio,
+        hora_fin,
+        estado: 'confirmada'
+      });
+
+      const versionTexto = (await getQuery('SELECT version FROM textos_legales WHERE negocio_id = ?', [NEGOCIO_ID]))?.version || '1';
+      const ip = req.ip || req.connection?.remoteAddress || null;
+      await runQuery(
+        'INSERT INTO consentimientos (paciente_id, fecha, ip, version_texto) VALUES (?, ?, ?, ?)',
+        [paciente.id, new Date().toISOString(), ip, versionTexto]
+      );
+    } catch (err) {
+      if (err.message && err.message.includes('solapa')) {
+        return res.status(400).json({ error: 'Este horario ya no está disponible' });
+      }
+      throw err;
     }
 
-    const duration = await getAppointmentDuration();
-    const { isTimeSlotAvailable } = require('../utils/helpers');
-    
-    // Verificar disponibilidad
-    const isAvailable = await isTimeSlotAvailable(appointmentDateTime.toISOString(), duration);
-    if (!isAvailable) {
-      return res.status(400).json({ error: 'Este horario ya no está disponible' });
-    }
-
-    // Crear la cita
-    const result = await runQuery(
-      `INSERT INTO appointments (client_name, client_email, appointment_date, duration, status) 
-       VALUES (?, ?, ?, ?, 'confirmed')`,
-      [name, email, appointmentDateTime.toISOString(), duration]
-    );
-
-    // Enviar email de confirmación
     const appointment = {
-      id: result.lastID,
-      client_name: name,
-      client_email: email,
-      appointment_date: appointmentDateTime.toISOString(),
-      duration: duration
+      id: null,
+      client_name: paciente.nombre,
+      client_email: paciente.email,
+      appointment_date: `${date}T${hora_inicio}:00`,
+      duration
     };
-
-    await sendConfirmationEmail(appointment).catch(err => {
-      console.error('Error enviando email al paciente (pero la cita se guardó):', err);
-    });
-    await sendNotificationToPsychologist(appointment).catch(err => {
-      console.error('Error enviando notificación al psicólogo:', err);
-    });
+    let emailSent = false;
+    try {
+      await sendConfirmationEmail(appointment);
+      emailSent = true;
+    } catch (err) {
+      console.error('Error enviando confirmación:', err.message);
+    }
+    try {
+      await sendNotificationToPsychologist(appointment);
+    } catch (err) {
+      console.error('Error notificación psicólogo:', err.message);
+    }
 
     res.json({
       success: true,
-      message: 'Cita reservada correctamente. Revisa tu email para la confirmación.',
-      appointmentId: result.lastID
+      message: emailSent
+        ? 'Cita reservada correctamente. Revisa tu email para la confirmación.'
+        : 'Cita reservada correctamente. Si no recibes el email, revisa spam o contacta al negocio.',
+      emailSent
     });
   } catch (error) {
     console.error('Error creando reserva:', error);
-    if (error.message.includes('UNIQUE constraint')) {
-      return res.status(400).json({ error: 'Este horario ya está reservado' });
-    }
     res.status(500).json({ error: 'Error al reservar la cita' });
   }
 });

@@ -75,8 +75,12 @@ async function sendConfirmationEmail(appointment) {
       minute: '2-digit'
     });
 
+    // Con Resend el "from" debe ser el remitente verificado (EMAIL_FROM)
+    const fromAddress = (process.env.RESEND_API_KEY && process.env.EMAIL_FROM)
+      ? process.env.EMAIL_FROM
+      : config.emailConfig.from;
     const mailOptions = {
-      from: config.emailConfig.from,
+      from: fromAddress,
       to: appointment.client_email,
       subject: `Confirmación de cita - ${businessName}`,
       html: `
@@ -128,8 +132,8 @@ async function sendConfirmationEmail(appointment) {
     console.log(`✅ Email de confirmación enviado a ${appointment.client_email}`);
     return true;
   } catch (error) {
-    console.error('❌ Error enviando email de confirmación:', error);
-    return false;
+    console.error('❌ Error enviando email de confirmación a', appointment.client_email, ':', error.message || error);
+    throw error;
   }
 }
 

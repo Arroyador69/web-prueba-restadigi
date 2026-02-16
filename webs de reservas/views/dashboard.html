@@ -26,13 +26,27 @@
         <!-- Navigation Tabs -->
         <div class="bg-white border-b">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <nav class="flex space-x-8">
+                <nav class="flex flex-wrap gap-2 space-x-2">
+                    <button 
+                        @click="activeTab = 'inicio'; loadStats()"
+                        :class="activeTab === 'inicio' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                        class="py-4 px-1 font-medium"
+                    >
+                        Inicio
+                    </button>
                     <button 
                         @click="activeTab = 'appointments'"
                         :class="activeTab === 'appointments' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
                         class="py-4 px-1 font-medium"
                     >
                         Citas
+                    </button>
+                    <button 
+                        @click="activeTab = 'pacientes'; loadPacientes()"
+                        :class="activeTab === 'pacientes' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                        class="py-4 px-1 font-medium"
+                    >
+                        Pacientes
                     </button>
                     <button 
                         @click="activeTab = 'config'"
@@ -68,6 +82,29 @@
 
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Tab: Inicio (estadísticas) -->
+            <div x-show="activeTab === 'inicio'">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-lg shadow p-5">
+                        <h3 class="text-sm font-medium text-gray-500">Sesiones este mes</h3>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" x-text="stats.sesionesRealizadas ?? '—'"></p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-5">
+                        <h3 class="text-sm font-medium text-gray-500">Facturación estimada (€)</h3>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" x-text="stats.facturacionEstimada ?? '—'"></p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-5">
+                        <h3 class="text-sm font-medium text-gray-500">Cancelaciones</h3>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" x-text="stats.cancelaciones ?? '—'"></p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-5">
+                        <h3 class="text-sm font-medium text-gray-500">Pacientes activos (mes)</h3>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" x-text="stats.pacientesActivos ?? '—'"></p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500" x-show="stats.periodo">Periodo: <span x-text="stats.periodo ? (stats.periodo.inicio + ' a ' + stats.periodo.fin) : ''"></span></p>
+            </div>
+
             <!-- Tab: Appointments -->
             <div x-show="activeTab === 'appointments'">
                 <div class="bg-white rounded-lg shadow p-6">
@@ -75,7 +112,7 @@
                         <h2 class="text-2xl font-bold text-gray-900">Citas</h2>
                         <div class="flex items-center gap-2">
                             <button 
-                                @click="showCreateAppointmentForm = !showCreateAppointmentForm"
+                                @click="openModalCita()"
                                 class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
                             >
                                 + Crear cita
@@ -86,51 +123,10 @@
                                 x-text="appointmentViewMode === 'calendar' ? 'Vista lista' : 'Vista calendario'"
                             >
                             </button>
-                            <button @click="loadAppointments()" class="text-blue-600 hover:text-blue-700">
+                            <button @click="loadCitas()" class="text-blue-600 hover:text-blue-700">
                                 Actualizar
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Formulario crear cita -->
-                    <div x-show="showCreateAppointmentForm" class="mb-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
-                        <h3 class="font-semibold text-gray-900 mb-4">Nueva cita (manual)</h3>
-                        <form @submit.prevent="createAppointment()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del cliente</label>
-                                <input type="text" x-model="newAppointment.client_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required placeholder="Nombre completo">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <input type="email" x-model="newAppointment.client_email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required placeholder="email@ejemplo.com">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                                <input type="date" x-model="newAppointment.date" @change="loadSlotsForNewAppointment()" :min="getMinDateForNew()" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Hora</label>
-                                <select x-model="newAppointment.time" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required :disabled="!newAppointment.date || slotsForNewAppointment.length === 0">
-                                    <option value="">Selecciona hora</option>
-                                    <template x-for="s in slotsForNewAppointment" :key="s.time">
-                                        <option :value="s.time" x-text="s.display"></option>
-                                    </template>
-                                </select>
-                                <p x-show="newAppointment.date && slotsForNewAppointment.length === 0" class="text-sm text-amber-600 mt-1">Sin horarios libres ese día. Revisa horarios y bloqueos.</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Duración (min)</label>
-                                <input type="number" x-model="newAppointment.duration" min="15" step="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Por defecto desde config">
-                            </div>
-                            <div class="md:col-span-2 flex gap-2">
-                                <button type="submit" :disabled="creatingAppointment" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">
-                                    <span x-show="!creatingAppointment">Crear cita</span>
-                                    <span x-show="creatingAppointment">Creando...</span>
-                                </button>
-                                <button type="button" @click="showCreateAppointmentForm = false; newAppointment = { client_name: '', client_email: '', date: '', time: '', duration: '' }; slotsForNewAppointment = []" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">Cancelar</button>
-                            </div>
-                            <p x-show="createAppointmentMessage" class="md:col-span-2 text-sm rounded p-2" :class="createAppointmentMessage.includes('correctamente') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'" x-text="createAppointmentMessage"></p>
-                        </form>
                     </div>
 
                     <!-- Vista calendario semanal -->
@@ -143,6 +139,7 @@
                             </div>
                             <h3 class="font-semibold text-gray-800" x-text="getCalendarWeekLabel()"></h3>
                         </div>
+                        <p class="text-xs text-gray-500 mb-2">Leyenda: <span class="bg-green-100 px-1">confirmada</span> <span class="bg-gray-200 px-1">pasada</span> <span class="bg-red-100 px-1">cancelada</span> <span class="bg-yellow-100 px-1">pendiente</span> <span class="bg-orange-100 px-1">no asistió</span></p>
                         <table class="w-full border border-gray-200 text-sm" style="min-width: 800px;">
                             <thead>
                                 <tr class="bg-gray-100">
@@ -158,12 +155,16 @@
                                         <td class="border border-gray-200 p-1 text-gray-600 align-top" x-text="String(hour).padStart(2,'0') + ':00'"></td>
                                         <template x-for="(day, di) in getCalendarWeekDays()" :key="di">
                                             <td class="border border-gray-200 p-1 align-top min-w-[120px]">
-                                                <template x-for="apt in getAppointmentsInCell(day.date, hour)" :key="apt.id">
-                                                    <div class="text-xs bg-blue-50 border border-blue-200 rounded p-2 mb-1">
-                                                        <div class="font-medium text-gray-900" x-text="apt.client_name"></div>
-                                                        <div class="text-gray-600" x-text="formatTime(apt.appointment_date)"></div>
-                                                        <div class="text-gray-500" x-text="apt.duration + ' min'"></div>
-                                                        <button @click="openDeleteModal(apt)" class="mt-1 text-red-600 hover:underline">Eliminar</button>
+                                                <template x-for="c in getCitasInCell(day.date, hour)" :key="c.id">
+                                                    <div class="text-xs rounded p-2 mb-1 border cursor-pointer"
+                                                         :class="c.estado === 'confirmada' ? 'bg-green-100 border-green-300' : c.estado === 'pasada' ? 'bg-gray-100 border-gray-300' : c.estado === 'cancelada' ? 'bg-red-100 border-red-300' : c.estado === 'pendiente' ? 'bg-yellow-100 border-yellow-300' : 'bg-orange-100 border-orange-300'"
+                                                         :title="(c.paciente_nombre || '') + (c.paciente_telefono ? ' · Tel: ' + c.paciente_telefono : '') + (c.tipo_sesion ? ' · ' + c.tipo_sesion : '')"
+                                                         @click="openModalCita(c)">
+                                                        <div class="font-medium text-gray-900" x-text="c.paciente_nombre"></div>
+                                                        <div class="text-gray-600" x-text="c.hora_inicio"></div>
+                                                        <div x-show="c.paciente_telefono" class="text-gray-500 truncate" x-text="c.paciente_telefono"></div>
+                                                        <div x-show="c.tipo_sesion" class="text-gray-500" x-text="c.tipo_sesion"></div>
+                                                        <button @click.stop="openDeleteModal(c)" class="mt-1 text-red-600 hover:underline">Eliminar</button>
                                                     </div>
                                                 </template>
                                             </td>
@@ -177,28 +178,61 @@
                     <!-- Vista lista (filtros solo en lista) -->
                     <div x-show="appointmentViewMode === 'list'">
                         <div class="mb-4 flex gap-4">
-                            <input type="date" x-model="filters.startDate" @change="loadAppointments()" class="px-4 py-2 border border-gray-300 rounded-lg" placeholder="Fecha inicio">
-                            <input type="date" x-model="filters.endDate" @change="loadAppointments()" class="px-4 py-2 border border-gray-300 rounded-lg" placeholder="Fecha fin">
+                            <input type="date" x-model="filters.startDate" @change="loadCitas()" class="px-4 py-2 border border-gray-300 rounded-lg" placeholder="Fecha inicio">
+                            <input type="date" x-model="filters.endDate" @change="loadCitas()" class="px-4 py-2 border border-gray-300 rounded-lg" placeholder="Fecha fin">
                         </div>
                         <div class="space-y-4">
-                            <template x-for="appointment in appointments" :key="appointment.id">
+                            <template x-for="c in citas" :key="c.id">
                                 <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <h3 class="font-semibold text-gray-900" x-text="appointment.client_name"></h3>
-                                            <p class="text-sm text-gray-600" x-text="appointment.client_email"></p>
-                                            <p class="text-sm text-gray-600 mt-1">
-                                                <span x-text="formatDate(appointment.appointment_date)"></span> - 
-                                                <span x-text="formatTime(appointment.appointment_date)"></span>
-                                            </p>
-                                            <p class="text-xs text-gray-500 mt-1">Duración: <span x-text="appointment.duration"></span> min</p>
+                                            <h3 class="font-semibold text-gray-900" x-text="c.paciente_nombre"></h3>
+                                            <p class="text-sm text-gray-600" x-text="c.paciente_email"></p>
+                                            <p x-show="c.paciente_telefono" class="text-sm text-gray-600" x-text="'Tel: ' + c.paciente_telefono"></p>
+                                            <p class="text-sm text-gray-600 mt-1"><span x-text="c.fecha"></span> <span x-text="c.hora_inicio"></span> - <span x-text="c.hora_fin"></span></p>
+                                            <p class="text-xs mt-1"><span class="px-1 rounded" :class="c.estado === 'confirmada' ? 'bg-green-100' : c.estado === 'pasada' ? 'bg-gray-100' : c.estado === 'cancelada' ? 'bg-red-100' : 'bg-yellow-100'" x-text="c.estado"></span> <span x-show="c.tipo_sesion" x-text="' · ' + c.tipo_sesion"></span></p>
                                         </div>
-                                        <button @click="openDeleteModal(appointment)" class="text-red-600 hover:text-red-700 text-sm font-medium">Eliminar</button>
+                                        <div>
+                                            <button @click="openModalCita(c)" class="text-blue-600 hover:underline mr-2">Editar</button>
+                                            <button @click="openDeleteModal(c)" class="text-red-600 hover:text-red-700 text-sm font-medium">Eliminar</button>
+                                        </div>
                                     </div>
                                 </div>
                             </template>
-                            <p x-show="appointments.length === 0" class="text-gray-500 text-center py-8">No hay citas en este rango de fechas</p>
+                            <p x-show="citas.length === 0" class="text-gray-500 text-center py-8">No hay citas en este rango de fechas</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Modal crear/editar cita -->
+                <div x-show="modalCita.show" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @keydown.escape.window="modalCita.show = false">
+                    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+                        <h3 class="text-xl font-bold mb-4" x-text="modalCita.id ? 'Editar cita' : 'Nueva cita'"></h3>
+                        <form @submit.prevent="saveModalCita()" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Paciente *</label>
+                                <select x-model="modalCita.paciente_id" class="w-full px-4 py-2 border rounded-lg" required :disabled="!!modalCita.id">
+                                    <option value="">Selecciona paciente</option>
+                                    <template x-for="p in listaPacientesParaCita" :key="p.id">
+                                        <option :value="p.id" x-text="p.nombre + ' (' + p.email + ')'"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Fecha *</label><input type="date" x-model="modalCita.fecha" @change="loadSlotsCitaModal()" :min="getMinDateForNew()" class="w-full px-4 py-2 border rounded-lg" required></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Hora *</label><select x-model="modalCita.hora_inicio" @change="setHoraFinFromSlot()" class="w-full px-4 py-2 border rounded-lg" required :disabled="!modalCita.fecha || slotsCitaModal.length === 0">
+                                    <option value="">Elegir</option>
+                                    <template x-for="s in slotsCitaModal" :key="s.hora_inicio"><option :value="s.hora_inicio" x-text="s.display || s.hora_inicio"></option></template>
+                                </select></div>
+                            </div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Tipo sesión</label><select x-model="modalCita.tipo_sesion" class="w-full px-4 py-2 border rounded-lg"><option value="">—</option><option value="online">Online</option><option value="presencial">Presencial</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Notas</label><textarea x-model="modalCita.notas" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea></div>
+                            <div class="flex gap-2 justify-end">
+                                <button type="button" @click="modalCita.show = false" class="px-4 py-2 bg-gray-200 rounded-lg">Cancelar</button>
+                                <button type="submit" :disabled="savingModalCita" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"><span x-show="!savingModalCita">Guardar</span><span x-show="savingModalCita">Guardando...</span></button>
+                            </div>
+                            <p x-show="modalCitaMessage" class="text-sm" :class="modalCitaMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="modalCitaMessage"></p>
+                        </form>
                     </div>
                 </div>
 
@@ -219,10 +253,97 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Confirmación final</h3>
                                 <p class="text-gray-600 mb-2">Escribe <strong>ELIMINAR</strong> para confirmar:</p>
-                                <input type="text" x-model="deleteModal.confirmText" placeholder="ELIMINAR" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4" @keydown.enter.prevent="confirmDeleteAppointment()">
+                                <input type="text" x-model="deleteModal.confirmText" placeholder="ELIMINAR" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4" @keydown.enter.prevent="confirmDeleteCita()">
                                 <div class="flex gap-2 justify-end">
                                     <button @click="deleteModal.show = false; deleteModal.step2 = false; deleteModal.confirmText = ''; deleteModal.id = null" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancelar</button>
-                                    <button @click="confirmDeleteAppointment()" :disabled="deleteModal.confirmText !== 'ELIMINAR'" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">Confirmar eliminación</button>
+                                    <button @click="confirmDeleteCita()" :disabled="deleteModal.confirmText !== 'ELIMINAR'" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">Confirmar eliminación</button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Pacientes -->
+            <div x-show="activeTab === 'pacientes'">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">Pacientes</h2>
+                        <button @click="showPacienteForm = !showPacienteForm" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">+ Nuevo paciente</button>
+                    </div>
+                    <div class="mb-4 flex gap-2">
+                        <input type="text" x-model="pacienteBusqueda" @input.debounce.200ms="loadPacientes()" class="px-4 py-2 border border-gray-300 rounded-lg flex-1" placeholder="Buscar por nombre, email o teléfono">
+                        <select x-model="pacienteEstadoFilter" @change="loadPacientes()" class="px-4 py-2 border border-gray-300 rounded-lg">
+                            <option value="">Todos los estados</option>
+                            <option value="activo">Activo</option>
+                            <option value="en_proceso">En proceso</option>
+                            <option value="alta_terapeutica">Alta terapéutica</option>
+                            <option value="inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                    <div x-show="showPacienteForm" class="mb-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <h3 class="font-semibold mb-4">Nuevo paciente</h3>
+                        <form @submit.prevent="createPaciente()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label><input type="text" x-model="pacienteForm.nombre" class="w-full px-4 py-2 border rounded-lg" required></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Email *</label><input type="email" x-model="pacienteForm.email" class="w-full px-4 py-2 border rounded-lg" required></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label><input type="tel" x-model="pacienteForm.telefono" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Estado</label><select x-model="pacienteForm.estado" class="w-full px-4 py-2 border rounded-lg"><option value="activo">Activo</option><option value="en_proceso">En proceso</option><option value="alta_terapeutica">Alta terapéutica</option><option value="inactivo">Inactivo</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Precio sesión (€)</label><input type="number" step="0.01" x-model="pacienteForm.precio_sesion" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div class="md:col-span-2 flex gap-2">
+                                <button type="submit" :disabled="creatingPaciente" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">Crear</button>
+                                <button type="button" @click="showPacienteForm = false" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">Cancelar</button>
+                            </div>
+                            <p x-show="pacienteMessage" class="md:col-span-2 text-sm" :class="pacienteMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="pacienteMessage"></p>
+                        </form>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border border-gray-200 text-sm">
+                            <thead><tr class="bg-gray-100"><th class="border p-2 text-left">Nombre</th><th class="border p-2 text-left">Email</th><th class="border p-2 text-left">Teléfono</th><th class="border p-2 text-left">Estado</th><th class="border p-2 text-right">Acciones</th></tr></thead>
+                            <tbody>
+                                <template x-for="p in pacientes" :key="p.id">
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="p-2 font-medium" x-text="p.nombre"></td>
+                                        <td class="p-2" x-text="p.email"></td>
+                                        <td class="p-2" x-text="p.telefono || '—'"></td>
+                                        <td class="p-2"><span class="px-2 py-0.5 rounded text-xs" :class="{ 'bg-green-100': p.estado==='activo', 'bg-yellow-100': p.estado==='en_proceso', 'bg-gray-100': p.estado==='inactivo' }" x-text="p.estado"></span></td>
+                                        <td class="p-2 text-right">
+                                            <button @click="openFichaPaciente(p.id)" class="text-blue-600 hover:underline mr-2">Ficha</button>
+                                            <button @click="exportPaciente(p.id)" class="text-gray-600 hover:underline mr-2">Exportar</button>
+                                            <button @click="confirmDeletePaciente(p)" class="text-red-600 hover:underline">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                        <p x-show="pacientes.length === 0 && !loadingPacientes" class="text-gray-500 text-center py-6">No hay pacientes. Añade uno o impórtalos desde las reservas.</p>
+                    </div>
+                </div>
+                <!-- Modal ficha paciente -->
+                <div x-show="fichaPaciente.show" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @keydown.escape.window="fichaPaciente.show = false">
+                    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-xl font-bold" x-text="fichaPaciente.paciente ? fichaPaciente.paciente.nombre : ''"></h3>
+                            <button @click="fichaPaciente.show = false" class="text-gray-500 hover:text-gray-700">✕</button>
+                        </div>
+                        <template x-if="fichaPaciente.paciente">
+                            <div class="space-y-4 text-sm">
+                                <p><strong>Email:</strong> <span x-text="fichaPaciente.paciente.email"></span></p>
+                                <p x-show="fichaPaciente.paciente.telefono"><strong>Teléfono:</strong> <span x-text="fichaPaciente.paciente.telefono"></span></p>
+                                <p><strong>Estado:</strong> <span x-text="fichaPaciente.paciente.estado"></span></p>
+                                <p><strong>Total sesiones:</strong> <span x-text="fichaPaciente.totalSesiones"></span></p>
+                                <p><strong>Facturación estimada:</strong> <span x-text="fichaPaciente.facturacionEstimada + ' €'"></span></p>
+                                <p x-show="fichaPaciente.proximaCita"><strong>Próxima cita:</strong> <span x-text="fichaPaciente.proximaCita.fecha + ' ' + fichaPaciente.proximaCita.hora_inicio"></span></p>
+                                <div>
+                                    <h4 class="font-semibold mt-2">Histórico de citas</h4>
+                                    <ul class="list-disc pl-5 mt-1">
+                                        <template x-for="c in (fichaPaciente.citas || [])" :key="c.id">
+                                            <li x-text="c.fecha + ' ' + c.hora_inicio + ' - ' + c.estado"></li>
+                                        </template>
+                                    </ul>
+                                </div>
+                                <div class="flex gap-2 pt-4">
+                                    <button @click="fichaPaciente.show = false; activeTab = 'pacientes'; editarPacienteId = fichaPaciente.paciente.id" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Editar</button>
+                                    <button @click="downloadFichaJson()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">Exportar JSON</button>
                                 </div>
                             </div>
                         </template>
@@ -305,7 +426,7 @@
 
                         <div class="border-t pt-6 mt-6">
                             <h3 class="font-semibold text-gray-900 mb-2">Probar envío de emails</h3>
-                            <p class="text-sm text-gray-500 mb-3">Se enviará un email de prueba al correo del negocio (arriba). Sirve para comprobar que SMTP está bien configurado.</p>
+                            <p class="text-sm text-gray-500 mb-3">Se enviará un email de prueba al correo del negocio (arriba). Usa la configuración SMTP de abajo o la de variables de entorno.</p>
                             <button 
                                 type="button"
                                 @click="sendTestEmail()"
@@ -320,6 +441,43 @@
                                x-text="testEmailMessage"></p>
                         </div>
                     </form>
+
+                    <div class="border-t pt-6 mt-6">
+                        <h3 class="font-semibold text-gray-900 mb-4">Configuración SMTP</h3>
+                        <p class="text-sm text-gray-500 mb-4">Opcional. Si la rellenas, los emails (confirmaciones, recordatorios) se enviarán con esta cuenta. Si no, se usan variables de entorno (SMTP_*) o Resend.</p>
+                        <form @submit.prevent="saveSmtp()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Host SMTP</label><input type="text" x-model="negocio.smtp_host" class="w-full px-4 py-2 border rounded-lg" placeholder="smtp.gmail.com"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Puerto</label><input type="number" x-model="negocio.smtp_port" class="w-full px-4 py-2 border rounded-lg" placeholder="587"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label><input type="text" x-model="negocio.smtp_user" class="w-full px-4 py-2 border rounded-lg" placeholder="tu@email.com"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label><input type="password" x-model="negocio.smtp_password" class="w-full px-4 py-2 border rounded-lg" placeholder="••••••••"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Email remitente</label><input type="email" x-model="negocio.email_remitente" class="w-full px-4 py-2 border rounded-lg" placeholder="noreply@tudominio.com"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Nombre remitente</label><input type="text" x-model="negocio.nombre_remitente" class="w-full px-4 py-2 border rounded-lg" placeholder="Mi Negocio"></div>
+                            <div class="md:col-span-2"><button type="submit" :disabled="savingSmtp" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">Guardar SMTP</button><span x-show="smtpMessage" class="ml-2 text-sm" :class="smtpMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="smtpMessage"></span></div>
+                        </form>
+                    </div>
+
+                    <div class="border-t pt-6 mt-6">
+                        <h3 class="font-semibold text-gray-900 mb-2">Plantilla de recordatorio (email automático día anterior)</h3>
+                        <p class="text-sm text-gray-500 mb-2">Variables: <code class="bg-gray-100 px-1">{{nombre_paciente}}</code>, <code class="bg-gray-100 px-1">{{fecha}}</code>, <code class="bg-gray-100 px-1">{{hora}}</code>, <code class="bg-gray-100 px-1">{{nombre_negocio}}</code></p>
+                        <form @submit.prevent="savePlantillaRecordatorio()" class="space-y-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Asunto</label><input type="text" x-model="plantillaRecordatorio.asunto" class="w-full px-4 py-2 border rounded-lg" placeholder="Recordatorio: cita el {{fecha}} a las {{hora}}"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Cuerpo</label><textarea x-model="plantillaRecordatorio.cuerpo" rows="5" class="w-full px-4 py-2 border rounded-lg" placeholder="Hola {{nombre_paciente}},&#10;Te recordamos tu cita en {{nombre_negocio}} el {{fecha}} a las {{hora}}.&#10;Saludos."></textarea></div>
+                            <button type="submit" :disabled="savingPlantilla" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">Guardar plantilla</button>
+                            <span x-show="plantillaMessage" class="ml-2 text-sm" :class="plantillaMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="plantillaMessage"></span>
+                        </form>
+                    </div>
+
+                    <div class="border-t pt-6 mt-6">
+                        <h3 class="font-semibold text-gray-900 mb-2">Textos legales (RGPD)</h3>
+                        <p class="text-sm text-gray-500 mb-4">Se muestran en la landing y el usuario debe aceptarlos para reservar. Se guarda el consentimiento (fecha, IP, versión) al hacer la reserva.</p>
+                        <form @submit.prevent="saveTextosLegales()" class="space-y-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Política de privacidad</label><textarea x-model="textosLegales.politica_privacidad" rows="4" class="w-full px-4 py-2 border rounded-lg" placeholder="Texto de la política de privacidad..."></textarea></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Consentimiento</label><textarea x-model="textosLegales.consentimiento" rows="4" class="w-full px-4 py-2 border rounded-lg" placeholder="Texto del consentimiento para el tratamiento de datos..."></textarea></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Versión</label><input type="text" x-model="textosLegales.version" class="w-24 px-4 py-2 border rounded-lg" placeholder="1"></div>
+                            <button type="submit" :disabled="savingTextosLegales" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">Guardar textos legales</button>
+                            <span x-show="textosLegalesMessage" class="ml-2 text-sm" :class="textosLegalesMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="textosLegalesMessage"></span>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -589,7 +747,19 @@
     <script>
         function dashboard() {
             return {
-                activeTab: 'appointments',
+                activeTab: 'inicio',
+                stats: {},
+                citas: [],
+                pacientes: [],
+                loadingPacientes: false,
+                showPacienteForm: false,
+                pacienteForm: { nombre: '', email: '', telefono: '', estado: 'activo', precio_sesion: '' },
+                pacienteBusqueda: '',
+                pacienteEstadoFilter: '',
+                creatingPaciente: false,
+                pacienteMessage: '',
+                fichaPaciente: { show: false, paciente: null, citas: [], totalSesiones: 0, facturacionEstimada: 0, proximaCita: null },
+                editarPacienteId: null,
                 appointments: [],
                 config: {},
                 openingHours: {},
@@ -601,17 +771,11 @@
                 },
                 appointmentViewMode: 'calendar',
                 calendarWeekStart: '',
-                showCreateAppointmentForm: false,
-                newAppointment: {
-                    client_name: '',
-                    client_email: '',
-                    date: '',
-                    time: '',
-                    duration: ''
-                },
-                slotsForNewAppointment: [],
-                creatingAppointment: false,
-                createAppointmentMessage: '',
+                modalCita: { show: false, id: null, paciente_id: '', fecha: '', hora_inicio: '', hora_fin: '', tipo_sesion: '', notas: '' },
+                listaPacientesParaCita: [],
+                slotsCitaModal: [],
+                savingModalCita: false,
+                modalCitaMessage: '',
                 deleteModal: {
                     show: false,
                     step2: false,
@@ -638,16 +802,146 @@
                 userMessage: '',
                 testEmailSending: false,
                 testEmailMessage: '',
+                negocio: {},
+                plantillaRecordatorio: { asunto: '', cuerpo: '' },
+                savingSmtp: false,
+                smtpMessage: '',
+                savingPlantilla: false,
+                plantillaMessage: '',
+                textosLegales: { politica_privacidad: '', consentimiento: '', version: '1' },
+                savingTextosLegales: false,
+                textosLegalesMessage: '',
 
                 async init() {
                     this.setCalendarWeekToNow();
+                    await this.loadStats();
                     await Promise.all([
-                        this.loadAppointments(),
+                        this.loadCitas(),
                         this.loadConfig(),
                         this.loadHours(),
                         this.loadBlockedSlots(),
                         this.loadUsers()
                     ]);
+                },
+
+                async loadStats() {
+                    try {
+                        const res = await fetch('/dashboard/api/stats');
+                        const data = await res.json();
+                        this.stats = data;
+                    } catch (e) {
+                        this.stats = {};
+                    }
+                },
+
+                async loadPacientes() {
+                    this.loadingPacientes = true;
+                    try {
+                        let url = '/dashboard/api/pacientes?';
+                        if (this.pacienteEstadoFilter) url += 'estado=' + encodeURIComponent(this.pacienteEstadoFilter) + '&';
+                        if (this.pacienteBusqueda) url += 'busqueda=' + encodeURIComponent(this.pacienteBusqueda) + '&';
+                        const res = await fetch(url);
+                        const data = await res.json();
+                        this.pacientes = data.pacientes || [];
+                    } catch (e) {
+                        this.pacientes = [];
+                    } finally {
+                        this.loadingPacientes = false;
+                    }
+                },
+
+                async openFichaPaciente(id) {
+                    try {
+                        const res = await fetch('/dashboard/api/pacientes/' + id);
+                        const data = await res.json();
+                        this.fichaPaciente = {
+                            show: true,
+                            paciente: data.paciente,
+                            citas: data.citas || [],
+                            totalSesiones: data.totalSesiones || 0,
+                            facturacionEstimada: data.facturacionEstimada ?? 0,
+                            proximaCita: data.proximaCita || null
+                        };
+                    } catch (e) {
+                        alert('Error cargando ficha');
+                    }
+                },
+
+                exportPacienteJson(ficha) {
+                    if (!ficha || !ficha.paciente) return '{}';
+                    return JSON.stringify({
+                        paciente: ficha.paciente,
+                        citas: ficha.citas,
+                        totalSesiones: ficha.totalSesiones,
+                        facturacionEstimada: ficha.facturacionEstimada,
+                        proximaCita: ficha.proximaCita
+                    }, null, 2);
+                },
+
+                downloadFichaJson() {
+                    const json = this.exportPacienteJson(this.fichaPaciente);
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'paciente-' + (this.fichaPaciente.paciente ? this.fichaPaciente.paciente.id : '') + '.json';
+                    a.click();
+                },
+
+                async exportPaciente(id) {
+                    try {
+                        const res = await fetch('/dashboard/api/pacientes/' + id);
+                        const data = await res.json();
+                        const blob = new Blob([JSON.stringify({
+                            paciente: data.paciente,
+                            citas: data.citas,
+                            totalSesiones: data.totalSesiones,
+                            facturacionEstimada: data.facturacionEstimada,
+                            proximaCita: data.proximaCita
+                        }, null, 2)], { type: 'application/json' });
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = 'paciente-' + id + '.json';
+                        a.click();
+                    } catch (e) {
+                        alert('Error exportando');
+                    }
+                },
+
+                async confirmDeletePaciente(p) {
+                    if (!confirm('¿Eliminar al paciente "' + p.nombre + '"? Se eliminarán también sus datos. Esta acción no se puede deshacer.')) return;
+                    try {
+                        const res = await fetch('/dashboard/api/pacientes/' + p.id, { method: 'DELETE' });
+                        const data = await res.json();
+                        if (data.success) await this.loadPacientes();
+                        else alert(data.error || 'Error');
+                    } catch (e) {
+                        alert('Error eliminando');
+                    }
+                },
+
+                async createPaciente() {
+                    this.creatingPaciente = true;
+                    this.pacienteMessage = '';
+                    try {
+                        const res = await fetch('/dashboard/api/pacientes', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.pacienteForm)
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            this.pacienteMessage = 'Paciente creado correctamente';
+                            this.pacienteForm = { nombre: '', email: '', telefono: '', estado: 'activo', precio_sesion: '' };
+                            this.showPacienteForm = false;
+                            await this.loadPacientes();
+                        } else {
+                            this.pacienteMessage = data.error || 'Error';
+                        }
+                    } catch (e) {
+                        this.pacienteMessage = 'Error de conexión';
+                    } finally {
+                        this.creatingPaciente = false;
+                    }
                 },
 
                 setCalendarWeekToNow() {
@@ -687,12 +981,11 @@
                     return h;
                 },
 
-                getAppointmentsInCell(dayStr, hour) {
-                    return this.appointments.filter(apt => {
-                        const d = new Date(apt.appointment_date);
-                        const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
-                        const aptDateStr = y + '-' + String(m).padStart(2, '0') + '-' + String(day).padStart(2, '0');
-                        return aptDateStr === dayStr && d.getHours() === hour;
+                getCitasInCell(dayStr, hour) {
+                    return this.citas.filter(c => {
+                        if (c.fecha !== dayStr) return false;
+                        const h = parseInt(String(c.hora_inicio).split(':')[0], 10);
+                        return h === hour;
                     });
                 },
 
@@ -700,22 +993,22 @@
                     const m = new Date(this.calendarWeekStart + 'T12:00:00');
                     m.setDate(m.getDate() - 7);
                     this.calendarWeekStart = m.toISOString().slice(0, 10);
-                    this.loadAppointments();
+                    this.loadCitas();
                 },
 
                 nextWeek() {
                     const m = new Date(this.calendarWeekStart + 'T12:00:00');
                     m.setDate(m.getDate() + 7);
                     this.calendarWeekStart = m.toISOString().slice(0, 10);
-                    this.loadAppointments();
+                    this.loadCitas();
                 },
 
                 goToToday() {
                     this.setCalendarWeekToNow();
-                    this.loadAppointments();
+                    this.loadCitas();
                 },
 
-                async loadAppointments() {
+                async loadCitas() {
                     try {
                         if (this.appointmentViewMode === 'calendar' && this.calendarWeekStart) {
                             const mon = new Date(this.calendarWeekStart + 'T00:00:00');
@@ -724,17 +1017,15 @@
                             this.filters.startDate = this.calendarWeekStart;
                             this.filters.endDate = sun.toISOString().slice(0, 10);
                         }
-                        let url = '/dashboard/api/appointments';
-                        const params = [];
-                        if (this.filters.startDate) params.push('startDate=' + encodeURIComponent(this.filters.startDate));
-                        if (this.filters.endDate) params.push('endDate=' + encodeURIComponent(this.filters.endDate));
-                        if (params.length > 0) url += '?' + params.join('&');
-
-                        const response = await fetch(url);
-                        const data = await response.json();
-                        this.appointments = data.appointments || [];
+                        let url = '/dashboard/api/citas?';
+                        if (this.filters.startDate) url += 'startDate=' + encodeURIComponent(this.filters.startDate) + '&';
+                        if (this.filters.endDate) url += 'endDate=' + encodeURIComponent(this.filters.endDate) + '&';
+                        const res = await fetch(url);
+                        const data = await res.json();
+                        this.citas = data.citas || [];
                     } catch (error) {
                         console.error('Error cargando citas:', error);
+                        this.citas = [];
                     }
                 },
 
@@ -742,51 +1033,74 @@
                     return new Date().toISOString().slice(0, 10);
                 },
 
-                async loadSlotsForNewAppointment() {
-                    this.newAppointment.time = '';
-                    if (!this.newAppointment.date) {
-                        this.slotsForNewAppointment = [];
-                        return;
+                openModalCita(cita) {
+                    this.loadListaPacientesParaCita();
+                    if (cita) {
+                        this.modalCita = { show: true, id: cita.id, paciente_id: cita.paciente_id, fecha: cita.fecha, hora_inicio: cita.hora_inicio, hora_fin: cita.hora_fin, tipo_sesion: cita.tipo_sesion || '', notas: cita.notas || '' };
+                        this.slotsCitaModal = [{ hora_inicio: cita.hora_inicio, hora_fin: cita.hora_fin, display: cita.hora_inicio }];
+                    } else {
+                        this.modalCita = { show: true, id: null, paciente_id: '', fecha: '', hora_inicio: '', hora_fin: '', tipo_sesion: '', notas: '' };
+                        this.slotsCitaModal = [];
                     }
+                    this.modalCitaMessage = '';
+                },
+
+                async loadListaPacientesParaCita() {
                     try {
-                        const res = await fetch('/api/available-slots?date=' + encodeURIComponent(this.newAppointment.date));
+                        const res = await fetch('/dashboard/api/pacientes');
                         const data = await res.json();
-                        this.slotsForNewAppointment = (data.slots || []).map(s => ({ time: s.time, display: s.display }));
+                        this.listaPacientesParaCita = data.pacientes || [];
                     } catch (e) {
-                        this.slotsForNewAppointment = [];
+                        this.listaPacientesParaCita = [];
                     }
                 },
 
-                async createAppointment() {
-                    this.creatingAppointment = true;
-                    this.createAppointmentMessage = '';
+                async loadSlotsCitaModal() {
+                    this.modalCita.hora_inicio = '';
+                    this.modalCita.hora_fin = '';
+                    if (!this.modalCita.fecha) { this.slotsCitaModal = []; return; }
                     try {
-                        const dateTime = this.newAppointment.date + 'T' + this.newAppointment.time + ':00';
-                        const body = {
-                            client_name: this.newAppointment.client_name,
-                            client_email: this.newAppointment.client_email,
-                            appointment_date: dateTime
-                        };
-                        if (this.newAppointment.duration) body.duration = parseInt(this.newAppointment.duration, 10);
-                        const response = await fetch('/dashboard/api/appointments', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(body)
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            this.createAppointmentMessage = 'Cita creada correctamente';
-                            this.newAppointment = { client_name: '', client_email: '', date: '', time: '', duration: '' };
-                            this.slotsForNewAppointment = [];
-                            this.showCreateAppointmentForm = false;
-                            await this.loadAppointments();
+                        const res = await fetch('/dashboard/api/citas/slots?fecha=' + encodeURIComponent(this.modalCita.fecha));
+                        const data = await res.json();
+                        this.slotsCitaModal = (data.slots || []).map(s => ({ ...s, display: s.display || s.hora_inicio }));
+                    } catch (e) {
+                        this.slotsCitaModal = [];
+                    }
+                },
+
+                setHoraFinFromSlot() {
+                    const s = this.slotsCitaModal.find(x => x.hora_inicio === this.modalCita.hora_inicio);
+                    this.modalCita.hora_fin = s ? s.hora_fin : '';
+                },
+
+                async saveModalCita() {
+                    this.savingModalCita = true;
+                    this.modalCitaMessage = '';
+                    try {
+                        if (this.modalCita.id) {
+                            const res = await fetch('/dashboard/api/citas/' + this.modalCita.id, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ fecha: this.modalCita.fecha, hora_inicio: this.modalCita.hora_inicio, hora_fin: this.modalCita.hora_fin, tipo_sesion: this.modalCita.tipo_sesion || null, notas: this.modalCita.notas || null })
+                            });
+                            const data = await res.json();
+                            if (data.success) { this.modalCita.show = false; await this.loadCitas(); }
+                            else this.modalCitaMessage = data.error || 'Error';
                         } else {
-                            this.createAppointmentMessage = data.error || 'Error al crear la cita';
+                            if (!this.modalCita.hora_fin) this.setHoraFinFromSlot();
+                            const res = await fetch('/dashboard/api/citas', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ paciente_id: this.modalCita.paciente_id, fecha: this.modalCita.fecha, hora_inicio: this.modalCita.hora_inicio, hora_fin: this.modalCita.hora_fin, tipo_sesion: this.modalCita.tipo_sesion || null, notas: this.modalCita.notas || null, estado: 'confirmada' })
+                            });
+                            const data = await res.json();
+                            if (data.success) { this.modalCita.show = false; await this.loadCitas(); }
+                            else this.modalCitaMessage = data.error || 'Error';
                         }
-                    } catch (error) {
-                        this.createAppointmentMessage = 'Error de conexión';
+                    } catch (e) {
+                        this.modalCitaMessage = 'Error de conexión';
                     } finally {
-                        this.creatingAppointment = false;
+                        this.savingModalCita = false;
                     }
                 },
 
@@ -794,14 +1108,14 @@
                     this.deleteModal = { show: true, step2: false, confirmText: '', id: apt.id };
                 },
 
-                async confirmDeleteAppointment() {
+                async confirmDeleteCita() {
                     if (this.deleteModal.confirmText !== 'ELIMINAR' || !this.deleteModal.id) return;
                     try {
-                        const response = await fetch('/dashboard/api/appointments/' + this.deleteModal.id, { method: 'DELETE' });
+                        const response = await fetch('/dashboard/api/citas/' + this.deleteModal.id, { method: 'DELETE' });
                         const data = await response.json();
                         if (data.success) {
                             this.deleteModal = { show: false, step2: false, confirmText: '', id: null };
-                            await this.loadAppointments();
+                            await this.loadCitas();
                         } else {
                             alert(data.error || 'Error al eliminar');
                         }
@@ -813,18 +1127,84 @@
 
                 async loadConfig() {
                     try {
-                        const response = await fetch('/dashboard/api/config');
-                        const data = await response.json();
+                        const [configRes, negocioRes, plantillaRes] = await Promise.all([
+                            fetch('/dashboard/api/config'),
+                            fetch('/dashboard/api/negocio').catch(() => ({ json: () => ({}) })),
+                            fetch('/dashboard/api/plantillas/recordatorio').catch(() => ({ json: () => ({}) }))
+                        ]);
+                        const data = await configRes.json();
                         this.config = data;
-                        // Convertir openingHours a objeto con índices numéricos
                         if (data.openingHours) {
                             this.openingHours = {};
                             Object.keys(data.openingHours).forEach(key => {
                                 this.openingHours[parseInt(key)] = data.openingHours[key];
                             });
                         }
+                        const negocioData = await negocioRes.json();
+                        if (negocioData.nombre !== undefined) this.negocio = negocioData;
+                        const plantillaData = await plantillaRes.json();
+                        if (plantillaData.plantilla) {
+                            this.plantillaRecordatorio = { asunto: plantillaData.plantilla.asunto || '', cuerpo: plantillaData.plantilla.cuerpo || '' };
+                        }
+                        const textosRes = await fetch('/dashboard/api/textos-legales').catch(() => ({ json: () => ({}) }));
+                        const textosData = await textosRes.json();
+                        if (textosData.politica_privacidad !== undefined) this.textosLegales = { politica_privacidad: textosData.politica_privacidad || '', consentimiento: textosData.consentimiento || '', version: textosData.version || '1' };
                     } catch (error) {
                         console.error('Error cargando configuración:', error);
+                    }
+                },
+
+                async saveSmtp() {
+                    this.savingSmtp = true;
+                    this.smtpMessage = '';
+                    try {
+                        const res = await fetch('/dashboard/api/negocio', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.negocio)
+                        });
+                        const data = await res.json();
+                        this.smtpMessage = data.success ? 'SMTP guardado correctamente' : (data.error || 'Error');
+                    } catch (e) {
+                        this.smtpMessage = 'Error de conexión';
+                    } finally {
+                        this.savingSmtp = false;
+                    }
+                },
+
+                async savePlantillaRecordatorio() {
+                    this.savingPlantilla = true;
+                    this.plantillaMessage = '';
+                    try {
+                        const res = await fetch('/dashboard/api/plantillas', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nombre: 'recordatorio', asunto: this.plantillaRecordatorio.asunto, cuerpo: this.plantillaRecordatorio.cuerpo })
+                        });
+                        const data = await res.json();
+                        this.plantillaMessage = data.success ? 'Plantilla guardada correctamente' : (data.error || 'Error');
+                    } catch (e) {
+                        this.plantillaMessage = 'Error de conexión';
+                    } finally {
+                        this.savingPlantilla = false;
+                    }
+                },
+
+                async saveTextosLegales() {
+                    this.savingTextosLegales = true;
+                    this.textosLegalesMessage = '';
+                    try {
+                        const res = await fetch('/dashboard/api/textos-legales', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.textosLegales)
+                        });
+                        const data = await res.json();
+                        this.textosLegalesMessage = data.success ? 'Textos legales guardados correctamente' : (data.error || 'Error');
+                    } catch (e) {
+                        this.textosLegalesMessage = 'Error de conexión';
+                    } finally {
+                        this.savingTextosLegales = false;
                     }
                 },
 
@@ -872,7 +1252,7 @@
                         });
                         const data = await response.json();
                         if (data.success) {
-                            await this.loadAppointments();
+                            await this.loadCitas();
                         }
                     } catch (error) {
                         console.error('Error cancelando cita:', error);

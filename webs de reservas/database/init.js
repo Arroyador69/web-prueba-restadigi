@@ -29,12 +29,16 @@ async function initDatabase() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         client_name TEXT NOT NULL,
         client_email TEXT NOT NULL,
+        client_phone TEXT,
         appointment_date DATETIME NOT NULL,
         duration INTEGER NOT NULL DEFAULT 50,
         status TEXT DEFAULT 'confirmed',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(appointment_date)
       )`);
+      db.run(`ALTER TABLE appointments ADD COLUMN client_phone TEXT`, err => {
+        if (err && !/duplicate column name/i.test(err.message)) console.warn('Migration client_phone:', err.message);
+      });
 
       // Tabla de configuración del negocio (sobrescribe config.js desde dashboard)
       db.run(`CREATE TABLE IF NOT EXISTS business_config (

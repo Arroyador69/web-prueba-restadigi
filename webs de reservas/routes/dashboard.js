@@ -5,6 +5,12 @@ const { runQuery, getQuery, allQuery } = require('../utils/db');
 const { getBusinessConfig, getOpeningHours, getAppointmentDuration, isTimeSlotAvailable } = require('../utils/helpers');
 const { sendTestEmail } = require('../utils/email');
 const { requireAuth } = require('../middleware/auth');
+const pacientesService = require('../lib/pacientes');
+const citasService = require('../lib/citas');
+const negocioService = require('../lib/negocio');
+const { getResumenMes } = require('../lib/stats');
+const plantillasService = require('../lib/plantillas');
+const { sendTestEmailWithNegocio } = require('../lib/email-negocio');
 
 // Aplicar autenticación a todas las rutas del dashboard
 router.use(requireAuth);
@@ -74,7 +80,7 @@ router.post('/api/appointments/:id/cancel', async (req, res) => {
 // Crear cita desde el panel (centralizado con reservas)
 router.post('/api/appointments', async (req, res) => {
   try {
-    const { client_name, client_email, appointment_date, duration: bodyDuration } = req.body;
+    const { client_name, client_email, client_phone, appointment_date, duration: bodyDuration } = req.body;
 
     if (!client_name || !client_email || !appointment_date) {
       return res.status(400).json({ error: 'Nombre, email y fecha/hora son obligatorios' });
@@ -101,9 +107,9 @@ router.post('/api/appointments', async (req, res) => {
     }
 
     const result = await runQuery(
-      `INSERT INTO appointments (client_name, client_email, appointment_date, duration, status) 
-       VALUES (?, ?, ?, ?, 'confirmed')`,
-      [client_name.trim(), client_email.trim(), appointmentDateTime.toISOString(), duration]
+      `INSERT INTO appointments (client_name, client_email, client_phone, appointment_date, duration, status) 
+       VALUES (?, ?, ?, ?, ?, 'confirmed')`,
+      [client_name.trim(), client_email.trim(), (client_phone && typeof client_phone === 'string' ? client_phone.trim() : null), appointmentDateTime.toISOString(), duration]
     );
 
     res.status(201).json({
@@ -132,11 +138,266 @@ router.delete('/api/appointments/:id', async (req, res) => {
   }
 });
 
+// --- Multi-negocio: Pacientes (CRM) ---
+router.get('/api/pacientes', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const lista = await pacientesService.list(negocioId, { estado: req.query.estado, busqueda: req.query.busqueda });
+    res.json({ pacientes: lista });
+  } catch (error) {
+    console.error('Error listando pacientes:', error);
+    res.status(500).json({ error: 'Error obteniendo pacientes' });
+  }
+});
+
+router.get('/api/pacientes/:id', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const p = await pacientesService.getById(negocioId, req.params.id);
+    if (!p) return res.status(404).json({ error: 'Paciente no encontrado' });
+    const [citas, proximaCita, totalSesiones, facturacion] = await Promise.all([
+      pacientesService.getCitas(negocioId, req.params.id),
+      pacientesService.getProximaCita(negocioId, req.params.id),
+      pacientesService.getTotalSesiones(negocioId, req.params.id),
+      pacientesService.getFacturacionEstimada(negocioId, req.params.id)
+    ]);
+    res.json({
+      paciente: p,
+      citas,
+      proximaCita,
+      totalSesiones,
+      facturacionEstimada: facturacion
+    });
+  } catch (error) {
+    console.error('Error obteniendo paciente:', error);
+    res.status(500).json({ error: 'Error obteniendo paciente' });
+  }
+});
+
+router.post('/api/pacientes', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const { id } = await pacientesService.create(negocioId, req.body);
+    res.status(201).json({ success: true, id });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error creando paciente' });
+  }
+});
+
+router.put('/api/pacientes/:id', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    await pacientesService.update(negocioId, req.params.id, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error actualizando paciente' });
+  }
+});
+
+router.delete('/api/pacientes/:id', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const ok = await pacientesService.remove(negocioId, req.params.id);
+    if (!ok) return res.status(404).json({ error: 'Paciente no encontrado' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Error eliminando paciente' });
+  }
+});
+
+// --- Multi-negocio: Citas (nueva tabla) ---
+router.get('/api/citas', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const citas = await citasService.list(negocioId, {
+      startDate: req.query.startDate,
+      endDate: req.query.endDate,
+      pacienteId: req.query.pacienteId
+    });
+    res.json({ citas });
+  } catch (error) {
+    console.error('Error listando citas:', error);
+    res.status(500).json({ error: 'Error obteniendo citas' });
+  }
+});
+
+router.get('/api/citas/slots', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const fecha = req.query.fecha;
+    if (!fecha) return res.status(400).json({ error: 'fecha requerida' });
+    const duracion = parseInt(req.query.duracion, 10) || await negocioService.getDuracionCitaDefault(negocioId);
+    const slots = await citasService.getSlotsDisponibles(negocioId, fecha, duracion);
+    res.json({ slots });
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo slots' });
+  }
+});
+
+router.get('/api/citas/:id', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const cita = await citasService.getById(negocioId, req.params.id);
+    if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
+    res.json({ cita });
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo cita' });
+  }
+});
+
+router.post('/api/citas', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const { id } = await citasService.create(negocioId, req.body);
+    res.status(201).json({ success: true, id });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error creando cita' });
+  }
+});
+
+router.put('/api/citas/:id', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    await citasService.update(negocioId, req.params.id, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error actualizando cita' });
+  }
+});
+
+router.post('/api/citas/:id/cancel', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const ok = await citasService.cancel(negocioId, req.params.id);
+    if (!ok) return res.status(404).json({ error: 'Cita no encontrada' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Error cancelando cita' });
+  }
+});
+
+router.delete('/api/citas/:id', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const ok = await citasService.remove(negocioId, req.params.id);
+    if (!ok) return res.status(404).json({ error: 'Cita no encontrada' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Error eliminando cita' });
+  }
+});
+
+// --- Estadísticas dashboard ---
+router.get('/api/stats', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const resumen = await getResumenMes(negocioId);
+    res.json(resumen);
+  } catch (error) {
+    console.error('Error obteniendo estadísticas:', error);
+    res.status(500).json({ error: 'Error obteniendo estadísticas' });
+  }
+});
+
+// --- Negocio (config) ---
+router.get('/api/negocio', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const negocio = await negocioService.getById(negocioId);
+    if (!negocio) return res.status(404).json({ error: 'Negocio no encontrado' });
+    const openingHours = await getOpeningHours(negocioId);
+    res.json({ ...negocio, openingHours });
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo negocio' });
+  }
+});
+
+router.post('/api/negocio', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    await negocioService.update(negocioId, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error actualizando negocio' });
+  }
+});
+
+// Plantillas de email
+router.get('/api/plantillas', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const list = await plantillasService.list(negocioId);
+    res.json({ plantillas: list });
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo plantillas' });
+  }
+});
+
+router.get('/api/plantillas/:nombre', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const p = await plantillasService.getByName(negocioId, req.params.nombre);
+    if (!p) return res.status(404).json({ error: 'Plantilla no encontrada' });
+    res.json({ plantilla: p });
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo plantilla' });
+  }
+});
+
+router.post('/api/plantillas', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const { nombre, asunto, cuerpo } = req.body;
+    if (!nombre) return res.status(400).json({ error: 'Nombre de plantilla requerido' });
+    const { id } = await plantillasService.upsert(negocioId, nombre, asunto || '', cuerpo || '');
+    res.json({ success: true, id });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error guardando plantilla' });
+  }
+});
+
+// Textos legales (RGPD)
+router.get('/api/textos-legales', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const row = await getQuery('SELECT * FROM textos_legales WHERE negocio_id = ?', [negocioId]);
+    res.json(row || { politica_privacidad: '', consentimiento: '', version: '1' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo textos legales' });
+  }
+});
+
+router.post('/api/textos-legales', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const { politica_privacidad, consentimiento, version } = req.body;
+    const pol = politica_privacidad || '';
+    const cons = consentimiento || '';
+    const ver = version || '1';
+    const existing = await getQuery('SELECT id FROM textos_legales WHERE negocio_id = ?', [negocioId]);
+    if (existing) {
+      await runQuery(
+        'UPDATE textos_legales SET politica_privacidad = ?, consentimiento = ?, version = ?, updated_at = CURRENT_TIMESTAMP WHERE negocio_id = ?',
+        [pol, cons, ver, negocioId]
+      );
+    } else {
+      await runQuery(
+        'INSERT INTO textos_legales (negocio_id, politica_privacidad, consentimiento, version) VALUES (?, ?, ?, ?)',
+        [negocioId, pol, cons, ver]
+      );
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Error guardando textos legales' });
+  }
+});
+
 // Obtener configuración del negocio
 router.get('/api/config', async (req, res) => {
   try {
     const config = await getBusinessConfig();
-    const openingHours = await getOpeningHours();
+    const negocioId = req.negocioId || 1;
+    const openingHours = await getOpeningHours(negocioId);
     const duration = await getAppointmentDuration();
     
     res.json({
@@ -178,7 +439,8 @@ router.post('/api/config', async (req, res) => {
 // Obtener horarios de apertura
 router.get('/api/opening-hours', async (req, res) => {
   try {
-    const hours = await getOpeningHours();
+    const negocioId = req.negocioId || 1;
+    const hours = await getOpeningHours(negocioId);
     res.json({ openingHours: hours });
   } catch (error) {
     res.status(500).json({ error: 'Error obteniendo horarios' });
@@ -189,19 +451,31 @@ router.get('/api/opening-hours', async (req, res) => {
 router.post('/api/opening-hours', async (req, res) => {
   try {
     const { openingHours } = req.body;
+    const negocioId = req.negocioId || 1;
 
-    // Eliminar horarios existentes
-    await runQuery('DELETE FROM opening_hours');
+    // Eliminar horarios existentes de este negocio (si tiene columna negocio_id)
+    try {
+      await runQuery('DELETE FROM opening_hours WHERE negocio_id = ?', [negocioId]);
+    } catch (_) {
+      await runQuery('DELETE FROM opening_hours');
+    }
 
     // Insertar nuevos horarios
     for (const [day, ranges] of Object.entries(openingHours)) {
       if (Array.isArray(ranges) && ranges.length > 0) {
         for (const range of ranges) {
           if (Array.isArray(range) && range.length === 2) {
-            await runQuery(
-              'INSERT INTO opening_hours (day_of_week, start_hour, end_hour) VALUES (?, ?, ?)',
-              [parseInt(day), range[0], range[1]]
-            );
+            try {
+              await runQuery(
+                'INSERT INTO opening_hours (negocio_id, day_of_week, start_hour, end_hour) VALUES (?, ?, ?, ?)',
+                [negocioId, parseInt(day), range[0], range[1]]
+              );
+            } catch (e) {
+              await runQuery(
+                'INSERT INTO opening_hours (day_of_week, start_hour, end_hour) VALUES (?, ?, ?)',
+                [parseInt(day), range[0], range[1]]
+              );
+            }
           }
         }
       }
@@ -218,18 +492,15 @@ router.post('/api/opening-hours', async (req, res) => {
 router.get('/api/blocked-slots', async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    
-    let query = 'SELECT * FROM blocked_slots';
-    const params = [];
-
+    const negocioId = req.negocioId || 1;
+    let query = 'SELECT * FROM blocked_slots WHERE negocio_id = ?';
+    const params = [negocioId];
     if (startDate && endDate) {
-      query += ` WHERE start_time >= ? AND end_time <= ?`;
+      query += ' AND start_time >= ? AND end_time <= ?';
       params.push(startDate, endDate);
     }
-
     query += ' ORDER BY start_time ASC';
-
-    const slots = await allQuery(query, params);
+    const slots = await allQuery(query, params).catch(() => allQuery('SELECT * FROM blocked_slots ORDER BY start_time ASC'));
     res.json({ blockedSlots: slots });
   } catch (error) {
     res.status(500).json({ error: 'Error obteniendo slots bloqueados' });
@@ -240,16 +511,21 @@ router.get('/api/blocked-slots', async (req, res) => {
 router.post('/api/blocked-slots', async (req, res) => {
   try {
     const { startTime, endTime, reason } = req.body;
-
+    const negocioId = req.negocioId || 1;
     if (!startTime || !endTime) {
       return res.status(400).json({ error: 'Fecha de inicio y fin requeridas' });
     }
-
-    await runQuery(
-      'INSERT INTO blocked_slots (start_time, end_time, reason) VALUES (?, ?, ?)',
-      [startTime, endTime, reason || null]
-    );
-
+    try {
+      await runQuery(
+        'INSERT INTO blocked_slots (negocio_id, start_time, end_time, reason) VALUES (?, ?, ?, ?)',
+        [negocioId, startTime, endTime, reason || null]
+      );
+    } catch (e) {
+      await runQuery(
+        'INSERT INTO blocked_slots (start_time, end_time, reason) VALUES (?, ?, ?)',
+        [startTime, endTime, reason || null]
+      );
+    }
     res.json({ success: true, message: 'Horario bloqueado correctamente' });
   } catch (error) {
     console.error('Error bloqueando slot:', error);
@@ -260,7 +536,12 @@ router.post('/api/blocked-slots', async (req, res) => {
 // Eliminar slot bloqueado
 router.delete('/api/blocked-slots/:id', async (req, res) => {
   try {
-    await runQuery('DELETE FROM blocked_slots WHERE id = ?', [req.params.id]);
+    const negocioId = req.negocioId || 1;
+    try {
+      await runQuery('DELETE FROM blocked_slots WHERE id = ? AND negocio_id = ?', [req.params.id, negocioId]);
+    } catch (_) {
+      await runQuery('DELETE FROM blocked_slots WHERE id = ?', [req.params.id]);
+    }
     res.json({ success: true, message: 'Bloqueo eliminado correctamente' });
   } catch (error) {
     res.status(500).json({ error: 'Error eliminando bloqueo' });
@@ -287,10 +568,18 @@ router.post('/api/users', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    await runQuery(
-      'INSERT INTO users (email, password, name) VALUES (?, ?, ?)',
-      [email, hashedPassword, name]
-    );
+    const negocioId = req.negocioId != null ? req.negocioId : 1;
+    try {
+      await runQuery(
+        'INSERT INTO users (email, password, name, negocio_id) VALUES (?, ?, ?, ?)',
+        [email, hashedPassword, name, negocioId]
+      );
+    } catch (e) {
+      await runQuery(
+        'INSERT INTO users (email, password, name) VALUES (?, ?, ?)',
+        [email, hashedPassword, name]
+      );
+    }
 
     res.json({ success: true, message: 'Usuario creado correctamente' });
   } catch (error) {
@@ -309,27 +598,27 @@ router.get('/api/users', async (req, res) => {
   }
 });
 
-// Enviar email de prueba (Resend o SMTP)
+// Enviar email de prueba (SMTP del negocio o Resend/env)
 router.post('/api/test-email', async (req, res) => {
   try {
-    const useResend = !!process.env.RESEND_API_KEY;
-    if (!useResend && (!process.env.SMTP_USER || !process.env.SMTP_PASS)) {
-      return res.status(400).json({
-        error: 'Configura Resend (RESEND_API_KEY en Railway) o SMTP (SMTP_USER y SMTP_PASS). Ver EMAIL_SIN_DOMINIO.md.'
-      });
-    }
-    // Destino: email del negocio (donde quieres recibir la prueba). EMAIL_FROM es el remitente, no el destinatario.
-    let to = null;
-    try {
-      const businessConfig = await getBusinessConfig();
-      to = (businessConfig.businessEmail || '').trim() || null;
-    } catch (e) {
-      console.warn('No se pudo leer config del negocio:', e.message);
-    }
+    const negocioId = req.negocioId || 1;
+    const negocio = await negocioService.getById(negocioId);
+    const to = (negocio?.email || (await getBusinessConfig()).businessEmail || '').trim();
     if (!to) {
-      return res.status(400).json({ error: 'Guarda el Email del negocio arriba y pulsa «Guardar configuración» antes de enviar la prueba.' });
+      return res.status(400).json({ error: 'Guarda el Email del negocio y pulsa «Guardar» antes de enviar la prueba.' });
     }
-    await sendTestEmail(to);
+    const useNegocioSmtp = negocio?.smtp_host && negocio?.smtp_user && negocio?.smtp_password;
+    if (useNegocioSmtp) {
+      await sendTestEmailWithNegocio(negocio, to);
+    } else {
+      const useResend = !!process.env.RESEND_API_KEY;
+      if (!useResend && (!process.env.SMTP_USER || !process.env.SMTP_PASS)) {
+        return res.status(400).json({
+          error: 'Configura SMTP en la sección de abajo (Host, Usuario, Contraseña) o usa Resend/SMTP en variables de entorno.'
+        });
+      }
+      await sendTestEmail(to);
+    }
     res.json({ success: true, message: `Email de prueba enviado a ${to}. Revisa la bandeja (y spam).` });
   } catch (error) {
     const msg = error.message || error.response || (error.responseCode ? `Código ${error.responseCode}` : '') || '';

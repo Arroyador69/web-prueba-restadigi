@@ -29,10 +29,11 @@ router.post('/login', requireGuest, async (req, res) => {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    // Crear sesión
+    // Crear sesión (negocio_id para multi-negocio)
     req.session.userId = user.id;
     req.session.userEmail = user.email;
     req.session.userName = user.name;
+    req.session.negocioId = user.negocio_id != null ? user.negocio_id : 1;
 
     res.json({ 
       success: true, 

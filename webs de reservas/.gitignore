@@ -28,3 +28,6 @@ Thumbs.db
 # Archivos temporales
 *.tmp
 *.temp
+
+# Imágenes subidas (landing)
+public/uploads/

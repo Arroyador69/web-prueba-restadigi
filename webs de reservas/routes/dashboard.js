@@ -1,7 +1,31 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const { runQuery, getQuery, allQuery } = require('../utils/db');
+
+// Subida de imágenes para la landing: guardar en public/uploads/landing
+const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'uploads', 'landing');
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+const uploadLanding = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+    filename: (req, file, cb) => {
+      const ext = (path.extname(file.originalname) || '').toLowerCase() || '.jpg';
+      const safe = /^\.(jpe?g|png|gif|webp)$/i.test(ext) ? ext : '.jpg';
+      cb(null, `landing-${Date.now()}-${Math.random().toString(36).slice(2, 10)}${safe}`);
+    }
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  fileFilter: (req, file, cb) => {
+    const ok = /^image\/(jpe?g|png|gif|webp)$/i.test(file.mimetype);
+    cb(null, !!ok);
+  }
+});
 const { getBusinessConfig, getOpeningHours, getAppointmentDuration, isTimeSlotAvailable } = require('../utils/helpers');
 const { sendTestEmail } = require('../utils/email');
 const { requireAuth } = require('../middleware/auth');
@@ -464,6 +488,19 @@ router.post('/api/landing', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Error guardando landing' });
+  }
+});
+
+// Subir imagen para la landing (hero o about). Devuelve la URL pública.
+router.post('/api/upload-landing-image', uploadLanding.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se envió ninguna imagen. Usa un archivo JPG, PNG, GIF o WebP (máx. 5 MB).' });
+    }
+    const url = '/uploads/landing/' + req.file.filename;
+    res.json({ url });
+  } catch (error) {
+    res.status(500).json({ error: 'Error subiendo la imagen' });
   }
 });
 

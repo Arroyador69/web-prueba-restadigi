@@ -321,15 +321,21 @@
                         <h2 class="text-2xl font-bold text-gray-900">Pacientes</h2>
                         <button @click="showPacienteForm = !showPacienteForm" class="btn-primary">+ Nuevo paciente</button>
                     </div>
-                    <div class="mb-4 flex gap-2">
-                        <input type="text" x-model="pacienteBusqueda" @input.debounce.200ms="loadPacientes()" class="input-modern flex-1" placeholder="Buscar por nombre, email o teléfono">
-                        <select x-model="pacienteEstadoFilter" @change="loadPacientes()" class="input-modern">
-                            <option value="">Todos los estados</option>
-                            <option value="activo">Activo</option>
-                            <option value="en_proceso">En proceso</option>
-                            <option value="alta_terapeutica">Alta terapéutica</option>
-                            <option value="inactivo">Inactivo</option>
-                        </select>
+                    <div class="mb-5 space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">Buscar paciente</label>
+                        <div class="flex flex-wrap gap-3 items-center">
+                            <input type="text" x-model="pacienteBusqueda" @input.debounce.200ms="loadPacientes()" class="input-modern min-w-0 flex-1 sm:min-w-[280px] py-2.5 text-base" placeholder="Nombre, email o teléfono del cliente...">
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="text-sm text-gray-500 whitespace-nowrap">Estado:</span>
+                                <select x-model="pacienteEstadoFilter" @change="loadPacientes()" class="input-modern w-[180px]">
+                                    <option value="">Todos los estados</option>
+                                    <option value="activo">Activo</option>
+                                    <option value="en_proceso">En proceso</option>
+                                    <option value="alta_terapeutica">Alta terapéutica</option>
+                                    <option value="inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div x-show="showPacienteForm" class="mb-6 card bg-gray-50/80 p-4 border border-gray-100">
                         <h3 class="font-semibold mb-4">Nuevo paciente</h3>
@@ -358,6 +364,7 @@
                                         <td><span class="badge" :class="p.estado==='activo' ? 'badge-confirmada' : p.estado==='en_proceso' ? 'badge-pendiente' : p.estado==='alta_terapeutica' ? 'badge-pasada' : 'badge-pasada'" x-text="p.estado"></span></td>
                                         <td class="text-right">
                                             <button @click="openFichaPaciente(p.id)" class="btn-link mr-2">Ficha</button>
+                                            <button @click="openEditPaciente(p)" class="btn-link mr-2">Editar</button>
                                             <button @click="exportPaciente(p.id)" class="text-gray-600 hover:underline mr-2">Exportar</button>
                                             <button @click="confirmDeletePaciente(p)" class="text-red-600 hover:underline">Eliminar</button>
                                         </td>
@@ -392,11 +399,31 @@
                                     </ul>
                                 </div>
                                 <div class="flex gap-2 pt-4">
-                                    <button @click="fichaPaciente.show = false; activeTab = 'pacientes'; editarPacienteId = fichaPaciente.paciente.id" class="btn-primary">Editar</button>
+                                    <button @click="fichaPaciente.show = false; openEditPaciente(fichaPaciente.paciente)" class="btn-primary">Editar</button>
                                     <button @click="downloadFichaJson()" class="btn-secondary">Exportar JSON</button>
                                 </div>
                             </div>
                         </template>
+                    </div>
+                </div>
+
+                <!-- Modal editar paciente -->
+                <div x-show="editPacienteModal.show" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @keydown.escape.window="editPacienteModal.show = false">
+                    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+                        <h3 class="text-xl font-bold mb-4">Editar paciente</h3>
+                        <p class="text-sm text-gray-500 mb-4">Corrige los datos si hubo un error al crear la reserva o el paciente.</p>
+                        <form @submit.prevent="saveEditPaciente()" class="space-y-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label><input type="text" x-model="editPacienteForm.nombre" class="input-modern" required></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Email *</label><input type="email" x-model="editPacienteForm.email" class="input-modern" required></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label><input type="tel" x-model="editPacienteForm.telefono" class="input-modern"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Estado</label><select x-model="editPacienteForm.estado" class="input-modern"><option value="activo">Activo</option><option value="en_proceso">En proceso</option><option value="alta_terapeutica">Alta terapéutica</option><option value="inactivo">Inactivo</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Precio sesión (€)</label><input type="number" step="0.01" x-model="editPacienteForm.precio_sesion" class="input-modern"></div>
+                            <div class="flex gap-2 pt-2">
+                                <button type="button" @click="editPacienteModal.show = false" class="btn-secondary">Cancelar</button>
+                                <button type="submit" :disabled="savingEditPaciente" class="btn-primary"><span x-show="!savingEditPaciente">Guardar cambios</span><span x-show="savingEditPaciente">Guardando...</span></button>
+                            </div>
+                            <p x-show="editPacienteMessage" class="text-sm" :class="editPacienteMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="editPacienteMessage"></p>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -412,7 +439,21 @@
                             <div class="space-y-4">
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Título principal</label><input type="text" x-model="landing.hero_title" class="input-modern" placeholder="Ej: Bienvenido a tu espacio de bienestar"></div>
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Subtítulo</label><textarea x-model="landing.hero_subtitle" rows="2" class="input-modern" placeholder="Una frase que describa tu consulta y la reserva online"></textarea></div>
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1">URL imagen cabecera (opcional)</label><input type="url" x-model="landing.hero_image_url" class="input-modern" placeholder="https://..."></div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Imagen cabecera (opcional)</label>
+                                    <div class="flex flex-wrap items-center gap-2 mt-1">
+                                        <input type="file" @change="uploadLandingImage($event, 'hero')" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" id="file-hero">
+                                        <button type="button" @click="document.getElementById('file-hero').click()" :disabled="uploadingImageHero" class="btn-secondary text-sm">
+                                            <span x-show="!uploadingImageHero">Subir desde el ordenador</span>
+                                            <span x-show="uploadingImageHero">Subiendo...</span>
+                                        </button>
+                                        <span class="text-xs text-gray-500">JPG, PNG, GIF o WebP (máx. 5 MB)</span>
+                                    </div>
+                                    <input type="url" x-model="landing.hero_image_url" class="input-modern mt-2" placeholder="O pega aquí una URL de imagen">
+                                    <div x-show="landing.hero_image_url" class="mt-2">
+                                        <img :src="landing.hero_image_url" alt="Vista previa" class="rounded-lg border border-gray-200 max-h-24 object-cover" @error="$el.style.display='none'">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="border-b border-gray-100 pb-6">
@@ -420,7 +461,21 @@
                             <div class="space-y-4">
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Título</label><input type="text" x-model="landing.about_title" class="input-modern" placeholder="Sobre la consulta"></div>
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Texto</label><textarea x-model="landing.about_text" rows="4" class="input-modern" placeholder="Describe tu enfoque, primera sesión, etc."></textarea></div>
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1">URL imagen (opcional)</label><input type="url" x-model="landing.about_image_url" class="input-modern" placeholder="https://..."></div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Imagen del bloque (opcional)</label>
+                                    <div class="flex flex-wrap items-center gap-2 mt-1">
+                                        <input type="file" @change="uploadLandingImage($event, 'about')" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" id="file-about">
+                                        <button type="button" @click="document.getElementById('file-about').click()" :disabled="uploadingImageAbout" class="btn-secondary text-sm">
+                                            <span x-show="!uploadingImageAbout">Subir desde el ordenador</span>
+                                            <span x-show="uploadingImageAbout">Subiendo...</span>
+                                        </button>
+                                        <span class="text-xs text-gray-500">JPG, PNG, GIF o WebP (máx. 5 MB)</span>
+                                    </div>
+                                    <input type="url" x-model="landing.about_image_url" class="input-modern mt-2" placeholder="O pega aquí una URL de imagen">
+                                    <div x-show="landing.about_image_url" class="mt-2">
+                                        <img :src="landing.about_image_url" alt="Vista previa" class="rounded-lg border border-gray-200 max-h-24 object-cover" @error="$el.style.display='none'">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div>
@@ -719,6 +774,10 @@
                 pacienteMessage: '',
                 fichaPaciente: { show: false, paciente: null, citas: [], totalSesiones: 0, facturacionEstimada: 0, proximaCita: null },
                 editarPacienteId: null,
+                editPacienteModal: { show: false },
+                editPacienteForm: { nombre: '', email: '', telefono: '', estado: 'activo', precio_sesion: '' },
+                savingEditPaciente: false,
+                editPacienteMessage: '',
                 appointments: [],
                 config: {},
                 openingHours: {},
@@ -773,6 +832,8 @@
                 landing: { hero_title: '', hero_subtitle: '', hero_image_url: '', about_title: '', about_text: '', about_image_url: '', cta_text: 'Reservar cita', sections: [] },
                 savingLanding: false,
                 landingMessage: '',
+                uploadingImageHero: false,
+                uploadingImageAbout: false,
 
                 async init() {
                     this.setCalendarWeekToNow();
@@ -810,6 +871,45 @@
                         this.pacientes = [];
                     } finally {
                         this.loadingPacientes = false;
+                    }
+                },
+
+                openEditPaciente(p) {
+                    this.fichaPaciente.show = false;
+                    this.editPacienteModal = { show: true, pacienteId: p.id };
+                    this.editPacienteForm = {
+                        nombre: p.nombre || '',
+                        email: p.email || '',
+                        telefono: p.telefono || '',
+                        estado: p.estado || 'activo',
+                        precio_sesion: p.precio_sesion != null ? p.precio_sesion : ''
+                    };
+                    this.editPacienteMessage = '';
+                },
+
+                async saveEditPaciente() {
+                    const id = this.editPacienteModal.pacienteId;
+                    if (!id) return;
+                    this.savingEditPaciente = true;
+                    this.editPacienteMessage = '';
+                    try {
+                        const res = await fetch('/dashboard/api/pacientes/' + id, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.editPacienteForm)
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            this.editPacienteModal.show = false;
+                            this.editPacienteMessage = 'Paciente actualizado correctamente';
+                            await this.loadPacientes();
+                        } else {
+                            this.editPacienteMessage = data.error || 'Error al guardar';
+                        }
+                    } catch (e) {
+                        this.editPacienteMessage = 'Error de conexión';
+                    } finally {
+                        this.savingEditPaciente = false;
                     }
                 },
 
@@ -1205,6 +1305,32 @@
                         this.landingMessage = 'Error de conexión';
                     } finally {
                         this.savingLanding = false;
+                    }
+                },
+
+                async uploadLandingImage(event, field) {
+                    const file = event.target.files && event.target.files[0];
+                    if (!file) return;
+                    const isHero = field === 'hero';
+                    if (isHero) this.uploadingImageHero = true; else this.uploadingImageAbout = true;
+                    this.landingMessage = '';
+                    try {
+                        const form = new FormData();
+                        form.append('image', file);
+                        const res = await fetch('/dashboard/api/upload-landing-image', { method: 'POST', body: form });
+                        const data = await res.json();
+                        if (data.url) {
+                            if (isHero) this.landing.hero_image_url = data.url;
+                            else this.landing.about_image_url = data.url;
+                            this.landingMessage = 'Imagen subida. Guarda la landing para aplicar.';
+                        } else {
+                            this.landingMessage = data.error || 'Error subiendo la imagen';
+                        }
+                    } catch (e) {
+                        this.landingMessage = 'Error de conexión al subir';
+                    } finally {
+                        if (isHero) this.uploadingImageHero = false; else this.uploadingImageAbout = false;
+                        event.target.value = '';
                     }
                 },
 

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { runQuery, getQuery, allQuery } = require('../utils/db');
-const { getBusinessConfig, getOpeningHours, getAppointmentDuration } = require('../utils/helpers');
+const { getBusinessConfig, getOpeningHours, getAppointmentDuration, isTimeSlotAvailable } = require('../utils/helpers');
 const { sendTestEmail } = require('../utils/email');
 const { requireAuth } = require('../middleware/auth');
 
@@ -24,7 +24,8 @@ router.get('/api/appointments', async (req, res) => {
 
     if (startDate && endDate) {
       query += ` AND appointment_date >= ? AND appointment_date <= ?`;
-      params.push(startDate, endDate);
+      const endOfDay = endDate.length === 10 ? endDate + 'T23:59:59.999Z' : endDate;
+      params.push(startDate.length === 10 ? startDate + 'T00:00:00.000Z' : startDate, endOfDay);
     } else {
       // Por defecto, mostrar próximas 2 semanas
       const start = new Date();
@@ -57,7 +58,7 @@ router.get('/api/appointments/:id', async (req, res) => {
   }
 });
 
-// Cancelar una cita
+// Cancelar una cita (marca como cancelada)
 router.post('/api/appointments/:id/cancel', async (req, res) => {
   try {
     await runQuery(
@@ -67,6 +68,67 @@ router.post('/api/appointments/:id/cancel', async (req, res) => {
     res.json({ success: true, message: 'Cita cancelada correctamente' });
   } catch (error) {
     res.status(500).json({ error: 'Error cancelando cita' });
+  }
+});
+
+// Crear cita desde el panel (centralizado con reservas)
+router.post('/api/appointments', async (req, res) => {
+  try {
+    const { client_name, client_email, appointment_date, duration: bodyDuration } = req.body;
+
+    if (!client_name || !client_email || !appointment_date) {
+      return res.status(400).json({ error: 'Nombre, email y fecha/hora son obligatorios' });
+    }
+
+    const duration = bodyDuration ? parseInt(bodyDuration, 10) : await getAppointmentDuration();
+    if (isNaN(duration) || duration < 5) {
+      return res.status(400).json({ error: 'Duración no válida' });
+    }
+
+    const appointmentDateTime = new Date(appointment_date);
+    if (isNaN(appointmentDateTime.getTime())) {
+      return res.status(400).json({ error: 'Fecha y hora no válidas' });
+    }
+
+    const now = new Date();
+    if (appointmentDateTime < now) {
+      return res.status(400).json({ error: 'No se pueden crear citas en el pasado' });
+    }
+
+    const isAvailable = await isTimeSlotAvailable(appointmentDateTime.toISOString(), duration);
+    if (!isAvailable) {
+      return res.status(400).json({ error: 'Ese horario no está disponible (ocupado o bloqueado)' });
+    }
+
+    const result = await runQuery(
+      `INSERT INTO appointments (client_name, client_email, appointment_date, duration, status) 
+       VALUES (?, ?, ?, ?, 'confirmed')`,
+      [client_name.trim(), client_email.trim(), appointmentDateTime.toISOString(), duration]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Cita creada correctamente',
+      appointmentId: result.lastID
+    });
+  } catch (error) {
+    console.error('Error creando cita:', error);
+    res.status(500).json({ error: 'Error creando cita' });
+  }
+});
+
+// Eliminar cita permanentemente (solo tras doble verificación en el cliente)
+router.delete('/api/appointments/:id', async (req, res) => {
+  try {
+    const appointment = await getQuery('SELECT id FROM appointments WHERE id = ?', [req.params.id]);
+    if (!appointment) {
+      return res.status(404).json({ error: 'Cita no encontrada' });
+    }
+    await runQuery('DELETE FROM appointments WHERE id = ?', [req.params.id]);
+    res.json({ success: true, message: 'Cita eliminada correctamente' });
+  } catch (error) {
+    console.error('Error eliminando cita:', error);
+    res.status(500).json({ error: 'Error eliminando cita' });
   }
 });
 
@@ -271,7 +333,15 @@ router.post('/api/test-email', async (req, res) => {
     res.json({ success: true, message: `Email de prueba enviado a ${to}. Revisa la bandeja (y spam).` });
   } catch (error) {
     const msg = error.message || error.response || (error.responseCode ? `Código ${error.responseCode}` : '') || '';
-    const detail = msg ? `: ${msg}` : (process.env.RESEND_API_KEY ? '. Revisa RESEND_API_KEY y EMAIL_FROM en Railway.' : '. Revisa SMTP_* y EMAIL_FROM en Railway.');
+    const isTimeout = /timeout|ETIMEDOUT|ECONNRESET|socket hang up/i.test(String(msg));
+    let detail = msg ? `: ${msg}` : '';
+    if (!process.env.RESEND_API_KEY && isTimeout) {
+      detail += ' En Railway plan Hobby el SMTP está bloqueado (puertos 465/587). Usa Resend (API) o pásate a Railway Pro. Ver ZOHO_MAIL_RAILWAY.md.';
+    } else if (!process.env.RESEND_API_KEY) {
+      detail += detail ? '. Revisa SMTP_* y EMAIL_FROM en Railway.' : ' Revisa SMTP_* y EMAIL_FROM en Railway.';
+    } else {
+      detail += detail ? '. Revisa RESEND_API_KEY y EMAIL_FROM.' : ' Revisa RESEND_API_KEY y EMAIL_FROM en Railway.';
+    }
     console.error('Error en test-email', detail, error);
     res.status(500).json({ error: `No se pudo enviar${detail}` });
   }

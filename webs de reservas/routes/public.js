@@ -132,6 +132,13 @@ router.post('/api/book', async (req, res) => {
     const endMin = h * 60 + m + duration;
     const hora_fin = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
 
+    // Validar que el hueco sigue disponible (solo se pueden reservar slots que devuelve getSlotsDisponibles)
+    const slotsDisponibles = await citasService.getSlotsDisponibles(NEGOCIO_ID, date, duration);
+    const slotValido = slotsDisponibles.some(s => s.hora_inicio === hora_inicio);
+    if (!slotValido) {
+      return res.status(400).json({ error: 'Este horario no está disponible. Elige otra fecha u hora.' });
+    }
+
     const paciente = await pacientesService.getOrCreateByEmail(NEGOCIO_ID, {
       nombre: nombre,
       email: emailTrim,

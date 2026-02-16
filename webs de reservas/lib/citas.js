@@ -152,7 +152,11 @@ async function remove(negocioId, citaId) {
   return true;
 }
 
-/** Slots disponibles para un día (para crear cita): devuelve { hora_inicio, hora_fin } en formato HH:MM, sin solaparse con citas ni bloqueos */
+/**
+ * Slots disponibles para un día: única fuente de verdad para "qué horas se pueden reservar".
+ * Solo devuelve huecos que: están en horario de atención, no están bloqueados, no se solapan con ninguna cita (salvo canceladas) y son en el futuro.
+ * La reserva pública y el dashboard deben mostrar solo estas horas; al guardar se valida que la hora elegida siga en esta lista.
+ */
 async function getSlotsDisponibles(negocioId, fecha, duracionMinutos) {
   const { getOpeningHours } = require('../utils/helpers');
   const hours = await getOpeningHours(negocioId);

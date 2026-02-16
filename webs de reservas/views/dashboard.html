@@ -28,11 +28,11 @@
         .card-body { padding: 1.35rem 1.5rem; }
 
         /* Botones */
-        .btn-primary { background: var(--primary-color); color: #fff; border-radius: 10px; padding: 0.5rem 1rem; font-weight: 500; transition: background var(--transition-fast), transform 0.15s ease; border: none; }
+        .btn-primary { background: var(--primary-color); color: #fff; border-radius: 10px; padding: 0.5rem 1rem; min-height: 44px; font-weight: 500; transition: background var(--transition-fast), transform 0.15s ease; border: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
         .btn-primary:active:not(:disabled) { transform: scale(0.98); }
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-secondary { background: #f1f5f9; color: #334155; border-radius: 10px; padding: 0.5rem 1rem; font-weight: 500; transition: background var(--transition-fast), color var(--transition-fast); border: none; }
+        .btn-secondary { background: #f1f5f9; color: #334155; border-radius: 10px; padding: 0.5rem 1rem; min-height: 44px; font-weight: 500; transition: background var(--transition-fast), color var(--transition-fast); border: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         .btn-secondary:hover { background: #e2e8f0; color: #1e293b; }
         .btn-ghost { color: var(--primary-color); background: transparent; border: none; padding: 0.5rem 0.75rem; font-weight: 500; border-radius: 8px; transition: background var(--transition-fast); }
         .btn-ghost:hover { background: var(--primary-light); }
@@ -79,35 +79,50 @@
 
         /* Header */
         .header-brand-initial { width: 42px; height: 42px; border-radius: 12px; background: var(--primary-color); color: #fff; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        @media (max-width: 640px) { .header-brand-initial { width: 36px; height: 36px; font-size: 1rem; } }
+        .safe-area-padding { padding-left: env(safe-area-inset-left, 0); padding-right: env(safe-area-inset-right, 0); }
+        /* Móvil: navegación con scroll horizontal */
+        .nav-tabs-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .nav-tabs-wrap::-webkit-scrollbar { display: none; }
+        .nav-tab { white-space: nowrap; min-height: 44px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        @media (max-width: 640px) {
+            .table-modern thead th, .table-modern tbody td { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
+            .card-body { padding: 1rem 1.25rem; }
+        }
+        .modal-mobile { max-height: 90vh; overflow-y: auto; }
+        @media (max-width: 640px) {
+            .modal-mobile { border-radius: 1rem 1rem 0 0; margin: 0; max-height: 92vh; }
+        }
+        body { padding-bottom: env(safe-area-inset-bottom, 0); -webkit-text-size-adjust: 100%; }
     </style>
 </head>
 <body class="bg-[#f8fafc] min-h-screen">
     <div x-data="dashboard()" x-cloak x-init="init()">
         <!-- Header profesional -->
-        <header class="bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div class="flex justify-between items-center gap-4">
-                    <div class="flex items-center gap-4 min-w-0">
+        <header class="bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sticky top-0 z-40 safe-area-padding">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+                <div class="flex justify-between items-center gap-3">
+                    <div class="flex items-center gap-3 sm:gap-4 min-w-0">
                         <template x-if="negocio.logo_url">
-                            <img :src="negocio.logo_url" alt="Logo" class="h-10 w-10 object-contain rounded-xl flex-shrink-0">
+                            <img :src="negocio.logo_url" alt="Logo" class="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-xl flex-shrink-0">
                         </template>
                         <template x-if="!negocio.logo_url">
                             <div class="header-brand-initial" x-text="(config.businessName || negocio.nombre || 'M').charAt(0).toUpperCase()"></div>
                         </template>
                         <div class="min-w-0">
-                            <h1 class="text-xl font-bold text-gray-900 truncate" x-text="config.businessName || negocio.nombre || 'Panel de gestión'"></h1>
-                            <p class="text-sm text-gray-500" x-show="config.businessName || negocio.nombre">Panel de gestión</p>
+                            <h1 class="text-base sm:text-xl font-bold text-gray-900 truncate" x-text="config.businessName || negocio.nombre || 'Panel de gestión'"></h1>
+                            <p class="text-xs sm:text-sm text-gray-500 hidden sm:block" x-show="config.businessName || negocio.nombre">Panel de gestión</p>
                         </div>
                     </div>
-                    <button @click="logout()" class="btn-ghost text-gray-600 hover:text-gray-900 flex-shrink-0">Cerrar sesión</button>
+                    <button @click="logout()" class="btn-ghost text-gray-600 hover:text-gray-900 flex-shrink-0 min-h-[44px] py-2 px-3 text-sm sm:text-base">Cerrar sesión</button>
                 </div>
             </div>
         </header>
 
         <!-- Navegación -->
-        <div class="bg-white border-b border-gray-100">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <nav class="flex flex-wrap gap-1 py-2">
+        <div class="bg-white border-b border-gray-100 safe-area-padding">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                <nav class="nav-tabs-wrap flex gap-1 py-2">
                     <button @click="activeTab = 'inicio'; loadStats()" class="nav-tab" :class="activeTab === 'inicio' && 'nav-tab-active'">Inicio</button>
                     <button @click="activeTab = 'appointments'" class="nav-tab" :class="activeTab === 'appointments' && 'nav-tab-active'">Citas</button>
                     <button @click="activeTab = 'pacientes'; loadPacientes()" class="nav-tab" :class="activeTab === 'pacientes' && 'nav-tab-active'">Pacientes</button>
@@ -121,7 +136,7 @@
         </div>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8">
             <!-- Tab: Inicio (estadísticas) -->
             <div x-show="activeTab === 'inicio'" class="fade-in">
                 <p class="text-lg text-gray-700 mb-6" x-show="config.businessName || negocio.nombre">Bienvenido, <span class="font-semibold text-gray-900" x-text="config.businessName || negocio.nombre || ''"></span></p>
@@ -169,25 +184,25 @@
 
             <!-- Tab: Appointments -->
             <div x-show="activeTab === 'appointments'">
-                <div class="card bg-white p-6">
-                    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900">Citas</h2>
-                        <div class="flex items-center gap-2">
-                            <button @click="openModalCita()" class="btn-primary">+ Crear cita</button>
-                            <button @click="appointmentViewMode = appointmentViewMode === 'calendar' ? 'list' : 'calendar'" class="btn-secondary" x-text="appointmentViewMode === 'calendar' ? 'Vista lista' : 'Vista calendario'"></button>
-                            <button @click="loadCitas()" class="btn-ghost">Actualizar</button>
+                <div class="card bg-white p-4 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between sm:items-center gap-3 mb-5 sm:mb-6">
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Citas</h2>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button @click="openModalCita()" class="btn-primary text-sm sm:text-base">+ Crear cita</button>
+                            <button @click="appointmentViewMode = appointmentViewMode === 'calendar' ? 'list' : 'calendar'" class="btn-secondary text-sm" x-text="appointmentViewMode === 'calendar' ? 'Vista lista' : 'Vista calendario'"></button>
+                            <button @click="loadCitas()" class="btn-ghost min-h-[44px] text-sm">Actualizar</button>
                         </div>
                     </div>
 
                     <!-- Vista calendario semanal -->
-                    <div x-show="appointmentViewMode === 'calendar'" class="overflow-x-auto">
-                        <div class="flex justify-between items-center mb-4">
-                            <div class="flex gap-2">
-                                <button @click="prevWeek()" class="btn-secondary text-sm">← Semana anterior</button>
-                                <button @click="goToToday()" class="btn-secondary text-sm">Hoy</button>
-                                <button @click="nextWeek()" class="btn-secondary text-sm">Semana siguiente →</button>
+                    <div x-show="appointmentViewMode === 'calendar'" class="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                        <div class="flex flex-wrap gap-2 items-center mb-3 sm:mb-4">
+                            <div class="flex gap-2 flex-wrap">
+                                <button @click="prevWeek()" class="btn-secondary text-xs sm:text-sm py-2">← Anterior</button>
+                                <button @click="goToToday()" class="btn-secondary text-xs sm:text-sm py-2">Hoy</button>
+                                <button @click="nextWeek()" class="btn-secondary text-xs sm:text-sm py-2">Siguiente →</button>
                             </div>
-                            <h3 class="font-semibold text-gray-800" x-text="getCalendarWeekLabel()"></h3>
+                            <h3 class="font-semibold text-gray-800 text-sm sm:text-base" x-text="getCalendarWeekLabel()"></h3>
                         </div>
                         <p class="text-xs text-gray-500 mb-2">Leyenda: <span class="badge badge-confirmada">confirmada</span> <span class="badge badge-pasada">pasada</span> <span class="badge badge-cancelada">cancelada</span> <span class="badge badge-pendiente">pendiente</span> <span class="badge badge-no-asistio">no asistió</span></p>
                         <table class="w-full border border-gray-200 text-sm" style="min-width: 800px;">
@@ -255,8 +270,8 @@
                 </div>
 
                 <!-- Modal crear/editar cita -->
-                <div x-show="modalCita.show" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @keydown.escape.window="modalCita.show = false">
-                    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+                <div x-show="modalCita.show" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" @keydown.escape.window="modalCita.show = false">
+                    <div class="modal-mobile bg-white rounded-t-xl sm:rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6">
                         <h3 class="text-xl font-bold mb-4" x-text="modalCita.id ? 'Editar cita' : 'Nueva cita'"></h3>
                         <form @submit.prevent="saveModalCita()" class="space-y-4">
                             <div>
@@ -287,8 +302,8 @@
                 </div>
 
                 <!-- Modal doble verificación eliminar -->
-                <div x-show="deleteModal.show" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @keydown.escape.window="deleteModal.show = false">
-                    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6" @click.stop>
+                <div x-show="deleteModal.show" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" @keydown.escape.window="deleteModal.show = false">
+                    <div class="modal-mobile bg-white rounded-t-xl sm:rounded-lg shadow-xl max-w-md w-full mx-0 sm:mx-4 p-5 sm:p-6" @click.stop>
                         <template x-if="!deleteModal.step2">
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2">¿Eliminar esta cita?</h3>
@@ -376,8 +391,8 @@
                     </div>
                 </div>
                 <!-- Modal ficha paciente -->
-                <div x-show="fichaPaciente.show" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @keydown.escape.window="fichaPaciente.show = false">
-                    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6">
+                <div x-show="fichaPaciente.show" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" @keydown.escape.window="fichaPaciente.show = false">
+                    <div class="modal-mobile bg-white rounded-t-xl sm:rounded-lg shadow-xl max-w-2xl w-full mx-0 sm:mx-4 max-h-[90vh] overflow-y-auto p-4 sm:p-6">
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-xl font-bold" x-text="fichaPaciente.paciente ? fichaPaciente.paciente.nombre : ''"></h3>
                             <button @click="fichaPaciente.show = false" class="text-gray-500 hover:text-gray-700">✕</button>
@@ -408,8 +423,8 @@
                 </div>
 
                 <!-- Modal editar paciente -->
-                <div x-show="editPacienteModal.show" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @keydown.escape.window="editPacienteModal.show = false">
-                    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+                <div x-show="editPacienteModal.show" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" @keydown.escape.window="editPacienteModal.show = false">
+                    <div class="modal-mobile bg-white rounded-t-xl sm:rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6">
                         <h3 class="text-xl font-bold mb-4">Editar paciente</h3>
                         <p class="text-sm text-gray-500 mb-4">Corrige los datos si hubo un error al crear la reserva o el paciente.</p>
                         <form @submit.prevent="saveEditPaciente()" class="space-y-4">
@@ -449,7 +464,7 @@
                                         </button>
                                         <span class="text-xs text-gray-500">JPG, PNG, GIF o WebP (máx. 5 MB)</span>
                                     </div>
-                                    <input type="url" x-model="landing.hero_image_url" class="input-modern mt-2" placeholder="O pega aquí una URL de imagen">
+                                    <input type="text" x-model="landing.hero_image_url" class="input-modern mt-2" placeholder="O pega aquí una URL (o ruta si subiste imagen)">
                                     <div x-show="landing.hero_image_url" class="mt-2">
                                         <img :src="landing.hero_image_url" alt="Vista previa" class="rounded-lg border border-gray-200 max-h-24 object-cover" @error="$el.style.display='none'">
                                     </div>
@@ -471,7 +486,7 @@
                                         </button>
                                         <span class="text-xs text-gray-500">JPG, PNG, GIF o WebP (máx. 5 MB)</span>
                                     </div>
-                                    <input type="url" x-model="landing.about_image_url" class="input-modern mt-2" placeholder="O pega aquí una URL de imagen">
+                                    <input type="text" x-model="landing.about_image_url" class="input-modern mt-2" placeholder="O pega aquí una URL (o ruta si subiste imagen)">
                                     <div x-show="landing.about_image_url" class="mt-2">
                                         <img :src="landing.about_image_url" alt="Vista previa" class="rounded-lg border border-gray-200 max-h-24 object-cover" @error="$el.style.display='none'">
                                     </div>

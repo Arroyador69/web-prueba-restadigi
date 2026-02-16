@@ -10,6 +10,10 @@ const dbPath = explicitPath
   || path.join(__dirname, '..', 'database.db');
 const dir = path.dirname(dbPath);
 if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+const dbFileExistedBeforeInit = fs.existsSync(dbPath);
+if (process.env.NODE_ENV === 'production') {
+  console.log('📂 Archivo BD al arrancar:', dbFileExistedBeforeInit ? 'ya existía (volumen persistió)' : 'nuevo (primera vez o volumen no persistió)');
+}
 const db = new sqlite3.Database(dbPath);
 
 async function initDatabase() {

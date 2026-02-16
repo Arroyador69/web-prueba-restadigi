@@ -76,10 +76,23 @@ Para que cada psicólogo tenga “lo suyo” sin depender de tu cuenta, la **Opc
 
 ---
 
-## 6. Checklist rápido
+## 6. Persistencia de la base de datos (importante para ti y para el cliente)
+
+Para que **los usuarios y reservas no se borren en cada deploy** en Railway hace falta:
+
+1. **Volume** asociado al servicio **web** (en el proyecto debe aparecer algo tipo "web-volume" en la arquitectura).
+2. **Variable `DATABASE_PATH`** en el servicio **web** con valor **exactamente** el **Mount Path del volumen** + **`/database.db`** (p. ej. si el volumen está montado en `/data` → `DATABASE_PATH=/data/database.db`; si está en `/app/data` → `DATABASE_PATH=/app/data/database.db`).
+
+Si el volumen está bien pero `DATABASE_PATH` apunta a otra ruta, la app escribe en el disco del contenedor y los datos se pierden en cada push. Detalle completo en **VERIFICAR_PERSISTENCIA_BD.md**.
+
+Al entregar el sistema a un cliente (cuenta nueva en Railway): en ese proyecto, crear el Volume, anotar el Mount Path y configurar `DATABASE_PATH` como arriba. Así su instalación mantendrá usuarios y datos entre deploys.
+
+---
+
+## 7. Checklist rápido
 
 - [ ] Crear organización en GitHub y repo del producto.
 - [ ] Crear cuenta Railway “de negocio”.
-- [ ] Por cada demo: nuevo proyecto en Railway, mismo repo, configurar panel con datos del psicólogo, compartir URL.
-- [ ] Cuando compren: nueva cuenta Railway (cliente) → un proyecto → desplegar → migrar BD si aplica → entregar acceso.
+- [ ] Por cada demo: nuevo proyecto en Railway, mismo repo, **Volume + DATABASE_PATH** (ver §6), configurar panel con datos del psicólogo, compartir URL.
+- [ ] Cuando compren: nueva cuenta Railway (cliente) → un proyecto → **Volume + DATABASE_PATH** → desplegar → migrar BD si aplica → entregar acceso.
 - [ ] Dominio: cuando el cliente tenga uno, añadirlo en Railway + DNS.

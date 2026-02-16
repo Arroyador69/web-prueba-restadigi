@@ -111,6 +111,7 @@
                     <button @click="activeTab = 'inicio'; loadStats()" class="nav-tab" :class="activeTab === 'inicio' && 'nav-tab-active'">Inicio</button>
                     <button @click="activeTab = 'appointments'" class="nav-tab" :class="activeTab === 'appointments' && 'nav-tab-active'">Citas</button>
                     <button @click="activeTab = 'pacientes'; loadPacientes()" class="nav-tab" :class="activeTab === 'pacientes' && 'nav-tab-active'">Pacientes</button>
+                    <button @click="activeTab = 'landing'; loadLanding()" class="nav-tab" :class="activeTab === 'landing' && 'nav-tab-active'">Landing</button>
                     <button @click="activeTab = 'config'" class="nav-tab" :class="activeTab === 'config' && 'nav-tab-active'">Configuración</button>
                     <button @click="activeTab = 'hours'" class="nav-tab" :class="activeTab === 'hours' && 'nav-tab-active'">Horarios</button>
                     <button @click="activeTab = 'blocked'" class="nav-tab" :class="activeTab === 'blocked' && 'nav-tab-active'">Bloqueos</button>
@@ -397,6 +398,39 @@
                             </div>
                         </template>
                     </div>
+                </div>
+            </div>
+
+            <!-- Tab: Landing (web pública editable) -->
+            <div x-show="activeTab === 'landing'">
+                <div class="card bg-white p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Landing page</h2>
+                    <p class="text-sm text-gray-500 mb-6">Contenido de tu web pública. Los visitantes verán esta información y podrán reservar cita desde el botón. Puedes usar URLs de imágenes (ej. Imgur, tu dominio).</p>
+                    <form @submit.prevent="saveLanding()" class="space-y-6">
+                        <div class="border-b border-gray-100 pb-6">
+                            <h3 class="font-semibold text-gray-900 mb-3">Cabecera (hero)</h3>
+                            <div class="space-y-4">
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Título principal</label><input type="text" x-model="landing.hero_title" class="input-modern" placeholder="Ej: Bienvenido a tu espacio de bienestar"></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Subtítulo</label><textarea x-model="landing.hero_subtitle" rows="2" class="input-modern" placeholder="Una frase que describa tu consulta y la reserva online"></textarea></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">URL imagen cabecera (opcional)</label><input type="url" x-model="landing.hero_image_url" class="input-modern" placeholder="https://..."></div>
+                            </div>
+                        </div>
+                        <div class="border-b border-gray-100 pb-6">
+                            <h3 class="font-semibold text-gray-900 mb-3">Bloque «Sobre la consulta»</h3>
+                            <div class="space-y-4">
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Título</label><input type="text" x-model="landing.about_title" class="input-modern" placeholder="Sobre la consulta"></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Texto</label><textarea x-model="landing.about_text" rows="4" class="input-modern" placeholder="Describe tu enfoque, primera sesión, etc."></textarea></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">URL imagen (opcional)</label><input type="url" x-model="landing.about_image_url" class="input-modern" placeholder="https://..."></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Texto del botón de reserva</label>
+                            <input type="text" x-model="landing.cta_text" class="input-modern w-64" placeholder="Reservar cita">
+                        </div>
+                        <button type="submit" :disabled="savingLanding" class="btn-primary">Guardar landing</button>
+                        <a href="/" target="_blank" rel="noopener" class="btn-secondary ml-2">Ver mi web pública</a>
+                        <span x-show="landingMessage" class="ml-2 text-sm" :class="landingMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="landingMessage"></span>
+                    </form>
                 </div>
             </div>
 
@@ -736,6 +770,9 @@
                 textosLegales: { politica_privacidad: '', consentimiento: '', version: '1' },
                 savingTextosLegales: false,
                 textosLegalesMessage: '',
+                landing: { hero_title: '', hero_subtitle: '', hero_image_url: '', about_title: '', about_text: '', about_image_url: '', cta_text: 'Reservar cita', sections: [] },
+                savingLanding: false,
+                landingMessage: '',
 
                 async init() {
                     this.setCalendarWeekToNow();
@@ -743,6 +780,7 @@
                     await Promise.all([
                         this.loadCitas(),
                         this.loadConfig(),
+                        this.loadLanding(),
                         this.loadHours(),
                         this.loadBlockedSlots(),
                         this.loadUsers()
@@ -1130,6 +1168,43 @@
                         this.textosLegalesMessage = 'Error de conexión';
                     } finally {
                         this.savingTextosLegales = false;
+                    }
+                },
+
+                async loadLanding() {
+                    try {
+                        const res = await fetch('/dashboard/api/landing');
+                        const data = await res.json();
+                        this.landing = {
+                            hero_title: data.hero_title || '',
+                            hero_subtitle: data.hero_subtitle || '',
+                            hero_image_url: data.hero_image_url || '',
+                            about_title: data.about_title || '',
+                            about_text: data.about_text || '',
+                            about_image_url: data.about_image_url || '',
+                            cta_text: data.cta_text || 'Reservar cita',
+                            sections: Array.isArray(data.sections) ? data.sections : []
+                        };
+                    } catch (e) {
+                        this.landing = { hero_title: '', hero_subtitle: '', hero_image_url: '', about_title: '', about_text: '', about_image_url: '', cta_text: 'Reservar cita', sections: [] };
+                    }
+                },
+
+                async saveLanding() {
+                    this.savingLanding = true;
+                    this.landingMessage = '';
+                    try {
+                        const res = await fetch('/dashboard/api/landing', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.landing)
+                        });
+                        const data = await res.json();
+                        this.landingMessage = data.success ? 'Landing guardada correctamente' : (data.error || 'Error');
+                    } catch (e) {
+                        this.landingMessage = 'Error de conexión';
+                    } finally {
+                        this.savingLanding = false;
                     }
                 },
 

@@ -109,6 +109,15 @@ async function runMigrations() {
       )
     `);
 
+    // --- Tabla landing_page (contenido editable de la web pública) ---
+    await run(`
+      CREATE TABLE IF NOT EXISTS landing_page (
+        negocio_id INTEGER NOT NULL PRIMARY KEY REFERENCES negocio(id),
+        content TEXT,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // --- Tabla consentimientos (log RGPD) ---
     await run(`
       CREATE TABLE IF NOT EXISTS consentimientos (
@@ -235,6 +244,23 @@ Derechos: Puede ejercer sus derechos de acceso, rectificación, supresión, limi
         [defaultPolitica, defaultConsentimiento, '1', DEFAULT_NEGOCIO_ID]
       );
       console.log('✅ Textos legales RGPD de ejemplo actualizados (campos vacíos)');
+    }
+
+    // --- Contenido por defecto landing page ---
+    const defaultLanding = JSON.stringify({
+      hero_title: 'Bienvenido a tu espacio de bienestar',
+      hero_subtitle: 'Acompañamiento profesional para tu crecimiento personal y salud emocional. Reserva tu cita de forma sencilla.',
+      hero_image_url: '',
+      about_title: 'Sobre la consulta',
+      about_text: 'Ofrecemos un espacio de escucha y acompañamiento profesional. La primera sesión es una oportunidad para conocernos y establecer objetivos. Si necesitas modificar o cancelar tu cita, contáctanos con al menos 24 horas de antelación.',
+      about_image_url: '',
+      cta_text: 'Reservar cita',
+      sections: []
+    });
+    const landingRow = await getQuery('SELECT negocio_id FROM landing_page WHERE negocio_id = ?', [DEFAULT_NEGOCIO_ID]);
+    if (!landingRow) {
+      await run('INSERT INTO landing_page (negocio_id, content) VALUES (?, ?)', [DEFAULT_NEGOCIO_ID, defaultLanding]);
+      console.log('✅ Landing page por defecto creada');
     }
 
   } catch (err) {

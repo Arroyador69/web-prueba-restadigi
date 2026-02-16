@@ -10,10 +10,42 @@ const negocioService = require('../lib/negocio');
 
 const NEGOCIO_ID = 1;
 
-// Landing pública
+// Landing pública (página editable + reserva)
 router.get('/', async (req, res) => {
-  const config = await getBusinessConfig();
-  res.sendFile('index.html', { root: './views' });
+  res.sendFile('landing.html', { root: './views' });
+});
+
+// Contenido de la landing (hero, bloques, CTA) para la web pública
+router.get('/api/landing', async (req, res) => {
+  try {
+    const row = await getQuery('SELECT content FROM landing_page WHERE negocio_id = ?', [NEGOCIO_ID]);
+    if (!row || !row.content) {
+      return res.json({
+        hero_title: '',
+        hero_subtitle: '',
+        hero_image_url: '',
+        about_title: '',
+        about_text: '',
+        about_image_url: '',
+        cta_text: 'Reservar cita',
+        sections: []
+      });
+    }
+    const content = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
+    res.json(content);
+  } catch (error) {
+    console.error('Error obteniendo landing:', error);
+    res.json({
+      hero_title: '',
+      hero_subtitle: '',
+      hero_image_url: '',
+      about_title: '',
+      about_text: '',
+      about_image_url: '',
+      cta_text: 'Reservar cita',
+      sections: []
+    });
+  }
 });
 
 // Obtener configuración pública (para el frontend)
@@ -62,21 +94,32 @@ router.get('/api/available-slots', async (req, res) => {
   }
 });
 
-// Crear nueva reserva (paciente + cita + consentimiento RGPD)
+// Crear nueva reserva (paciente + cita + consentimiento RGPD). Solo citas reales: validación estricta.
 router.post('/api/book', async (req, res) => {
   try {
     const { name, email, date, time, telefono, acepta_legal } = req.body;
 
-    if (!name || !email || !date || !time) {
-      return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    const nombre = (name && typeof name === 'string') ? name.trim() : '';
+    const emailTrim = (email && typeof email === 'string') ? email.trim().toLowerCase() : '';
+
+    if (!nombre || nombre.length < 2) {
+      return res.status(400).json({ error: 'El nombre debe tener al menos 2 caracteres.' });
+    }
+    if (nombre.length > 120) {
+      return res.status(400).json({ error: 'Nombre demasiado largo.' });
+    }
+    if (!emailTrim) {
+      return res.status(400).json({ error: 'El email es obligatorio.' });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrim)) {
+      return res.status(400).json({ error: 'Email inválido.' });
+    }
+    if (!date || !time) {
+      return res.status(400).json({ error: 'Fecha y hora son obligatorias.' });
     }
     if (!acepta_legal) {
       return res.status(400).json({ error: 'Debes aceptar la política de privacidad y el consentimiento para reservar.' });
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Email inválido' });
     }
 
     const [hours, minutes] = String(time).split(':');
@@ -90,9 +133,9 @@ router.post('/api/book', async (req, res) => {
     const hora_fin = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
 
     const paciente = await pacientesService.getOrCreateByEmail(NEGOCIO_ID, {
-      nombre: name.trim(),
-      email: email.trim().toLowerCase(),
-      telefono: telefono ? String(telefono).trim() : null
+      nombre: nombre,
+      email: emailTrim,
+      telefono: (telefono && String(telefono).trim()) ? String(telefono).trim() : null
     });
 
     try {

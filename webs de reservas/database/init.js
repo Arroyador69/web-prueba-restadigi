@@ -11,8 +11,15 @@ const dbPath = explicitPath
 const dir = path.dirname(dbPath);
 if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 const dbFileExistedBeforeInit = fs.existsSync(dbPath);
-if (process.env.NODE_ENV === 'production') {
-  console.log('📂 Archivo BD al arrancar:', dbFileExistedBeforeInit ? 'ya existía (volumen persistió)' : 'nuevo (primera vez o volumen no persistió)');
+let dbFileSize = 0;
+try {
+  if (dbFileExistedBeforeInit) dbFileSize = fs.statSync(dbPath).size;
+  const resolved = path.resolve(dbPath);
+  if (process.env.NODE_ENV === 'production') {
+    console.log('📂 Archivo BD al arrancar:', dbFileExistedBeforeInit ? 'ya existía (volumen persistió)' : 'nuevo (primera vez o volumen no persistió)', '| ruta real:', resolved, '| tamaño:', dbFileSize, 'bytes');
+  }
+} catch (e) {
+  if (process.env.NODE_ENV === 'production') console.log('📂 Archivo BD al arrancar:', dbFileExistedBeforeInit ? 'ya existía' : 'nuevo', '| (no se pudo stat:', e.message + ')');
 }
 const db = new sqlite3.Database(dbPath);
 db.run('PRAGMA synchronous = FULL');

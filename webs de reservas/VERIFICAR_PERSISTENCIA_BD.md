@@ -82,6 +82,14 @@ A veces Railway monta el volumen en un path que no coincide con el que pusiste e
 3. **Redeploy**. En los logs deberías ver **RAILWAY_VOLUME_MOUNT_PATH = &lt;ruta&gt;**; esa es la ruta donde se guarda la BD.
 4. Crea el usuario en **/setup**, haz otro deploy y comprueba que salga **Archivo BD al arrancar: ya existía** y **Usuarios en BD: 1**.
 
+### Opción C – Montar el volumen en `/data` (recomendada si "ya existía" pero 0 usuarios)
+
+En Railway, lo que se escribe dentro de **`/app`** a veces va a un overlay temporal y **no** al volumen, por eso el archivo "existe" pero los usuarios no persisten. Prueba montar el volumen **fuera de `/app`**:
+
+1. En Railway, en el **Volume** (web-volume) → **Settings**: cambia el **Mount Path** de **`/app/data`** a **`/data`** (si la UI lo permite). Si no se puede cambiar, crea un **nuevo** volumen con Mount Path **`/data`**, asígnale el servicio **web**, y elimina el volumen antiguo.
+2. En **Variables** del servicio **web**, pon **`DATABASE_PATH`** = **`/data/database.db`**.
+3. **Redeploy**. Crea el usuario en **/setup**, haz otro deploy y comprueba en logs **Usuarios en BD: 1**.
+
 ### Permisos
 
 Si el archivo nunca aparece o hay errores de escritura, en **Variables** añade **`RAILWAY_RUN_UID=0`** para que el contenedor pueda escribir en el volumen.
@@ -89,3 +97,18 @@ Si el archivo nunca aparece o hay errores de escritura, en **Variables** añade 
 ---
 
 Si en los logs sigue saliendo **(NO PERSISTENTE)** o **Usuarios en BD: 0** después de crear usuario, el volumen no está llegando al servicio o el path no coincide: revisa que el volumen esté asignado al servicio **web** y, si usas `DATABASE_PATH`, que sea exactamente &lt;Mount Path&gt;/database.db.
+
+---
+
+## 4. Mensaje "npm error signal SIGTERM" / "command failed"
+
+En los logs a veces aparece algo como:
+
+```
+npm error signal SIGTERM
+npm error command sh -c node database/init.js && node server.js
+```
+
+**En muchos casos es normal:** cuando haces un nuevo deploy, Railway **apaga el contenedor anterior** enviándole SIGTERM. Ese mensaje corresponde al **deploy viejo** que se está cerrando, no al nuevo. Si el **nuevo** deploy queda en "Running" y la web responde, no hay que hacer nada.
+
+El servidor tiene apagado graceful: al recibir SIGTERM espera unos segundos para que cualquier escritura a la BD termine y luego sale. Así se evita cortar una escritura a mitad y perder datos. Si ves el mensaje de SIGTERM pero también "SIGTERM recibido. Cerrando en 5s...", es el apagado controlado del contenedor anterior.

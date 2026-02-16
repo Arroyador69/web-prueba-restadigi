@@ -106,3 +106,16 @@ app.listen(PORT, '0.0.0.0', async () => {
     console.log(`   3. node utils/create-user.js\n`);
   }
 });
+
+// Apagado graceful: al recibir SIGTERM/SIGINT (p. ej. Railway para el deploy anterior),
+// dar unos segundos para que terminen escrituras a la BD y salir limpio.
+const GRACEFUL_SHUTDOWN_MS = 5000;
+function shutdown(signal) {
+  console.log(`\n⚠️ ${signal} recibido. Cerrando en ${GRACEFUL_SHUTDOWN_MS / 1000}s para que la BD termine de escribir...`);
+  setTimeout(() => {
+    console.log('👋 Servidor cerrado.');
+    process.exit(0);
+  }, GRACEFUL_SHUTDOWN_MS);
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

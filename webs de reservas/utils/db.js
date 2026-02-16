@@ -14,7 +14,7 @@ if (process.env.NODE_ENV === 'production') {
   console.log('💾 Base de datos:', dbPath, onVolume ? '(persistente)' : '(NO PERSISTENTE)');
   if (volumeMount) console.log('   RAILWAY_VOLUME_MOUNT_PATH =', volumeMount);
   if (!onVolume) {
-    console.warn('⚠️ Los datos se perderán en cada deploy. Añade un Volume con mount /app/data y variable DATABASE_PATH=/app/data/database.db');
+    console.warn('⚠️ Los datos se perderán en cada deploy. Añade un Volume (mejor mount /data) y DATABASE_PATH=/data/database.db. Ver VERIFICAR_PERSISTENCIA_BD.md');
   }
 }
 

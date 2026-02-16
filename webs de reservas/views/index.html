@@ -2,19 +2,23 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#2563eb">
     <title>Reserva tu cita</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         [x-cloak] { display: none !important; }
+        body { -webkit-text-size-adjust: 100%; padding-left: env(safe-area-inset-left, 0); padding-right: env(safe-area-inset-right, 0); padding-bottom: env(safe-area-inset-bottom, 0); }
+        .input-touch { min-height: 48px; font-size: 16px; padding: 0.75rem 1rem; -webkit-appearance: none; appearance: none; }
+        .btn-touch { min-height: 48px; font-size: 16px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 min-h-screen">
     <div x-data="app()" x-cloak>
         <!-- Header -->
         <header class="bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <h1 class="text-3xl font-bold text-gray-900" x-text="config.businessName || 'Cargando...'"></h1>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+                <h1 class="text-xl sm:text-3xl font-bold text-gray-900" x-text="config.businessName || 'Cargando...'"></h1>
                 <p class="mt-2 text-gray-600">
                     <a :href="'tel:' + (config.businessPhone || '')" class="hover:text-blue-600">
                         <span x-text="config.businessPhone || ''"></span>
@@ -24,19 +28,19 @@
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
             <!-- Hero Section -->
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Bienvenido</h2>
-                <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+            <div class="text-center mb-8 sm:mb-12">
+                <h2 class="text-2xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Bienvenido</h2>
+                <p class="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto">
                     Estamos aquí para acompañarte en tu proceso de crecimiento personal y bienestar emocional. 
                     Reserva tu cita de forma sencilla y rápida.
                 </p>
             </div>
 
             <!-- Booking Form -->
-            <div class="bg-white rounded-lg shadow-lg p-8">
-                <h3 class="text-2xl font-semibold text-gray-900 mb-6">Reservar cita</h3>
+            <div class="bg-white rounded-lg shadow-lg p-4 sm:p-8">
+                <h3 class="text-xl sm:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6">Reservar cita</h3>
                 
                 <form @submit.prevent="bookAppointment()" class="space-y-6">
                     <!-- Nombre -->
@@ -49,7 +53,7 @@
                             id="name" 
                             x-model="form.name"
                             required
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            class="w-full input-touch border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Tu nombre"
                         >
                     </div>
@@ -64,7 +68,7 @@
                             id="email" 
                             x-model="form.email"
                             required
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            class="w-full input-touch border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="tu@email.com"
                         >
                     </div>
@@ -78,7 +82,7 @@
                             type="tel" 
                             id="telefono" 
                             x-model="form.telefono"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            class="w-full input-touch border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="612 345 678"
                         >
                     </div>
@@ -95,7 +99,7 @@
                             @change="loadAvailableSlots()"
                             :min="minDate"
                             required
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            class="w-full input-touch border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                     </div>
 
@@ -109,7 +113,7 @@
                             x-model="form.time"
                             required
                             :disabled="!form.date || loadingSlots || availableSlots.length === 0"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                            class="w-full input-touch border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                         >
                             <option value="">Selecciona una hora</option>
                             <template x-for="slot in availableSlots" :key="slot.time">
@@ -129,7 +133,7 @@
                             id="acepta_legal" 
                             x-model="form.acepta_legal"
                             required
-                            class="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            class="mt-1 h-5 w-5 min-w-[20px] min-h-[20px] rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         >
                         <label for="acepta_legal" class="ml-2 text-sm text-gray-700">
                             Acepto la <a href="#" @click.prevent="showPolitica = true" class="text-blue-600 hover:underline">política de privacidad</a> y el consentimiento para el tratamiento de mis datos (obligatorio para reservar).
@@ -140,7 +144,7 @@
                     <button 
                         type="submit"
                         :disabled="submitting"
-                        class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        class="w-full btn-touch bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
                         <span x-show="!submitting">Reservar cita</span>
                         <span x-show="submitting">Reservando...</span>
@@ -170,11 +174,11 @@
         </main>
 
         <!-- Modal política de privacidad -->
-        <div x-show="showPolitica" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @keydown.escape.window="showPolitica = false">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6">
+        <div x-show="showPolitica" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" @keydown.escape.window="showPolitica = false">
+            <div class="bg-white rounded-t-xl sm:rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-4 sm:p-6">
                 <h3 class="text-xl font-bold mb-4">Política de privacidad y consentimiento</h3>
                 <div class="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap" x-html="textosLegalesHtml()"></div>
-                <button @click="showPolitica = false" class="mt-4 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">Cerrar</button>
+                <button @click="showPolitica = false" class="mt-4 min-h-[44px] px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">Cerrar</button>
             </div>
         </div>
 

@@ -2,18 +2,22 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#2563eb">
     <title>Configuración Inicial - Crear Primer Usuario</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         [x-cloak] { display: none !important; }
+        body { -webkit-text-size-adjust: 100%; padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0); }
+        .input-touch { min-height: 48px; font-size: 16px; padding: 0.75rem 1rem; }
+        .btn-touch { min-height: 48px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div x-data="setupApp()" x-cloak class="w-full max-w-md">
-        <div class="bg-white rounded-lg shadow-lg p-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2 text-center">🔐 Configuración Inicial</h1>
-            <p class="text-gray-600 text-center mb-8">Crea el primer usuario para acceder al dashboard</p>
+    <div x-data="setupApp()" x-cloak class="w-full max-w-md px-4">
+        <div class="bg-white rounded-lg shadow-lg p-4 sm:p-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 text-center">🔐 Configuración Inicial</h1>
+            <p class="text-gray-600 text-center mb-6 sm:mb-8 text-sm sm:text-base">Crea el primer usuario para acceder al dashboard</p>
 
             <form @submit.prevent="createUser()" class="space-y-6">
                 <!-- Nombre -->
@@ -26,7 +30,7 @@
                         id="name" 
                         x-model="form.name"
                         required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="w-full input-touch border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Tu nombre"
                     >
                 </div>
@@ -41,7 +45,7 @@
                         id="email" 
                         x-model="form.email"
                         required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="w-full input-touch border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="tu@email.com"
                     >
                 </div>
@@ -57,7 +61,7 @@
                         x-model="form.password"
                         required
                         minlength="6"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="w-full input-touch border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Mínimo 6 caracteres"
                     >
                     <p class="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
@@ -80,7 +84,7 @@
                 <button 
                     type="submit"
                     :disabled="submitting"
-                    class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    class="w-full btn-touch bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                     <span x-show="!submitting">Crear usuario</span>
                     <span x-show="submitting">Creando usuario...</span>

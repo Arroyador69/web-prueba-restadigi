@@ -62,6 +62,8 @@ Después de cada deploy, en **Railway** → **web** → **Deployments** → últ
 
 ## 3. Si sigue fallando (persistente + Usuarios en BD: 0 en cada deploy)
 
+**Si en los logs sale "Archivo BD al arrancar: ya existía" pero "Usuarios en BD: 0":** el archivo está en el volumen, pero las escrituras (p. ej. el usuario creado en /setup) no llegaron a disco antes de que el contenedor se apagara. El código ya usa `PRAGMA synchronous = FULL` para forzar que SQLite escriba a disco. Después de un push con ese cambio, crea el usuario de nuevo y haz otro deploy; en los logs deberías ver también **"✅ Primer usuario creado desde /setup. Usuarios en BD ahora: 1"**. Si tras el siguiente deploy sigue en 0, prueba la opción B (usar la ruta que inyecta Railway).
+
 ### Opción A – Revisar path y variable
 
 1. En Railway, abre el **Volume** asociado al servicio **web** y anota el **Mount Path** (p. ej. `/app/data` o `/data`).

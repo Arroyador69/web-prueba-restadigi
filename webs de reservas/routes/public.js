@@ -244,6 +244,11 @@ router.post('/api/setup/first-user', async (req, res) => {
       'INSERT INTO users (email, password, name) VALUES (?, ?, ?)',
       [email, hashedPassword, name]
     );
+    // Comprobar que quedó guardado (y forzar flush con otra lectura)
+    const check = await allQuery('SELECT COUNT(*) as c FROM users');
+    if (process.env.NODE_ENV === 'production') {
+      console.log('✅ Primer usuario creado desde /setup. Usuarios en BD ahora:', (check[0] && check[0].c) || 0);
+    }
 
     res.json({
       success: true,

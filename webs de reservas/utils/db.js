@@ -30,7 +30,11 @@ if (dbDir && !fs.existsSync(dbDir)) {
 
 // Promisificar las operaciones de la base de datos
 function getDb() {
-  return new sqlite3.Database(dbPath);
+  const db = new sqlite3.Database(dbPath);
+  // Asegurar que los datos se escriben al disco (importante en Railway para no perder usuarios entre deploys)
+  db.run('PRAGMA synchronous = FULL');
+  db.run('PRAGMA journal_mode = DELETE');
+  return db;
 }
 
 function runQuery(query, params = []) {

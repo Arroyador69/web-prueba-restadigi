@@ -4,36 +4,24 @@
  * Añade negocio_id a users, opening_hours, blocked_slots.
  * Migra datos desde appointments + business_config al nuevo esquema.
  */
-const { runQuery, getQuery, allQuery, getDb } = require('../utils/db');
+const { runQuery, getQuery, allQuery } = require('../utils/db');
 const config = require('../config');
 
 const DEFAULT_NEGOCIO_ID = 1;
 
+function runIgnore(sql, params = []) {
+  return runQuery(sql, params).catch((err) => {
+    if (!/duplicate column name|already exists/i.test(err.message)) console.warn('[Migration]', err.message);
+  });
+}
+
+const isPg = !!process.env.DATABASE_URL;
+
 async function runMigrations() {
-  let db;
   try {
-    db = getDb();
-  } catch (e) {
-    console.warn('Migraciones: no se pudo abrir BD', e.message);
-    return;
-  }
-
-  const run = (sql, params = []) =>
-    new Promise((resolve, reject) => {
-      db.run(sql, params, function (err) {
-        if (err) reject(err);
-        else resolve({ lastID: this.lastID, changes: this.changes });
-      });
-    });
-
-  const runIgnore = (sql, params = []) =>
-    run(sql, params).catch((err) => {
-      if (!/duplicate column name|already exists/i.test(err.message)) console.warn('[Migration]', err.message);
-    });
-
-  try {
-    // --- Tabla negocio ---
-    await run(`
+    if (!isPg) {
+      // --- Tabla negocio (solo SQLite; Postgres usa init-pg.js) ---
+      await runQuery(`
       CREATE TABLE IF NOT EXISTS negocio (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL,
@@ -47,7 +35,7 @@ async function runMigrations() {
     `);
 
     // --- Tabla pacientes ---
-    await run(`
+    await runQuery(`
       CREATE TABLE IF NOT EXISTS pacientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         negocio_id INTEGER NOT NULL REFERENCES negocio(id),
@@ -67,7 +55,7 @@ async function runMigrations() {
     `);
 
     // --- Tabla citas (nueva estructura) ---
-    await run(`
+    await runQuery(`
       CREATE TABLE IF NOT EXISTS citas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         negocio_id INTEGER NOT NULL REFERENCES negocio(id),
@@ -84,7 +72,7 @@ async function runMigrations() {
     `);
 
     // --- Tabla plantillas_email ---
-    await run(`
+    await runQuery(`
       CREATE TABLE IF NOT EXISTS plantillas_email (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         negocio_id INTEGER NOT NULL REFERENCES negocio(id),
@@ -98,7 +86,7 @@ async function runMigrations() {
     `);
 
     // --- Tabla textos_legales ---
-    await run(`
+    await runQuery(`
       CREATE TABLE IF NOT EXISTS textos_legales (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         negocio_id INTEGER NOT NULL REFERENCES negocio(id) UNIQUE,
@@ -110,7 +98,7 @@ async function runMigrations() {
     `);
 
     // --- Tabla landing_page (contenido editable de la web pública) ---
-    await run(`
+    await runQuery(`
       CREATE TABLE IF NOT EXISTS landing_page (
         negocio_id INTEGER NOT NULL PRIMARY KEY REFERENCES negocio(id),
         content TEXT,
@@ -119,7 +107,7 @@ async function runMigrations() {
     `);
 
     // --- Tabla consentimientos (log RGPD) ---
-    await run(`
+    await runQuery(`
       CREATE TABLE IF NOT EXISTS consentimientos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         paciente_id INTEGER NOT NULL REFERENCES pacientes(id),
@@ -129,6 +117,7 @@ async function runMigrations() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    }
 
     // --- SMTP en negocio ---
     await runIgnore('ALTER TABLE negocio ADD COLUMN smtp_host TEXT');
@@ -149,7 +138,7 @@ async function runMigrations() {
       const bc = await allQuery('SELECT key, value FROM business_config').catch(() => []);
       const kv = {};
       bc.forEach((r) => { kv[r.key] = r.value; });
-      await run(
+      await runQuery(
         `INSERT INTO negocio (id, nombre, telefono, email, direccion, duracion_cita_default) VALUES (?, ?, ?, ?, ?, ?)`,
         [
           DEFAULT_NEGOCIO_ID,
@@ -161,6 +150,9 @@ async function runMigrations() {
         ]
       );
       console.log('✅ Negocio por defecto creado (id=1)');
+      if (isPg) {
+        await runQuery("SELECT setval(pg_get_serial_sequence('negocio', 'id'), (SELECT COALESCE(MAX(id), 1) FROM negocio))").catch(() => {});
+      }
     }
 
     // --- Migrar appointments → pacientes + citas (una sola vez) ---
@@ -180,14 +172,14 @@ async function runMigrations() {
           [DEFAULT_NEGOCIO_ID, apt.client_email]
         );
         if (!paciente) {
-          const r = await run(
+          const r = await runQuery(
             `INSERT INTO pacientes (negocio_id, nombre, email, telefono, estado) VALUES (?, ?, ?, ?, 'activo')`,
             [DEFAULT_NEGOCIO_ID, apt.client_name || 'Sin nombre', apt.client_email, apt.client_phone || null]
           );
           paciente = { id: r.lastID };
         }
         const estado = apt.status === 'cancelled' ? 'cancelada' : (d < new Date() ? 'pasada' : 'confirmada');
-        await run(
+        await runQuery(
           `INSERT INTO citas (negocio_id, paciente_id, fecha, hora_inicio, hora_fin, estado) VALUES (?, ?, ?, ?, ?, ?)`,
           [DEFAULT_NEGOCIO_ID, paciente.id, fecha, hora, hora_fin, estado]
         );
@@ -201,7 +193,7 @@ async function runMigrations() {
       [DEFAULT_NEGOCIO_ID, 'recordatorio']
     );
     if (!plantillaExists) {
-      await run(
+      await runQuery(
         `INSERT INTO plantillas_email (negocio_id, nombre, asunto, cuerpo) VALUES (?, 'recordatorio', ?, ?)`,
         [
           DEFAULT_NEGOCIO_ID,
@@ -233,13 +225,13 @@ Derechos: Puede ejercer sus derechos de acceso, rectificación, supresión, limi
     const textosLegalesRow = await getQuery('SELECT id, politica_privacidad, consentimiento FROM textos_legales WHERE negocio_id = ?', [DEFAULT_NEGOCIO_ID]);
     const vacio = (t) => t == null || String(t).trim() === '';
     if (!textosLegalesRow) {
-      await run(
+      await runQuery(
         'INSERT INTO textos_legales (negocio_id, politica_privacidad, consentimiento, version) VALUES (?, ?, ?, ?)',
         [DEFAULT_NEGOCIO_ID, defaultPolitica, defaultConsentimiento, '1']
       );
       console.log('✅ Textos legales RGPD de ejemplo insertados');
     } else if (vacio(textosLegalesRow.politica_privacidad) && vacio(textosLegalesRow.consentimiento)) {
-      await run(
+      await runQuery(
         'UPDATE textos_legales SET politica_privacidad = ?, consentimiento = ?, version = ?, updated_at = CURRENT_TIMESTAMP WHERE negocio_id = ?',
         [defaultPolitica, defaultConsentimiento, '1', DEFAULT_NEGOCIO_ID]
       );
@@ -259,14 +251,12 @@ Derechos: Puede ejercer sus derechos de acceso, rectificación, supresión, limi
     });
     const landingRow = await getQuery('SELECT negocio_id FROM landing_page WHERE negocio_id = ?', [DEFAULT_NEGOCIO_ID]);
     if (!landingRow) {
-      await run('INSERT INTO landing_page (negocio_id, content) VALUES (?, ?)', [DEFAULT_NEGOCIO_ID, defaultLanding]);
+      await runQuery('INSERT INTO landing_page (negocio_id, content) VALUES (?, ?)', [DEFAULT_NEGOCIO_ID, defaultLanding]);
       console.log('✅ Landing page por defecto creada');
     }
 
   } catch (err) {
     throw err;
-  } finally {
-    if (db) db.close();
   }
 }
 

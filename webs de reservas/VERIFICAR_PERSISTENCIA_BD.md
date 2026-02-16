@@ -1,10 +1,28 @@
 # Verificar que la base de datos persista (usuarios no se borran)
 
-Si cada vez que pasa un tiempo (o cada push/deploy) tienes que volver a crear el usuario, la BD **no** está usando el volumen. Sigue esta lista y revisa los logs.
+Si cada vez que pasa un tiempo (o cada push/deploy) tienes que volver a crear el usuario, la BD no está persistiendo. Hay dos formas de conseguir persistencia en Railway.
 
 ---
 
-## Por qué se borra todo en cada deploy
+## Opción recomendada: PostgreSQL en Railway (persistencia garantizada)
+
+La forma **más robusta** es usar la **base de datos PostgreSQL** que ofrece Railway. Los datos quedan en un servicio gestionado y **no dependen de volúmenes ni del contenedor**.
+
+1. En tu proyecto **Railway** → **+ New** → **Database** → elige **PostgreSQL**.
+2. Railway crea el servicio de BD y te asigna la variable **`DATABASE_URL`**. Conéctala al servicio **web** (en la pestaña del Postgres → **Variables** → **Add reference** al servicio web, o copia `DATABASE_URL` a las variables del servicio **web**).
+3. En el servicio **web** debe existir la variable **`DATABASE_URL`** (con la cadena de conexión que te da Railway).
+4. **Redeploy** el servicio web. En los logs deberías ver: **`💾 Base de datos: PostgreSQL (Railway) – persistencia garantizada`**.
+5. Crea el primer usuario en **/setup**. Los datos ya no se pierden en cada deploy.
+
+No hace falta Volume ni `DATABASE_PATH` cuando usas `DATABASE_URL`. Todo queda en la nube y persistente.
+
+---
+
+## Alternativa: SQLite con volumen
+
+Si no usas Postgres, la app usa un archivo SQLite. Para que persista hace falta un **Volume** y que la ruta coincida.
+
+### Por qué se borra todo en cada deploy (SQLite)
 
 - En cada deploy Railway arranca un **contenedor nuevo**. Todo lo que la app escribe en el disco “normal” del contenedor (por ejemplo `./database.db` o `/app/database.db`) **se pierde** cuando ese contenedor desaparece.
 - La **única** forma de que los datos sobrevivan es escribir el fichero de la base de datos **dentro del path donde está montado el Volume**. Ese path lo eliges tú al crear el volumen en Railway (p. ej. `/data` o `/app/data`).

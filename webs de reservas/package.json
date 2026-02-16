@@ -4,7 +4,7 @@
   "description": "Plantilla base para sistema de reservas de citas para psicólogos",
   "main": "server.js",
   "scripts": {
-    "start": "node database/init.js && node server.js",
+    "start": "node scripts/start.js",
     "build": "echo ok",
     "dev": "nodemon server.js",
     "init-db": "node database/init.js",
@@ -26,6 +26,7 @@
     "multer": "^2.0.2",
     "nodemailer": "^6.9.7",
     "path": "^0.12.7",
+    "pg": "^8.18.0",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {

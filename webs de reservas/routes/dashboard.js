@@ -12,6 +12,27 @@ const { getResumenMes } = require('../lib/stats');
 const plantillasService = require('../lib/plantillas');
 const { sendTestEmailWithNegocio } = require('../lib/email-negocio');
 
+// Textos legales RGPD de ejemplo (cuando no hay nada guardado)
+const TEXTOS_LEGALES_EJEMPLO = {
+  politica_privacidad: `POLÍTICA DE PRIVACIDAD (ejemplo RGPD)
+
+Responsable del tratamiento: [Nombre del profesional/centro], con domicilio en [dirección] y contacto [email].
+
+Finalidad: Gestión de citas, relación terapéutica o profesional y comunicaciones relativas al servicio.
+
+Legitimación: Consentimiento del interesado y, en su caso, ejecución de contrato.
+
+Datos que tratamos: nombre, apellidos, email, teléfono y cuantos datos facilite en el formulario de reserva o en sesión.
+
+Conservación: Los datos se conservarán mientras exista relación y, tras ella, durante los plazos legales aplicables (incluida reclamación de responsabilidades).
+
+Destinatarios: No se ceden datos a terceros salvo obligación legal.
+
+Derechos: Puede ejercer sus derechos de acceso, rectificación, supresión, limitación, oposición y portabilidad dirigiendo un escrito a [email] o ante la Agencia Española de Protección de Datos (www.aepd.es).`,
+  consentimiento: `Consiento el tratamiento de mis datos personales (nombre, email, teléfono y los que facilite) para la gestión de la cita y la relación terapéutica/profesional, de conformidad con la política de privacidad indicada.`,
+  version: '1'
+};
+
 // Aplicar autenticación a todas las rutas del dashboard
 router.use(requireAuth);
 
@@ -361,7 +382,11 @@ router.get('/api/textos-legales', async (req, res) => {
   try {
     const negocioId = req.negocioId || 1;
     const row = await getQuery('SELECT * FROM textos_legales WHERE negocio_id = ?', [negocioId]);
-    res.json(row || { politica_privacidad: '', consentimiento: '', version: '1' });
+    const vacio = (t) => t == null || String(t).trim() === '';
+    if (!row || (vacio(row.politica_privacidad) && vacio(row.consentimiento))) {
+      return res.json({ ...TEXTOS_LEGALES_EJEMPLO, ...(row && { id: row.id }) });
+    }
+    res.json(row);
   } catch (error) {
     res.status(500).json({ error: 'Error obteniendo textos legales' });
   }

@@ -202,6 +202,41 @@ async function runMigrations() {
       );
     }
 
+    // --- Textos legales RGPD por defecto (ejemplo política de privacidad y consentimiento) ---
+    const defaultPolitica = `POLÍTICA DE PRIVACIDAD (ejemplo RGPD)
+
+Responsable del tratamiento: [Nombre del profesional/centro], con domicilio en [dirección] y contacto [email].
+
+Finalidad: Gestión de citas, relación terapéutica o profesional y comunicaciones relativas al servicio.
+
+Legitimación: Consentimiento del interesado y, en su caso, ejecución de contrato.
+
+Datos que tratamos: nombre, apellidos, email, teléfono y cuantos datos facilite en el formulario de reserva o en sesión.
+
+Conservación: Los datos se conservarán mientras exista relación y, tras ella, durante los plazos legales aplicables (incluida reclamación de responsabilidades).
+
+Destinatarios: No se ceden datos a terceros salvo obligación legal.
+
+Derechos: Puede ejercer sus derechos de acceso, rectificación, supresión, limitación, oposición y portabilidad dirigiendo un escrito a [email] o ante la Agencia Española de Protección de Datos (www.aepd.es).`;
+
+    const defaultConsentimiento = `Consiento el tratamiento de mis datos personales (nombre, email, teléfono y los que facilite) para la gestión de la cita y la relación terapéutica/profesional, de conformidad con la política de privacidad indicada.`;
+
+    const textosLegalesRow = await getQuery('SELECT id, politica_privacidad, consentimiento FROM textos_legales WHERE negocio_id = ?', [DEFAULT_NEGOCIO_ID]);
+    const vacio = (t) => t == null || String(t).trim() === '';
+    if (!textosLegalesRow) {
+      await run(
+        'INSERT INTO textos_legales (negocio_id, politica_privacidad, consentimiento, version) VALUES (?, ?, ?, ?)',
+        [DEFAULT_NEGOCIO_ID, defaultPolitica, defaultConsentimiento, '1']
+      );
+      console.log('✅ Textos legales RGPD de ejemplo insertados');
+    } else if (vacio(textosLegalesRow.politica_privacidad) && vacio(textosLegalesRow.consentimiento)) {
+      await run(
+        'UPDATE textos_legales SET politica_privacidad = ?, consentimiento = ?, version = ?, updated_at = CURRENT_TIMESTAMP WHERE negocio_id = ?',
+        [defaultPolitica, defaultConsentimiento, '1', DEFAULT_NEGOCIO_ID]
+      );
+      console.log('✅ Textos legales RGPD de ejemplo actualizados (campos vacíos)');
+    }
+
   } catch (err) {
     throw err;
   } finally {

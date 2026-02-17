@@ -990,11 +990,14 @@
                     if (!confirm('¿Eliminar al paciente "' + p.nombre + '"? Se eliminarán también sus datos. Esta acción no se puede deshacer.')) return;
                     try {
                         const res = await fetch('/dashboard/api/pacientes/' + p.id, { method: 'DELETE' });
-                        const data = await res.json();
-                        if (data.success) await this.loadPacientes();
-                        else alert(data.error || 'Error');
+                        const data = await res.json().catch(() => ({}));
+                        if (data.success) {
+                            await this.loadPacientes();
+                        } else {
+                            alert(data.error || 'Error eliminando paciente');
+                        }
                     } catch (e) {
-                        alert('Error eliminando');
+                        alert('Error de conexión al eliminar');
                     }
                 },
 

@@ -130,6 +130,8 @@ async function remove(negocioId, pacienteId) {
   if (citasCount && Number(citasCount.total) > 0) {
     throw new Error('No se puede eliminar: el paciente tiene citas. Cancela o elimina sus citas primero.');
   }
+  // Borrar consentimientos (FK a pacientes) para poder eliminar al paciente
+  await runQuery('DELETE FROM consentimientos WHERE paciente_id = ?', [pacienteId]);
   await runQuery('DELETE FROM pacientes WHERE id = ? AND negocio_id = ?', [pacienteId, negocioId]);
   return true;
 }

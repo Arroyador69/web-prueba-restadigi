@@ -10,6 +10,20 @@ const negocioService = require('../lib/negocio');
 
 const NEGOCIO_ID = 1;
 
+// Servir imagen de la landing desde la BD (persistente en Railway)
+router.get('/api/landing-image/:id', async (req, res) => {
+  try {
+    const row = await getQuery('SELECT mimetype, data FROM landing_images WHERE id = ?', [req.params.id]);
+    if (!row || !row.data) return res.status(404).send('Imagen no encontrada');
+    res.set('Content-Type', row.mimetype || 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(Buffer.isBuffer(row.data) ? row.data : Buffer.from(row.data));
+  } catch (error) {
+    console.error('Error sirviendo imagen landing:', error);
+    res.status(500).send('Error');
+  }
+});
+
 // Landing pública (página editable + reserva)
 router.get('/', async (req, res) => {
   res.sendFile('landing.html', { root: './views' });

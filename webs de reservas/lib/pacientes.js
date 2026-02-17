@@ -123,6 +123,13 @@ async function update(negocioId, pacienteId, data) {
 async function remove(negocioId, pacienteId) {
   const p = await getById(negocioId, pacienteId);
   if (!p) return false;
+  const citasCount = await getQuery(
+    'SELECT COUNT(*) as total FROM citas WHERE negocio_id = ? AND paciente_id = ?',
+    [negocioId, pacienteId]
+  );
+  if (citasCount && Number(citasCount.total) > 0) {
+    throw new Error('No se puede eliminar: el paciente tiene citas. Cancela o elimina sus citas primero.');
+  }
   await runQuery('DELETE FROM pacientes WHERE id = ? AND negocio_id = ?', [pacienteId, negocioId]);
   return true;
 }

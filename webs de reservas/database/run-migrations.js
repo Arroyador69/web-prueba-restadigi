@@ -106,6 +106,18 @@ async function runMigrations() {
       )
     `);
 
+    // --- Tabla landing_images (imágenes en BD para persistir en Railway) ---
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS landing_images (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        negocio_id INTEGER NOT NULL REFERENCES negocio(id),
+        filename TEXT NOT NULL,
+        mimetype TEXT NOT NULL,
+        data BLOB NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // --- Tabla consentimientos (log RGPD) ---
     await runQuery(`
       CREATE TABLE IF NOT EXISTS consentimientos (
@@ -157,6 +169,20 @@ async function runMigrations() {
 
     // Asegurar que usuarios existentes vean citas del negocio 1 (landing y dashboard alineados)
     await runQuery('UPDATE users SET negocio_id = 1 WHERE negocio_id IS NULL').catch(() => {});
+
+    // --- Tabla landing_images en Postgres (para deploys que ya tenían BD antes de añadirla) ---
+    if (isPg) {
+      await runQuery(`
+        CREATE TABLE IF NOT EXISTS landing_images (
+          id SERIAL PRIMARY KEY,
+          negocio_id INTEGER NOT NULL REFERENCES negocio(id),
+          filename TEXT NOT NULL,
+          mimetype TEXT NOT NULL,
+          data BYTEA NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `).catch(() => {});
+    }
 
     // --- Migrar appointments → pacientes + citas (una sola vez) ---
     const citasCount = await getQuery('SELECT COUNT(*) as c FROM citas').catch(() => null);

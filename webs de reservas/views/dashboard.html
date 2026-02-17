@@ -255,7 +255,7 @@
                                             <h3 class="font-semibold text-gray-900" x-text="c.paciente_nombre"></h3>
                                             <p class="text-sm text-gray-600" x-text="c.paciente_email"></p>
                                             <p x-show="c.paciente_telefono" class="text-sm text-gray-600" x-text="'Tel: ' + c.paciente_telefono"></p>
-                                            <p class="text-sm text-gray-600 mt-1"><span x-text="c.fecha"></span> <span x-text="c.hora_inicio"></span> - <span x-text="c.hora_fin"></span></p>
+                                            <p class="text-sm text-gray-600 mt-1"><span x-text="formatCitaFecha(c.fecha)"></span> <span x-text="c.hora_inicio"></span> - <span x-text="c.hora_fin"></span></p>
                                             <p class="text-xs mt-1"><span class="badge" :class="c.estado === 'confirmada' ? 'badge-confirmada' : c.estado === 'pasada' ? 'badge-pasada' : c.estado === 'cancelada' ? 'badge-cancelada' : c.estado === 'pendiente' ? 'badge-pendiente' : 'badge-no-asistio'" x-text="c.estado"></span> <span x-show="c.tipo_sesion" x-text="' · ' + c.tipo_sesion"></span></p>
                                         </div>
                                         <div>
@@ -1062,7 +1062,8 @@
 
                 getCitasInCell(dayStr, hour) {
                     return this.citas.filter(c => {
-                        if (c.fecha !== dayStr) return false;
+                        const fechaStr = c.fecha ? String(c.fecha).slice(0, 10) : '';
+                        if (fechaStr !== dayStr) return false;
                         const h = parseInt(String(c.hora_inicio).split(':')[0], 10);
                         return h === hour;
                     });
@@ -1112,10 +1113,14 @@
                     return new Date().toISOString().slice(0, 10);
                 },
 
+                formatCitaFecha(fecha) {
+                    return fecha ? String(fecha).slice(0, 10) : '';
+                },
+
                 openModalCita(cita) {
                     this.loadListaPacientesParaCita();
                     if (cita) {
-                        this.modalCita = { show: true, id: cita.id, paciente_id: cita.paciente_id, fecha: cita.fecha, hora_inicio: cita.hora_inicio, hora_fin: cita.hora_fin, tipo_sesion: cita.tipo_sesion || '', notas: cita.notas || '' };
+                        this.modalCita = { show: true, id: cita.id, paciente_id: cita.paciente_id, fecha: this.formatCitaFecha(cita.fecha), hora_inicio: cita.hora_inicio, hora_fin: cita.hora_fin, tipo_sesion: cita.tipo_sesion || '', notas: cita.notas || '' };
                         this.slotsCitaModal = [{ hora_inicio: cita.hora_inicio, hora_fin: cita.hora_fin, display: cita.hora_inicio }];
                     } else {
                         this.modalCita = { show: true, id: null, paciente_id: '', fecha: '', hora_inicio: '', hora_fin: '', tipo_sesion: '', notas: '' };

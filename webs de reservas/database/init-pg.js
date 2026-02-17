@@ -139,6 +139,16 @@ async function initPostgres() {
     )
   `);
   await runQuery(`
+    CREATE TABLE IF NOT EXISTS landing_images (
+      id SERIAL PRIMARY KEY,
+      negocio_id INTEGER NOT NULL REFERENCES negocio(id),
+      filename TEXT NOT NULL,
+      mimetype TEXT NOT NULL,
+      data BYTEA NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await runQuery(`
     CREATE TABLE IF NOT EXISTS consentimientos (
       id SERIAL PRIMARY KEY,
       paciente_id INTEGER NOT NULL REFERENCES pacientes(id),

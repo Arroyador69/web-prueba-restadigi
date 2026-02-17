@@ -238,10 +238,10 @@ router.post('/api/setup/first-user', async (req, res) => {
       return res.status(400).json({ error: 'Este email ya está registrado' });
     }
 
-    // Hash de la contraseña y crear usuario
+    // Hash de la contraseña y crear usuario (negocio_id=1 para que vea las citas de la landing)
     const hashedPassword = await bcrypt.hash(password, 10);
     await runQuery(
-      'INSERT INTO users (email, password, name) VALUES (?, ?, ?)',
+      'INSERT INTO users (email, password, name, negocio_id) VALUES (?, ?, ?, 1)',
       [email, hashedPassword, name]
     );
     // Comprobar que quedó guardado (y forzar flush con otra lectura)

@@ -155,6 +155,9 @@ async function runMigrations() {
       }
     }
 
+    // Asegurar que usuarios existentes vean citas del negocio 1 (landing y dashboard alineados)
+    await runQuery('UPDATE users SET negocio_id = 1 WHERE negocio_id IS NULL').catch(() => {});
+
     // --- Migrar appointments → pacientes + citas (una sola vez) ---
     const citasCount = await getQuery('SELECT COUNT(*) as c FROM citas').catch(() => null);
     if (citasCount && citasCount.c === 0) {

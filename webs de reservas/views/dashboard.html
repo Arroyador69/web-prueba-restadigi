@@ -803,7 +803,7 @@
                     startDate: '',
                     endDate: ''
                 },
-                appointmentViewMode: 'calendar',
+                appointmentViewMode: 'list',
                 calendarWeekStart: '',
                 modalCita: { show: false, id: null, paciente_id: '', fecha: '', hora_inicio: '', hora_fin: '', tipo_sesion: '', notas: '' },
                 listaPacientesParaCita: [],
@@ -1090,11 +1090,11 @@
                 async loadCitas() {
                     try {
                         if (this.appointmentViewMode === 'calendar' && this.calendarWeekStart) {
-                            const mon = new Date(this.calendarWeekStart + 'T00:00:00');
+                            const mon = new Date(this.calendarWeekStart + 'T12:00:00');
                             const sun = new Date(mon);
                             sun.setDate(mon.getDate() + 6);
                             this.filters.startDate = this.calendarWeekStart;
-                            this.filters.endDate = sun.toISOString().slice(0, 10);
+                            this.filters.endDate = sun.getFullYear() + '-' + String(sun.getMonth() + 1).padStart(2, '0') + '-' + String(sun.getDate()).padStart(2, '0');
                         }
                         let url = '/dashboard/api/citas?';
                         if (this.filters.startDate) url += 'startDate=' + encodeURIComponent(this.filters.startDate) + '&';

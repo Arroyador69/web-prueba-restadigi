@@ -149,6 +149,23 @@ async function initPostgres() {
     )
   `);
 
+  // Negocio por defecto (id=1) para que landing y dashboard usen el mismo negocio
+  const negocioExists = await getQuery('SELECT id FROM negocio WHERE id = 1');
+  if (!negocioExists) {
+    await runQuery(
+      `INSERT INTO negocio (id, nombre, telefono, email, direccion, duracion_cita_default) VALUES (1, ?, ?, ?, ?, ?)`,
+      [
+        config.businessName || 'Mi Negocio',
+        config.businessPhone || '',
+        config.businessEmail || '',
+        '',
+        parseInt(config.appointmentDuration || '50', 10)
+      ]
+    );
+    await runQuery("SELECT setval(pg_get_serial_sequence('negocio', 'id'), (SELECT COALESCE(MAX(id), 1) FROM negocio))").catch(() => {});
+    console.log('✅ Negocio por defecto creado (id=1)');
+  }
+
   // Horarios y config inicial (desde config.js)
   for (const day of Object.keys(config.openingHours || {})) {
     const ranges = config.openingHours[day];

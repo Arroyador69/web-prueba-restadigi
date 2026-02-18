@@ -4,6 +4,24 @@ Guía paso a paso para enviar los emails de confirmación desde **Zoho Mail** co
 
 ---
 
+## ⚠️ Importante: Railway plan Hobby y SMTP
+
+**En el plan Hobby (y Free/Trial), Railway bloquea las conexiones SMTP** (puertos 465 y 587). Por eso al enviar el email de prueba puede salir **"Connection timeout"**: no es fallo de la landing ni de Zoho; es que Railway no permite salida por SMTP en ese plan.
+
+Tienes dos opciones para que los mails funcionen:
+
+1. **Usar Resend (recomendado en Hobby)**  
+   Resend usa **HTTPS**, no SMTP, así que funciona en todos los planes de Railway. Puedes verificar tu dominio **delfincheckin.com** en Resend y enviar desde **contacto@delfincheckin.com** (o reservas@…). En Railway: pon **RESEND_API_KEY** y **EMAIL_FROM** = contacto@delfincheckin.com; quita las variables SMTP. La guía de Resend + dominio está en **EMAIL_SIN_DOMINIO.md**.
+
+2. **Pasar a Railway Pro**  
+   En Pro, SMTP (Zoho, Gmail, etc.) sí está permitido. Puedes seguir entonces con la configuración SMTP de esta guía.
+
+**Resend con tu dominio:** En [resend.com](https://resend.com) → Domains → Add **delfincheckin.com** → añade en Porkbun los registros TXT que te pida Resend. Luego en Railway: **RESEND_API_KEY** + **EMAIL_FROM** = `contacto@delfincheckin.com`. Los correos saldrán desde contacto@delfincheckin.com por API (sin SMTP). Ver **EMAIL_SIN_DOMINIO.md**.
+
+Si ves "Connection timeout" al probar el email, es por lo anterior. El fallo no está en la landing.
+
+---
+
 ## Resumen
 
 - **Dominio:** delfincheckin.com  

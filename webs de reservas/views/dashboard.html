@@ -128,6 +128,7 @@
                     <button @click="activeTab = 'appointments'" class="nav-tab" :class="activeTab === 'appointments' && 'nav-tab-active'">Citas</button>
                     <button @click="activeTab = 'pacientes'; loadPacientes()" class="nav-tab" :class="activeTab === 'pacientes' && 'nav-tab-active'">Pacientes</button>
                     <button @click="activeTab = 'landing'; loadLanding()" class="nav-tab" :class="activeTab === 'landing' && 'nav-tab-active'">Landing</button>
+                    <button @click="activeTab = 'facturas'; loadFacturas()" class="nav-tab" :class="activeTab === 'facturas' && 'nav-tab-active'">Facturas</button>
                     <button @click="activeTab = 'config'" class="nav-tab" :class="activeTab === 'config' && 'nav-tab-active'">Configuración</button>
                     <button @click="activeTab = 'hours'" class="nav-tab" :class="activeTab === 'hours' && 'nav-tab-active'">Horarios</button>
                     <button @click="activeTab = 'blocked'" class="nav-tab" :class="activeTab === 'blocked' && 'nav-tab-active'">Bloqueos</button>
@@ -505,6 +506,78 @@
                 </div>
             </div>
 
+            <!-- Tab: Facturas -->
+            <div x-show="activeTab === 'facturas'" class="fade-in">
+                <div class="flex gap-2 mb-4">
+                    <button @click="facturaTab = 'nueva'" class="nav-tab" :class="facturaTab === 'nueva' && 'nav-tab-active'">Nueva Factura</button>
+                    <button @click="facturaTab = 'historial'; loadFacturas()" class="nav-tab" :class="facturaTab === 'historial' && 'nav-tab-active'">Historial (<span x-text="facturas.length"></span>)</button>
+                </div>
+
+                <template x-if="facturaTab === 'nueva'">
+                    <div class="card bg-white p-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-6">Nueva Factura</h2>
+                        <form @submit.prevent="crearFactura()" class="space-y-6">
+                            <div class="card bg-slate-50/80 rounded-xl p-5 border border-slate-100">
+                                <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2"><span class="text-lg">👤</span> Datos del Cliente</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label><input type="text" x-model="facturaForm.cliente_nombre" class="input-modern" required placeholder="Juan Pérez"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">NIF/DNI</label><input type="text" x-model="facturaForm.cliente_nif" class="input-modern" placeholder="12345678A"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label><input type="text" x-model="facturaForm.cliente_direccion" class="input-modern" placeholder="Calle Mayor, 123"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Código Postal</label><input type="text" x-model="facturaForm.cliente_cp" class="input-modern" placeholder="29640"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Ciudad</label><input type="text" x-model="facturaForm.cliente_ciudad" class="input-modern" placeholder="Fuengirola"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Provincia</label><input type="text" x-model="facturaForm.cliente_provincia" class="input-modern" placeholder="Málaga"></div>
+                                </div>
+                            </div>
+                            <div class="card bg-slate-50/80 rounded-xl p-5 border border-slate-100">
+                                <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2"><span class="text-lg">€</span> Concepto y Precio</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Concepto *</label><input type="text" x-model="facturaForm.concepto" class="input-modern" required placeholder="Sesión de psicología"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Total pagado por el cliente (€) *</label><input type="number" step="0.01" min="0" x-model="facturaForm.totalPagado" @input="actualizarResumenFactura()" class="input-modern" required placeholder="60"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">IVA (%)</label><input type="number" step="1" min="0" max="100" x-model="facturaForm.ivaPct" @input="actualizarResumenFactura()" class="input-modern" placeholder="21"></div>
+                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label><input type="text" x-model="facturaForm.descripcion" class="input-modern" placeholder="Sesión individual 50 min"></div>
+                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Forma de pago</label><input type="text" x-model="facturaForm.forma_pago" class="input-modern" placeholder="Transferencia bancaria"></div>
+                                </div>
+                            </div>
+                            <div class="card bg-emerald-50/80 rounded-xl p-5 border border-emerald-100">
+                                <h3 class="font-semibold text-gray-900 mb-3">Resumen de la Factura</h3>
+                                <p class="text-sm text-gray-600">Precio base: <span x-text="resumenFactura.precioBase"></span></p>
+                                <p class="text-sm text-gray-600">IVA (<span x-text="resumenFactura.ivaPct"></span>%): <span x-text="resumenFactura.ivaEur"></span></p>
+                                <p class="font-semibold text-[var(--primary-color)] mt-2">Total: <span x-text="resumenFactura.total"></span></p>
+                            </div>
+                            <button type="submit" :disabled="savingFactura" class="btn-primary">
+                                <span x-show="!savingFactura">Crear Factura</span>
+                                <span x-show="savingFactura">Creando...</span>
+                            </button>
+                            <span x-show="facturaMessage" class="ml-2 text-sm" :class="facturaMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="facturaMessage"></span>
+                        </form>
+                    </div>
+                </template>
+
+                <template x-if="facturaTab === 'historial'">
+                    <div class="card bg-white p-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4">Historial de facturas</h2>
+                        <p x-show="facturas.length === 0" class="text-gray-500 py-4">No hay facturas aún.</p>
+                        <div x-show="facturas.length > 0" class="overflow-x-auto">
+                            <table class="table-modern w-full">
+                                <thead><tr><th>Nº</th><th>Fecha</th><th>Cliente</th><th>Concepto</th><th>Total</th><th>Acciones</th></tr></thead>
+                                <tbody>
+                                    <template x-for="f in facturas" :key="f.id">
+                                        <tr>
+                                            <td x-text="f.numero_factura"></td>
+                                            <td x-text="f.fecha_emision ? String(f.fecha_emision).slice(0,10) : ''"></td>
+                                            <td x-text="f.cliente_nombre"></td>
+                                            <td x-text="f.concepto"></td>
+                                            <td x-text="formatEuroFactura(f.total)"></td>
+                                            <td><a :href="'/dashboard/api/facturas/' + f.id + '/pdf'" target="_blank" rel="noopener" class="btn-link">Ver PDF</a></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
             <!-- Tab: Config -->
             <div x-show="activeTab === 'config'">
                 <div class="card bg-white p-6">
@@ -529,6 +602,26 @@
                             <p class="text-xs text-gray-500 mt-1">
                                 Ejemplo: 50 minutos para sesiones estándar, 20 minutos para consultas cortas
                             </p>
+                        </div>
+
+                        <div class="border-t pt-6 mt-4">
+                            <h3 class="font-semibold text-gray-900 mb-3">Datos fiscales (emisor de facturas)</h3>
+                            <p class="text-sm text-gray-500 mb-3">Nombre, teléfono y email del emisor se usan de arriba. Completa NIF y dirección fiscal para que las facturas sean válidas.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">NIF/CIF</label>
+                                    <input type="text" x-model="negocio.nif" class="input-modern" placeholder="12345678A">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Dirección fiscal</label>
+                                    <input type="text" x-model="negocio.direccion" class="input-modern" placeholder="Calle, número, código postal, ciudad">
+                                </div>
+                            </div>
+                            <button type="button" @click="saveDatosFiscales()" :disabled="savingDatosFiscales" class="btn-secondary">
+                                <span x-show="!savingDatosFiscales">Guardar datos fiscales</span>
+                                <span x-show="savingDatosFiscales">Guardando...</span>
+                            </button>
+                            <span x-show="datosFiscalesMessage" class="ml-2 text-sm" :class="datosFiscalesMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="datosFiscalesMessage"></span>
                         </div>
 
                         <button type="submit" :disabled="savingConfig" class="btn-primary">
@@ -829,6 +922,8 @@
                     password: ''
                 },
                 savingConfig: false,
+                savingDatosFiscales: false,
+                datosFiscalesMessage: '',
                 savingHours: false,
                 creatingUser: false,
                 configMessage: '',
@@ -850,6 +945,15 @@
                 landingMessage: '',
                 uploadingImageHero: false,
                 uploadingImageAbout: false,
+                facturaTab: 'nueva',
+                facturas: [],
+                facturaForm: {
+                    cliente_nombre: '', cliente_nif: '', cliente_direccion: '', cliente_cp: '', cliente_ciudad: '', cliente_provincia: '',
+                    concepto: '', descripcion: '', totalPagado: '', ivaPct: '21', forma_pago: ''
+                },
+                resumenFactura: { precioBase: '0,00 €', ivaPct: 21, ivaEur: '0,00 €', total: '0,00 €' },
+                savingFactura: false,
+                facturaMessage: '',
 
                 async init() {
                     this.setCalendarWeekToNow();
@@ -1426,6 +1530,75 @@
                         this.configMessage = 'Error guardando configuración';
                     } finally {
                         this.savingConfig = false;
+                    }
+                },
+
+                async saveDatosFiscales() {
+                    this.savingDatosFiscales = true;
+                    this.datosFiscalesMessage = '';
+                    try {
+                        const res = await fetch('/dashboard/api/negocio', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nif: this.negocio.nif, direccion: this.negocio.direccion })
+                        });
+                        const data = await res.json();
+                        this.datosFiscalesMessage = data.success ? 'Datos fiscales guardados correctamente' : (data.error || 'Error');
+                    } catch (e) {
+                        this.datosFiscalesMessage = 'Error de conexión';
+                    } finally {
+                        this.savingDatosFiscales = false;
+                    }
+                },
+
+                actualizarResumenFactura() {
+                    const total = parseFloat(this.facturaForm.totalPagado) || 0;
+                    const ivaPct = parseFloat(this.facturaForm.ivaPct) || 21;
+                    const precioBase = total / (1 + ivaPct / 100);
+                    const ivaEur = total - precioBase;
+                    this.resumenFactura = {
+                        precioBase: precioBase.toFixed(2).replace('.', ',') + ' €',
+                        ivaPct: ivaPct,
+                        ivaEur: ivaEur.toFixed(2).replace('.', ',') + ' €',
+                        total: total.toFixed(2).replace('.', ',') + ' €'
+                    };
+                },
+                formatEuroFactura(n) {
+                    if (n == null) return '0,00 €';
+                    const x = typeof n === 'number' ? n : parseFloat(n);
+                    return isNaN(x) ? '0,00 €' : x.toFixed(2).replace('.', ',') + ' €';
+                },
+                async loadFacturas() {
+                    try {
+                        const res = await fetch('/dashboard/api/facturas');
+                        const data = await res.json();
+                        this.facturas = data.facturas || [];
+                    } catch (e) {
+                        this.facturas = [];
+                    }
+                },
+                async crearFactura() {
+                    this.savingFactura = true;
+                    this.facturaMessage = '';
+                    try {
+                        const res = await fetch('/dashboard/api/facturas', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.facturaForm)
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            this.facturaMessage = 'Factura ' + data.numero_factura + ' creada correctamente.';
+                            this.facturaForm = { cliente_nombre: '', cliente_nif: '', cliente_direccion: '', cliente_cp: '', cliente_ciudad: '', cliente_provincia: '', concepto: '', descripcion: '', totalPagado: '', ivaPct: '21', forma_pago: '' };
+                            this.actualizarResumenFactura();
+                            await this.loadFacturas();
+                        } else {
+                            this.facturaMessage = data.error || 'Error creando factura';
+                        }
+                    } catch (e) {
+                        this.facturaMessage = 'Error de conexión';
+                    } finally {
+                        this.savingFactura = false;
                     }
                 },
 

@@ -129,6 +129,30 @@ async function runMigrations() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // --- Tabla facturas (generador de facturas) ---
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS facturas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        negocio_id INTEGER NOT NULL REFERENCES negocio(id),
+        numero_factura TEXT NOT NULL,
+        fecha_emision DATE NOT NULL,
+        cliente_nombre TEXT NOT NULL,
+        cliente_nif TEXT,
+        cliente_direccion TEXT,
+        cliente_cp TEXT,
+        cliente_ciudad TEXT,
+        cliente_provincia TEXT,
+        concepto TEXT NOT NULL,
+        descripcion TEXT,
+        precio_base REAL NOT NULL,
+        iva_pct REAL NOT NULL DEFAULT 21,
+        iva_eur REAL NOT NULL,
+        total REAL NOT NULL,
+        forma_pago TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
     }
 
     // --- SMTP en negocio ---
@@ -138,6 +162,7 @@ async function runMigrations() {
     await runIgnore('ALTER TABLE negocio ADD COLUMN smtp_password TEXT');
     await runIgnore('ALTER TABLE negocio ADD COLUMN email_remitente TEXT');
     await runIgnore('ALTER TABLE negocio ADD COLUMN nombre_remitente TEXT');
+    await runIgnore('ALTER TABLE negocio ADD COLUMN nif TEXT');
 
     // --- Añadir negocio_id a tablas existentes ---
     await runIgnore('ALTER TABLE users ADD COLUMN negocio_id INTEGER DEFAULT 1');
@@ -170,8 +195,30 @@ async function runMigrations() {
     // Asegurar que usuarios existentes vean citas del negocio 1 (landing y dashboard alineados)
     await runQuery('UPDATE users SET negocio_id = 1 WHERE negocio_id IS NULL').catch(() => {});
 
-    // --- Tabla landing_images en Postgres (para deploys que ya tenían BD antes de añadirla) ---
+    // --- Tablas en Postgres (para deploys que ya tenían BD antes de añadirlas) ---
     if (isPg) {
+      await runQuery(`
+        CREATE TABLE IF NOT EXISTS facturas (
+          id SERIAL PRIMARY KEY,
+          negocio_id INTEGER NOT NULL REFERENCES negocio(id),
+          numero_factura TEXT NOT NULL,
+          fecha_emision DATE NOT NULL,
+          cliente_nombre TEXT NOT NULL,
+          cliente_nif TEXT,
+          cliente_direccion TEXT,
+          cliente_cp TEXT,
+          cliente_ciudad TEXT,
+          cliente_provincia TEXT,
+          concepto TEXT NOT NULL,
+          descripcion TEXT,
+          precio_base REAL NOT NULL,
+          iva_pct REAL NOT NULL DEFAULT 21,
+          iva_eur REAL NOT NULL,
+          total REAL NOT NULL,
+          forma_pago TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `).catch(() => {});
       await runQuery(`
         CREATE TABLE IF NOT EXISTS landing_images (
           id SERIAL PRIMARY KEY,

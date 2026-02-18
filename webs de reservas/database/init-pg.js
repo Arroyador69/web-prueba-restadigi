@@ -65,6 +65,7 @@ async function initPostgres() {
       telefono TEXT,
       email TEXT,
       direccion TEXT,
+      nif TEXT,
       duracion_cita_default INTEGER NOT NULL DEFAULT 50,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -136,6 +137,28 @@ async function initPostgres() {
       negocio_id INTEGER NOT NULL PRIMARY KEY REFERENCES negocio(id),
       content TEXT,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await runQuery(`
+    CREATE TABLE IF NOT EXISTS facturas (
+      id SERIAL PRIMARY KEY,
+      negocio_id INTEGER NOT NULL REFERENCES negocio(id),
+      numero_factura TEXT NOT NULL,
+      fecha_emision DATE NOT NULL,
+      cliente_nombre TEXT NOT NULL,
+      cliente_nif TEXT,
+      cliente_direccion TEXT,
+      cliente_cp TEXT,
+      cliente_ciudad TEXT,
+      cliente_provincia TEXT,
+      concepto TEXT NOT NULL,
+      descripcion TEXT,
+      precio_base REAL NOT NULL,
+      iva_pct REAL NOT NULL DEFAULT 21,
+      iva_eur REAL NOT NULL,
+      total REAL NOT NULL,
+      forma_pago TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
   await runQuery(`

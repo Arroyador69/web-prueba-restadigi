@@ -22,6 +22,7 @@ const citasService = require('../lib/citas');
 const negocioService = require('../lib/negocio');
 const { getResumenMes } = require('../lib/stats');
 const plantillasService = require('../lib/plantillas');
+const facturasService = require('../lib/facturas');
 const { sendTestEmailWithNegocio } = require('../lib/email-negocio');
 
 // Textos legales RGPD de ejemplo (cuando no hay nada guardado)
@@ -668,6 +669,45 @@ router.delete('/api/blocked-slots/:id', async (req, res) => {
     res.json({ success: true, message: 'Bloqueo eliminado correctamente' });
   } catch (error) {
     res.status(500).json({ error: 'Error eliminando bloqueo' });
+  }
+});
+
+// --- Facturas ---
+router.get('/api/facturas', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const facturas = await facturasService.list(negocioId);
+    res.json({ facturas });
+  } catch (error) {
+    console.error('Error listando facturas:', error);
+    res.status(500).json({ error: 'Error obteniendo facturas' });
+  }
+});
+
+router.post('/api/facturas', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const result = await facturasService.create(negocioId, req.body);
+    res.json({ success: true, id: result.id, numero_factura: result.numero_factura });
+  } catch (error) {
+    console.error('Error creando factura:', error);
+    res.status(400).json({ error: error.message || 'Error creando factura' });
+  }
+});
+
+router.get('/api/facturas/:id/pdf', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const buffer = await facturasService.generatePdfBuffer(negocioId, req.params.id);
+    if (!buffer) return res.status(404).send('Factura no encontrada');
+    const factura = await facturasService.getById(negocioId, req.params.id);
+    const filename = `factura-${(factura && factura.numero_factura) || req.params.id}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error generando PDF factura:', error);
+    res.status(500).send('Error generando PDF');
   }
 });
 

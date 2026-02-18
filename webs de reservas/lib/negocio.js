@@ -10,7 +10,7 @@ async function getById(negocioId) {
 
 async function update(negocioId, data) {
   const {
-    nombre, telefono, email, direccion, duracion_cita_default,
+    nombre, telefono, email, direccion, nif, duracion_cita_default,
     smtp_host, smtp_port, smtp_user, smtp_password, email_remitente, nombre_remitente
   } = data;
   const updates = [];
@@ -19,6 +19,7 @@ async function update(negocioId, data) {
   if (telefono !== undefined) { updates.push('telefono = ?'); params.push(telefono ? String(telefono).trim() : null); }
   if (email !== undefined) { updates.push('email = ?'); params.push(email ? String(email).trim() : null); }
   if (direccion !== undefined) { updates.push('direccion = ?'); params.push(direccion ? String(direccion).trim() : null); }
+  if (nif !== undefined) { updates.push('nif = ?'); params.push(nif ? String(nif).trim() : null); }
   if (duracion_cita_default !== undefined) { updates.push('duracion_cita_default = ?'); params.push(parseInt(duracion_cita_default, 10) || 50); }
   if (smtp_host !== undefined) { updates.push('smtp_host = ?'); params.push(smtp_host ? String(smtp_host).trim() : null); }
   if (smtp_port !== undefined) { updates.push('smtp_port = ?'); params.push(smtp_port != null ? parseInt(smtp_port, 10) : null); }

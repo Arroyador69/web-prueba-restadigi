@@ -24,6 +24,7 @@ const { getResumenMes } = require('../lib/stats');
 const plantillasService = require('../lib/plantillas');
 const facturasService = require('../lib/facturas');
 const { sendTestEmailWithNegocio } = require('../lib/email-negocio');
+const reputacionPro = require('../lib/reputacion-pro');
 
 // Textos legales RGPD de ejemplo (cuando no hay nada guardado)
 const TEXTOS_LEGALES_EJEMPLO = {
@@ -304,7 +305,11 @@ router.post('/api/citas', async (req, res) => {
 router.put('/api/citas/:id', async (req, res) => {
   try {
     const negocioId = req.negocioId || 1;
+    const estadoAnterior = await citasService.getById(negocioId, req.params.id).then(c => c && c.estado);
     await citasService.update(negocioId, req.params.id, req.body);
+    if (req.body.estado === 'completada' && estadoAnterior !== 'completada') {
+      reputacionPro.jobs.scheduleReviewJob(negocioId, req.params.id).catch((e) => console.error('[ReputacionPro] Error programando job:', e.message));
+    }
     res.json({ success: true });
   } catch (error) {
     res.status(400).json({ error: error.message || 'Error actualizando cita' });
@@ -808,6 +813,39 @@ router.post('/api/test-email', async (req, res) => {
     }
     console.error('Error en test-email', detail, error);
     res.status(500).json({ error: `No se pudo enviar${detail}` });
+  }
+});
+
+// --- ReputacionPro: configuración y estadísticas ---
+router.get('/api/reputacion-pro', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const config = await reputacionPro.config.getConfig(negocioId);
+    res.json(config);
+  } catch (error) {
+    console.error('Error obteniendo config ReputacionPro:', error);
+    res.status(500).json({ error: 'Error obteniendo configuración' });
+  }
+});
+
+router.post('/api/reputacion-pro', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    await reputacionPro.config.saveConfig(negocioId, { googleReviewUrl: req.body.googleReviewUrl });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error guardando configuración' });
+  }
+});
+
+router.get('/api/reputacion-pro/stats', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const stats = await reputacionPro.stats.getStats(negocioId);
+    res.json(stats);
+  } catch (error) {
+    console.error('Error obteniendo stats ReputacionPro:', error);
+    res.status(500).json({ error: 'Error obteniendo estadísticas' });
   }
 });
 

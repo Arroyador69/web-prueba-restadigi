@@ -11,7 +11,8 @@ async function getById(negocioId) {
 async function update(negocioId, data) {
   const {
     nombre, telefono, email, direccion, nif, duracion_cita_default,
-    smtp_host, smtp_port, smtp_user, smtp_password, email_remitente, nombre_remitente
+    smtp_host, smtp_port, smtp_user, smtp_password, email_remitente, nombre_remitente,
+    google_review_url, reputacion_activa
   } = data;
   const updates = [];
   const params = [];
@@ -27,6 +28,8 @@ async function update(negocioId, data) {
   if (smtp_password !== undefined) { updates.push('smtp_password = ?'); params.push(smtp_password ? String(smtp_password).trim() : null); }
   if (email_remitente !== undefined) { updates.push('email_remitente = ?'); params.push(email_remitente ? String(email_remitente).trim() : null); }
   if (nombre_remitente !== undefined) { updates.push('nombre_remitente = ?'); params.push(nombre_remitente ? String(nombre_remitente).trim() : null); }
+  if (google_review_url !== undefined) { updates.push('google_review_url = ?'); params.push(google_review_url ? String(google_review_url).trim() : null); }
+  if (reputacion_activa !== undefined) { updates.push('reputacion_activa = ?'); params.push(reputacion_activa ? 1 : 0); }
   if (updates.length === 0) return { success: true };
   params.push(negocioId);
   await runQuery(

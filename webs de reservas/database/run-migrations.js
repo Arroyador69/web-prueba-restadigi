@@ -331,6 +331,9 @@ Derechos: Puede ejercer sus derechos de acceso, rectificación, supresión, limi
       console.log('✅ Landing page por defecto creada');
     }
 
+    // --- ReputacionPro: tablas y columnas para reseñas Google ---
+    const { runReputacionProMigrations } = require('./reputacion-pro-migrations');
+    await runReputacionProMigrations();
   } catch (err) {
     throw err;
   }

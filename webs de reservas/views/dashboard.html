@@ -60,6 +60,7 @@
         .badge-pendiente { background: #fef9c3; color: #854d0e; }
         .badge-pasada { background: #f1f5f9; color: #475569; }
         .badge-no-asistio { background: #ffedd5; color: #9a3412; }
+        .badge-completada { background: #ccfbf1; color: #0f766e; }
 
         /* Tablas */
         .table-modern { border-collapse: separate; border-spacing: 0; }
@@ -129,6 +130,7 @@
                     <button @click="activeTab = 'pacientes'; loadPacientes()" class="nav-tab" :class="activeTab === 'pacientes' && 'nav-tab-active'">Pacientes</button>
                     <button @click="activeTab = 'landing'; loadLanding()" class="nav-tab" :class="activeTab === 'landing' && 'nav-tab-active'">Landing</button>
                     <button @click="activeTab = 'facturas'; loadFacturas()" class="nav-tab" :class="activeTab === 'facturas' && 'nav-tab-active'">Facturas</button>
+                    <button @click="activeTab = 'reputacion'; loadReputacion()" class="nav-tab" :class="activeTab === 'reputacion' && 'nav-tab-active'">Reputación</button>
                     <button @click="activeTab = 'config'" class="nav-tab" :class="activeTab === 'config' && 'nav-tab-active'">Configuración</button>
                     <button @click="activeTab = 'hours'" class="nav-tab" :class="activeTab === 'hours' && 'nav-tab-active'">Horarios</button>
                     <button @click="activeTab = 'blocked'" class="nav-tab" :class="activeTab === 'blocked' && 'nav-tab-active'">Bloqueos</button>
@@ -206,7 +208,7 @@
                             </div>
                             <h3 class="font-semibold text-gray-800 text-sm sm:text-base" x-text="getCalendarWeekLabel()"></h3>
                         </div>
-                        <p class="text-xs text-gray-500 mb-2">Leyenda: <span class="badge badge-confirmada">confirmada</span> <span class="badge badge-pasada">pasada</span> <span class="badge badge-cancelada">cancelada</span> <span class="badge badge-pendiente">pendiente</span> <span class="badge badge-no-asistio">no asistió</span></p>
+                        <p class="text-xs text-gray-500 mb-2">Leyenda: <span class="badge badge-confirmada">confirmada</span> <span class="badge badge-completada">completada</span> <span class="badge badge-pasada">pasada</span> <span class="badge badge-cancelada">cancelada</span> <span class="badge badge-pendiente">pendiente</span> <span class="badge badge-no-asistio">no asistió</span></p>
                         <table class="w-full border border-gray-200 text-sm" style="min-width: 800px;">
                             <thead>
                                 <tr class="bg-gray-100">
@@ -224,7 +226,7 @@
                                             <td class="border border-gray-200 p-1 align-top min-w-[120px]">
                                                 <template x-for="c in getCitasInCell(day.date, hour)" :key="c.id">
                                                     <div class="text-xs rounded p-2 mb-1 border cursor-pointer"
-                                                         :class="c.estado === 'confirmada' ? 'bg-emerald-50 border-emerald-200' : c.estado === 'pasada' ? 'bg-slate-100 border-slate-200' : c.estado === 'cancelada' ? 'bg-red-50 border-red-200' : c.estado === 'pendiente' ? 'bg-amber-50 border-amber-200' : 'bg-orange-50 border-orange-200'"
+                                                         :class="c.estado === 'confirmada' ? 'bg-emerald-50 border-emerald-200' : c.estado === 'completada' ? 'bg-teal-50 border-teal-200' : c.estado === 'pasada' ? 'bg-slate-100 border-slate-200' : c.estado === 'cancelada' ? 'bg-red-50 border-red-200' : c.estado === 'pendiente' ? 'bg-amber-50 border-amber-200' : 'bg-orange-50 border-orange-200'"
                                                          :title="(c.paciente_nombre || '') + (c.paciente_telefono ? ' · Tel: ' + c.paciente_telefono : '') + (c.tipo_sesion ? ' · ' + c.tipo_sesion : '')"
                                                          @click="openModalCita(c)">
                                                         <div class="font-medium text-gray-900" x-text="c.paciente_nombre"></div>
@@ -257,7 +259,7 @@
                                             <p class="text-sm text-gray-600" x-text="c.paciente_email"></p>
                                             <p x-show="c.paciente_telefono" class="text-sm text-gray-600" x-text="'Tel: ' + c.paciente_telefono"></p>
                                             <p class="text-sm text-gray-600 mt-1"><span x-text="formatCitaFecha(c.fecha)"></span> <span x-text="c.hora_inicio"></span> - <span x-text="c.hora_fin"></span></p>
-                                            <p class="text-xs mt-1"><span class="badge" :class="c.estado === 'confirmada' ? 'badge-confirmada' : c.estado === 'pasada' ? 'badge-pasada' : c.estado === 'cancelada' ? 'badge-cancelada' : c.estado === 'pendiente' ? 'badge-pendiente' : 'badge-no-asistio'" x-text="c.estado"></span> <span x-show="c.tipo_sesion" x-text="' · ' + c.tipo_sesion"></span></p>
+                                            <p class="text-xs mt-1"><span class="badge" :class="c.estado === 'confirmada' ? 'badge-confirmada' : c.estado === 'completada' ? 'badge-completada' : c.estado === 'pasada' ? 'badge-pasada' : c.estado === 'cancelada' ? 'badge-cancelada' : c.estado === 'pendiente' ? 'badge-pendiente' : 'badge-no-asistio'" x-text="c.estado"></span> <span x-show="c.tipo_sesion" x-text="' · ' + c.tipo_sesion"></span></p>
                                         </div>
                                         <div>
                                             <button @click="openModalCita(c)" class="text-blue-600 hover:underline mr-2">Editar</button>
@@ -293,6 +295,7 @@
                                 </select></div>
                             </div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1">Tipo sesión</label><select x-model="modalCita.tipo_sesion" class="input-modern"><option value="">—</option><option value="online">Online</option><option value="presencial">Presencial</option></select></div>
+                            <div x-show="modalCita.id"><label class="block text-sm font-medium text-gray-700 mb-1">Estado</label><select x-model="modalCita.estado" class="input-modern"><option value="confirmada">Confirmada</option><option value="pendiente">Pendiente</option><option value="pasada">Pasada</option><option value="no_asistio">No asistió</option><option value="completada">Completada</option><option value="cancelada">Cancelada</option></select><p class="text-xs text-gray-500 mt-1">Si marcas «Completada», se enviará automáticamente una solicitud de reseña al paciente 3 horas después.</p></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1">Notas</label><textarea x-model="modalCita.notas" rows="2" class="input-modern"></textarea></div>
                             <div class="flex gap-2 justify-end">
                                 <button type="button" @click="modalCita.show = false" class="btn-secondary">Cancelar</button>
@@ -582,6 +585,45 @@
                         </div>
                     </div>
                 </template>
+            </div>
+
+            <!-- Tab: Reputación en Google (ReputacionPro) -->
+            <div x-show="activeTab === 'reputacion'" class="fade-in">
+                <div class="card bg-white p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Reputación en Google</h2>
+                    <p class="text-gray-600 mb-6">Tu perfil de Google es una de las principales fuentes de nuevos pacientes. Activa este sistema y comienza a fortalecer tu posicionamiento de forma automática después de cada sesión.</p>
+                    <p class="text-sm text-gray-600 mb-6">Cuantas más reseñas positivas y recientes tenga tu perfil, mayor será tu visibilidad en tu ciudad. Este sistema te ayuda a conseguirlas de forma natural, profesional y sin esfuerzo manual.</p>
+                    <form @submit.prevent="saveReputacion()" class="space-y-4 mb-8">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Enlace a tu perfil de Google *</label>
+                            <input type="url" x-model="reputacion.googleReviewUrl" class="input-modern" placeholder="https://g.page/...">
+                            <p class="text-xs text-gray-500 mt-1">Busca tu consulta en Google, pulsa en «Escribir reseña» y copia el enlace que aparece en la barra del navegador. Pégalo aquí.</p>
+                        </div>
+                        <button type="submit" :disabled="savingReputacion" class="btn-primary">Guardar configuración</button>
+                        <span x-show="reputacionMessage" class="ml-2 text-sm" :class="reputacionMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="reputacionMessage"></span>
+                    </form>
+                    <div class="border-t pt-6">
+                        <h3 class="font-semibold text-gray-900 mb-4">Resumen este mes</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="card bg-gray-50/80 p-4">
+                                <p class="text-sm font-medium text-gray-500">Solicitudes enviadas</p>
+                                <p class="text-2xl font-bold text-gray-900" x-text="reputacionStats.solicitudesEnviadasMes ?? '0'"></p>
+                            </div>
+                            <div class="card bg-gray-50/80 p-4">
+                                <p class="text-sm font-medium text-gray-500">Valoraciones recibidas</p>
+                                <p class="text-2xl font-bold text-gray-900" x-text="reputacionStats.valoracionesInternas ?? '0'"></p>
+                            </div>
+                            <div class="card bg-gray-50/80 p-4">
+                                <p class="text-sm font-medium text-gray-500">Clics a Google</p>
+                                <p class="text-2xl font-bold text-gray-900" x-text="reputacionStats.clicsGoogle ?? '0'"></p>
+                            </div>
+                            <div class="card bg-gray-50/80 p-4">
+                                <p class="text-sm font-medium text-gray-500">Media de valoración</p>
+                                <p class="text-2xl font-bold text-gray-900" x-text="reputacionStats.mediaValoracion != null ? reputacionStats.mediaValoracion : '—'"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Tab: Config -->
@@ -904,8 +946,12 @@
                 },
                 appointmentViewMode: 'list',
                 calendarWeekStart: '',
-                modalCita: { show: false, id: null, paciente_id: '', fecha: '', hora_inicio: '', hora_fin: '', tipo_sesion: '', notas: '' },
+                modalCita: { show: false, id: null, paciente_id: '', fecha: '', hora_inicio: '', hora_fin: '', tipo_sesion: '', notas: '', estado: 'confirmada' },
                 listaPacientesParaCita: [],
+                reputacion: { googleReviewUrl: '' },
+                reputacionStats: {},
+                reputacionMessage: '',
+                savingReputacion: false,
                 slotsCitaModal: [],
                 savingModalCita: false,
                 modalCitaMessage: '',
@@ -1234,10 +1280,10 @@
                 openModalCita(cita) {
                     this.loadListaPacientesParaCita();
                     if (cita) {
-                        this.modalCita = { show: true, id: cita.id, paciente_id: cita.paciente_id, fecha: this.formatCitaFecha(cita.fecha), hora_inicio: cita.hora_inicio, hora_fin: cita.hora_fin, tipo_sesion: cita.tipo_sesion || '', notas: cita.notas || '' };
+                        this.modalCita = { show: true, id: cita.id, paciente_id: cita.paciente_id, fecha: this.formatCitaFecha(cita.fecha), hora_inicio: cita.hora_inicio, hora_fin: cita.hora_fin, tipo_sesion: cita.tipo_sesion || '', notas: cita.notas || '', estado: cita.estado || 'confirmada' };
                         this.slotsCitaModal = [{ hora_inicio: cita.hora_inicio, hora_fin: cita.hora_fin, display: cita.hora_inicio }];
                     } else {
-                        this.modalCita = { show: true, id: null, paciente_id: '', fecha: '', hora_inicio: '', hora_fin: '', tipo_sesion: '', notas: '' };
+                        this.modalCita = { show: true, id: null, paciente_id: '', fecha: '', hora_inicio: '', hora_fin: '', tipo_sesion: '', notas: '', estado: 'confirmada' };
                         this.slotsCitaModal = [];
                     }
                     this.modalCitaMessage = '';
@@ -1279,7 +1325,7 @@
                             const res = await fetch('/dashboard/api/citas/' + this.modalCita.id, {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ fecha: this.modalCita.fecha, hora_inicio: this.modalCita.hora_inicio, hora_fin: this.modalCita.hora_fin, tipo_sesion: this.modalCita.tipo_sesion || null, notas: this.modalCita.notas || null })
+                                body: JSON.stringify({ fecha: this.modalCita.fecha, hora_inicio: this.modalCita.hora_inicio, hora_fin: this.modalCita.hora_fin, tipo_sesion: this.modalCita.tipo_sesion || null, notas: this.modalCita.notas || null, estado: this.modalCita.estado || 'confirmada' })
                             });
                             const data = await res.json();
                             if (data.success) { this.modalCita.show = false; await this.loadCitas(); }
@@ -1620,6 +1666,39 @@
                         this.facturaMessage = 'Error de conexión';
                     } finally {
                         this.savingFactura = false;
+                    }
+                },
+
+                async loadReputacion() {
+                    try {
+                        const [configRes, statsRes] = await Promise.all([
+                            fetch('/dashboard/api/reputacion-pro'),
+                            fetch('/dashboard/api/reputacion-pro/stats')
+                        ]);
+                        const configData = await configRes.json();
+                        const statsData = await statsRes.json();
+                        this.reputacion = { googleReviewUrl: configData.googleReviewUrl || '' };
+                        this.reputacionStats = statsData;
+                    } catch (e) {
+                        this.reputacionStats = {};
+                    }
+                },
+                async saveReputacion() {
+                    this.savingReputacion = true;
+                    this.reputacionMessage = '';
+                    try {
+                        const res = await fetch('/dashboard/api/reputacion-pro', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ googleReviewUrl: this.reputacion.googleReviewUrl || '' })
+                        });
+                        const data = await res.json();
+                        this.reputacionMessage = data.success ? 'Configuración guardada correctamente' : (data.error || 'Error');
+                        if (data.success) await this.loadReputacion();
+                    } catch (e) {
+                        this.reputacionMessage = 'Error de conexión';
+                    } finally {
+                        this.savingReputacion = false;
                     }
                 },
 

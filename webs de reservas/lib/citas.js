@@ -1,9 +1,11 @@
 /**
- * Servicio de citas (nueva tabla). Sin solapamientos, estados: confirmada, pendiente, cancelada, pasada, no_asistio.
+ * Servicio de citas (nueva tabla). Sin solapamientos.
+ * Estados: confirmada, pendiente, cancelada, pasada, no_asistio, completada.
+ * Al marcar 'completada' se programa el envío de solicitud de reseña (ReputacionPro) 3h después.
  */
 const { getQuery, runQuery, allQuery } = require('../utils/db');
 
-const ESTADOS = ['confirmada', 'pendiente', 'cancelada', 'pasada', 'no_asistio'];
+const ESTADOS = ['confirmada', 'pendiente', 'cancelada', 'pasada', 'no_asistio', 'completada'];
 const TIPO_SESION = ['online', 'presencial'];
 
 function sanitizeEstado(estado) {

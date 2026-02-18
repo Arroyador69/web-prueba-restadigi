@@ -7,6 +7,7 @@ const { sendConfirmationEmail, sendNotificationToPsychologist } = require('../ut
 const pacientesService = require('../lib/pacientes');
 const citasService = require('../lib/citas');
 const negocioService = require('../lib/negocio');
+const reputacionPro = require('../lib/reputacion-pro');
 
 const NEGOCIO_ID = 1;
 
@@ -317,6 +318,45 @@ router.post('/api/reset-password', async (req, res) => {
   } catch (error) {
     console.error('Error restableciendo contraseña:', error);
     res.status(500).json({ error: 'Error al restablecer contraseña' });
+  }
+});
+
+// --- ReputacionPro: feedback público (valoración tras cita) ---
+router.get('/api/feedback/:sessionId', async (req, res) => {
+  try {
+    const session = await reputacionPro.feedback.getSessionForFeedback(req.params.sessionId);
+    if (!session.valid) return res.status(404).json({ error: 'Sesión no encontrada' });
+    const already = await reputacionPro.feedback.hasExistingFeedback(req.params.sessionId);
+    res.json({ valid: true, googleReviewUrl: session.googleReviewUrl || null, alreadySubmitted: already });
+  } catch (error) {
+    res.status(500).json({ error: 'Error' });
+  }
+});
+
+router.post('/api/feedback/:sessionId', async (req, res) => {
+  try {
+    const session = await reputacionPro.feedback.getSessionForFeedback(req.params.sessionId);
+    if (!session.valid || !session.negocioId) return res.status(404).json({ error: 'Sesión no encontrada' });
+    const { rating, comentario } = req.body;
+    const r = parseInt(rating, 10);
+    if (!r || r < 1 || r > 5) return res.status(400).json({ error: 'Valoración no válida' });
+    await reputacionPro.feedback.submitRating(session.negocioId, req.params.sessionId, r, comentario ? String(comentario).trim() : null);
+    res.json({ success: true });
+  } catch (error) {
+    if (error.message && error.message.includes('Ya has enviado')) return res.status(409).json({ error: error.message });
+    res.status(400).json({ error: error.message || 'Error' });
+  }
+});
+
+router.get('/feedback/:sessionId/dejar-resena-google', async (req, res) => {
+  try {
+    const session = await reputacionPro.feedback.getSessionForFeedback(req.params.sessionId);
+    if (!session.valid || !session.negocioId) return res.status(404).send('Sesión no encontrada');
+    if (!session.googleReviewUrl) return res.status(400).send('Enlace de Google no configurado');
+    await reputacionPro.feedback.recordRedirectToGoogle(session.negocioId, req.params.sessionId);
+    res.redirect(302, session.googleReviewUrl);
+  } catch (error) {
+    res.status(500).send('Error');
   }
 });
 

@@ -61,6 +61,10 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
 });
 
+app.get('/feedback/:sessionId', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'feedback.html'));
+});
+
 // Migración: añadir client_phone a appointments si no existe (BD ya creadas)
 const { runQuery } = require('./utils/db');
 runQuery('ALTER TABLE appointments ADD COLUMN client_phone TEXT').catch(() => {});
@@ -82,6 +86,14 @@ setInterval(() => {
     .then((r) => { if (r.sent > 0) console.log('📧 Recordatorios enviados:', r.sent); })
     .catch((e) => console.error('Error job recordatorios:', e.message));
 }, 60 * 60 * 1000);
+
+// ReputacionPro: procesar jobs de solicitud de reseña (cada minuto; envío 3h después de cita completada).
+const { processDueJobs } = require('./lib/reputacion-pro/jobs');
+setInterval(() => {
+  processDueJobs()
+    .then(() => {})
+    .catch((e) => console.error('Error job ReputacionPro:', e.message));
+}, 60 * 1000);
 
 // Iniciar servidor
 const PORT = process.env.PORT || config.port || 3000;

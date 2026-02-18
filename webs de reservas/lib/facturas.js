@@ -67,14 +67,26 @@ async function create(negocioId, data) {
   return { id: row.id, numero_factura: numero };
 }
 
-/** Genera el buffer PDF de la factura (estilo legal: emisor, cliente, tabla, totales, pie) */
+/** Fecha en formato DD/MM/YYYY */
+function formatFechaDDMMYYYY(fecha) {
+  if (!fecha) return '';
+  const s = typeof fecha === 'string' ? fecha.slice(0, 10) : new Date(fecha).toISOString().slice(0, 10);
+  if (s.length < 10) return '';
+  const [yy, mm, dd] = s.split('-');
+  return `${dd}/${mm}/${yy}`;
+}
+
+/** Genera el buffer PDF de la factura (estilo claro, espaciado, nombre negocio desde config) */
 async function generatePdfBuffer(negocioId, facturaId) {
   const factura = await getById(negocioId, facturaId);
   if (!factura) return null;
   const negocio = await require('./negocio').getById(negocioId);
   if (!negocio) return null;
+  const { getBusinessConfig } = require('../utils/helpers');
+  const config = await getBusinessConfig();
+  const nombreNegocio = (config && config.businessName) ? String(config.businessName).trim() : (negocio.nombre || '');
 
-  const doc = new PDFDocument({ size: 'A4', margin: 50 });
+  const doc = new PDFDocument({ size: 'A4', margin: 60 });
   const chunks = [];
   doc.on('data', (c) => chunks.push(c));
   await new Promise((resolve, reject) => {
@@ -82,63 +94,72 @@ async function generatePdfBuffer(negocioId, facturaId) {
     doc.on('error', reject);
 
     const blue = '#2563eb';
-    doc.fontSize(22).fillColor(blue).text('FACTURA', 50, 50);
-    doc.fontSize(10).fillColor('#374151');
-    doc.text(`N° ${factura.numero_factura}`, 400, 50, { align: 'right' });
-    const fechaStr = factura.fecha_emision ? String(factura.fecha_emision).slice(0, 10) : '';
-    doc.text(`Fecha: ${fechaStr ? fechaStr.split('-').reverse().join('/') : ''}`, 400, 65, { align: 'right' });
+    const gris = '#6b7280';
+    const lineHeight = 16;
+    const blockGap = 28;
 
-    let y = 110;
-    doc.fontSize(11).fillColor('#111827');
-    doc.text('EMISOR', 50, y);
-    doc.fontSize(10).fillColor('#374151');
-    y += 18;
-    doc.text(negocio.nombre || '', 50, y);
-    y += 14;
-    if (negocio.nif) { doc.text('NIF: ' + negocio.nif, 50, y); y += 14; }
-    if (negocio.direccion) { doc.text(negocio.direccion, 50, y); y += 14; }
-    if (negocio.telefono) { doc.text('Tel: ' + negocio.telefono, 50, y); y += 14; }
-    if (negocio.email) { doc.text('Email: ' + negocio.email, 50, y); y += 14; }
+    doc.fontSize(22).fillColor(blue).text('FACTURA', 60, 55);
+    doc.fontSize(10).fillColor(gris);
+    doc.text(`Nº ${factura.numero_factura}`, 60, 55, { width: 450, align: 'right' });
+    doc.text(`Fecha: ${formatFechaDDMMYYYY(factura.fecha_emision)}`, 60, 72, { width: 450, align: 'right' });
 
-    y = 110;
+    let yEmisor = 115;
     doc.fontSize(11).fillColor('#111827');
-    doc.text('CLIENTE', 320, y);
+    doc.text('EMISOR', 60, yEmisor);
+    yEmisor += lineHeight + 4;
     doc.fontSize(10).fillColor('#374151');
-    y += 18;
-    doc.text(factura.cliente_nombre || '', 320, y);
-    y += 14;
-    if (factura.cliente_nif) { doc.text('NIF: ' + factura.cliente_nif, 320, y); y += 14; }
+    doc.text(nombreNegocio || '—', 60, yEmisor, { width: 240 });
+    yEmisor += lineHeight;
+    if (negocio.nif) { doc.text('NIF: ' + negocio.nif, 60, yEmisor); yEmisor += lineHeight; }
+    if (negocio.direccion) { doc.text(negocio.direccion, 60, yEmisor, { width: 240 }); yEmisor += lineHeight; }
+    if (negocio.telefono) { doc.text('Tel: ' + negocio.telefono, 60, yEmisor); yEmisor += lineHeight; }
+    if (negocio.email) { doc.text('Email: ' + negocio.email, 60, yEmisor, { width: 240 }); yEmisor += lineHeight; }
+
+    let yCliente = 115;
+    doc.fontSize(11).fillColor('#111827');
+    doc.text('CLIENTE', 330, yCliente);
+    yCliente += lineHeight + 4;
+    doc.fontSize(10).fillColor('#374151');
+    doc.text(factura.cliente_nombre || '—', 330, yCliente, { width: 230 });
+    yCliente += lineHeight;
+    if (factura.cliente_nif) { doc.text('NIF: ' + factura.cliente_nif, 330, yCliente); yCliente += lineHeight; }
     const dirParts = [factura.cliente_direccion, factura.cliente_cp, factura.cliente_ciudad, factura.cliente_provincia].filter(Boolean);
-    if (dirParts.length) { doc.text(dirParts.join(', '), 320, y); y += 14; }
+    if (dirParts.length) { doc.text(dirParts.join(', '), 330, yCliente, { width: 230 }); yCliente += lineHeight; }
 
-    y += 20;
+    let y = Math.max(yEmisor, yCliente) + blockGap;
     doc.fontSize(10).fillColor('#111827');
-    doc.text('Concepto', 50, y);
-    doc.text('Precio Base', 280, y);
-    doc.text('IVA', 360, y);
-    doc.text('Total', 440, y);
-    y += 20;
-    doc.moveTo(50, y).lineTo(550, y).stroke();
-    y += 12;
-    doc.fillColor('#374151');
-    doc.text(factura.concepto || '', 50, y, { width: 220 });
-    if (factura.descripcion) doc.fontSize(9).text(factura.descripcion, 50, y + 14, { width: 220 });
-    doc.fontSize(10).text(formatEuro(factura.precio_base), 280, y);
-    doc.text(formatEuro(factura.iva_eur), 360, y);
-    doc.text(formatEuro(factura.total), 440, y);
-    y += 40;
-    doc.fontSize(10).fillColor('#374151');
-    doc.text('Subtotal: ' + formatEuro(factura.precio_base), 380, y);
-    y += 16;
-    doc.text(`IVA (${factura.iva_pct}%): ${formatEuro(factura.iva_eur)}`, 380, y);
-    y += 16;
-    doc.fontSize(11).fillColor(blue).text('TOTAL: ' + formatEuro(factura.total), 380, y);
-    y += 30;
-    if (factura.forma_pago) doc.fontSize(9).fillColor('#374151').text('Forma de pago: ' + factura.forma_pago, 50, y);
-    y += 20;
-    doc.fontSize(9).fillColor('#6b7280').text('Gracias por su confianza.', 50, y);
+    doc.text('Concepto', 60, y);
+    doc.text('Precio Base', 300, y);
+    doc.text('IVA', 400, y);
+    doc.text('Total', 480, y);
+    y += lineHeight + 6;
+    doc.moveTo(60, y).lineTo(535, y).stroke();
     y += 14;
-    doc.text('Factura generada automáticamente por el sistema de gestión de citas.', 50, y);
+    doc.fillColor('#374151');
+    doc.fontSize(10).text(factura.concepto || '', 60, y, { width: 230 });
+    const conceptY = y;
+    if (factura.descripcion) doc.fontSize(9).fillColor(gris).text(factura.descripcion, 60, y + 14, { width: 230 });
+    doc.fontSize(10).fillColor('#374151').text(formatEuro(factura.precio_base), 300, conceptY);
+    doc.text(formatEuro(factura.iva_eur), 400, conceptY);
+    doc.text(formatEuro(factura.total), 480, conceptY);
+    y += (factura.descripcion ? 28 : 20) + blockGap;
+    doc.moveTo(60, y).lineTo(535, y).stroke();
+    y += 18;
+    doc.fontSize(10).fillColor('#374151');
+    doc.text('Subtotal: ' + formatEuro(factura.precio_base), 400, y);
+    y += lineHeight;
+    doc.text(`IVA (${factura.iva_pct}%): ${formatEuro(factura.iva_eur)}`, 400, y);
+    y += lineHeight;
+    doc.fontSize(11).fillColor(blue).text('TOTAL: ' + formatEuro(factura.total), 400, y);
+    y += blockGap + 10;
+    if (factura.forma_pago) {
+      doc.fontSize(9).fillColor('#374151').text('Forma de pago: ' + factura.forma_pago, 60, y);
+      y += lineHeight + 8;
+    }
+    y += 12;
+    doc.fontSize(9).fillColor(gris).text('Gracias por su confianza.', 60, y);
+    y += lineHeight;
+    doc.fontSize(8).fillColor('#9ca3af').text('Factura generada automáticamente por ' + (nombreNegocio || 'el emisor') + '.', 60, y);
     doc.end();
   });
   return Buffer.concat(chunks);

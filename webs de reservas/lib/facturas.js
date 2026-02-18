@@ -35,6 +35,13 @@ async function getById(negocioId, id) {
   return getQuery('SELECT * FROM facturas WHERE id = ? AND negocio_id = ?', [id, negocioId]);
 }
 
+async function remove(negocioId, facturaId) {
+  const f = await getById(negocioId, facturaId);
+  if (!f) return false;
+  await runQuery('DELETE FROM facturas WHERE id = ? AND negocio_id = ?', [facturaId, negocioId]);
+  return true;
+}
+
 async function create(negocioId, data) {
   const {
     cliente_nombre, cliente_nif, cliente_direccion, cliente_cp, cliente_ciudad, cliente_provincia,
@@ -169,6 +176,7 @@ module.exports = {
   list,
   getById,
   create,
+  remove,
   getNextNumeroFactura,
   generatePdfBuffer,
   formatEuro

@@ -711,6 +711,18 @@ router.get('/api/facturas/:id/pdf', async (req, res) => {
   }
 });
 
+router.delete('/api/facturas/:id', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const ok = await facturasService.remove(negocioId, req.params.id);
+    if (!ok) return res.status(404).json({ error: 'Factura no encontrada' });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error eliminando factura:', error);
+    res.status(500).json({ error: 'Error eliminando factura' });
+  }
+});
+
 // Crear nuevo usuario (solo desde dashboard autenticado)
 router.post('/api/users', async (req, res) => {
   try {

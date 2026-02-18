@@ -404,6 +404,7 @@
                                 <p><strong>Email:</strong> <span x-text="fichaPaciente.paciente.email"></span></p>
                                 <p x-show="fichaPaciente.paciente.telefono"><strong>Teléfono:</strong> <span x-text="fichaPaciente.paciente.telefono"></span></p>
                                 <p><strong>Estado:</strong> <span x-text="fichaPaciente.paciente.estado"></span></p>
+                                <p x-show="fichaPaciente.paciente.notas_privadas" class="mt-2"><strong>Observaciones:</strong><br><span class="text-gray-700 whitespace-pre-line" x-text="fichaPaciente.paciente.notas_privadas"></span></p>
                                 <p><strong>Total sesiones:</strong> <span x-text="fichaPaciente.totalSesiones"></span></p>
                                 <p><strong>Facturación estimada:</strong> <span x-text="fichaPaciente.facturacionEstimada + ' €'"></span></p>
                                 <p x-show="fichaPaciente.proximaCita"><strong>Próxima cita:</strong> <span x-text="fichaPaciente.proximaCita.fecha + ' ' + fichaPaciente.proximaCita.hora_inicio"></span></p>
@@ -435,6 +436,7 @@
                             <div><label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label><input type="tel" x-model="editPacienteForm.telefono" class="input-modern"></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1">Estado</label><select x-model="editPacienteForm.estado" class="input-modern"><option value="activo">Activo</option><option value="en_proceso">En proceso</option><option value="alta_terapeutica">Alta terapéutica</option><option value="inactivo">Inactivo</option></select></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1">Precio sesión (€)</label><input type="number" step="0.01" x-model="editPacienteForm.precio_sesion" class="input-modern"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Observaciones sobre el paciente</label><textarea x-model="editPacienteForm.notas_privadas" class="input-modern" rows="4" placeholder="Notas privadas, evolución, recordatorios... Solo visibles para ti."></textarea><p class="text-xs text-gray-500 mt-1">Todo lo que necesites anotar sobre este paciente. Se guarda en la base de datos.</p></div>
                             <div class="flex gap-2 pt-2">
                                 <button type="button" @click="editPacienteModal.show = false" class="btn-secondary">Cancelar</button>
                                 <button type="submit" :disabled="savingEditPaciente" class="btn-primary"><span x-show="!savingEditPaciente">Guardar cambios</span><span x-show="savingEditPaciente">Guardando...</span></button>
@@ -568,7 +570,10 @@
                                             <td x-text="f.cliente_nombre"></td>
                                             <td x-text="f.concepto"></td>
                                             <td x-text="formatEuroFactura(f.total)"></td>
-                                            <td><a :href="'/dashboard/api/facturas/' + f.id + '/pdf'" target="_blank" rel="noopener" class="btn-link">Ver PDF</a></td>
+                                            <td class="flex gap-2 items-center justify-end">
+                                                <a :href="'/dashboard/api/facturas/' + f.id + '/pdf'" target="_blank" rel="noopener" class="btn-link">Ver PDF</a>
+                                                <button type="button" @click="eliminarFactura(f)" class="text-red-600 hover:text-red-700 text-sm font-medium">Eliminar</button>
+                                            </td>
                                         </tr>
                                     </template>
                                 </tbody>
@@ -884,7 +889,7 @@
                 fichaPaciente: { show: false, paciente: null, citas: [], totalSesiones: 0, facturacionEstimada: 0, proximaCita: null },
                 editarPacienteId: null,
                 editPacienteModal: { show: false },
-                editPacienteForm: { nombre: '', email: '', telefono: '', estado: 'activo', precio_sesion: '' },
+                editPacienteForm: { nombre: '', email: '', telefono: '', estado: 'activo', precio_sesion: '', notas_privadas: '' },
                 savingEditPaciente: false,
                 editPacienteMessage: '',
                 appointments: [],
@@ -1002,7 +1007,8 @@
                         email: p.email || '',
                         telefono: p.telefono || '',
                         estado: p.estado || 'activo',
-                        precio_sesion: p.precio_sesion != null ? p.precio_sesion : ''
+                        precio_sesion: p.precio_sesion != null ? p.precio_sesion : '',
+                        notas_privadas: p.notas_privadas || ''
                     };
                     this.editPacienteMessage = '';
                 },
@@ -1575,6 +1581,20 @@
                         this.facturas = data.facturas || [];
                     } catch (e) {
                         this.facturas = [];
+                    }
+                },
+                async eliminarFactura(f) {
+                    if (!f || !confirm('¿Eliminar la factura ' + (f.numero_factura || '') + '? Esta acción no se puede deshacer.')) return;
+                    try {
+                        const res = await fetch('/dashboard/api/facturas/' + f.id, { method: 'DELETE' });
+                        const data = await res.json().catch(() => ({}));
+                        if (data.success) {
+                            await this.loadFacturas();
+                        } else {
+                            alert(data.error || 'Error al eliminar');
+                        }
+                    } catch (e) {
+                        alert('Error de conexión');
                     }
                 },
                 async crearFactura() {

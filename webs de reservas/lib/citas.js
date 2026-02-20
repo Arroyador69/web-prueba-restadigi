@@ -155,9 +155,23 @@ async function remove(negocioId, citaId) {
 }
 
 /**
+ * Comprueba si un slot [hora_inicio, hora_fin] se solapa con algún rango busy (Google Calendar).
+ */
+function slotSolapaConBusy(fecha, horaInicio, horaFin, busyRanges) {
+  if (!busyRanges || busyRanges.length === 0) return false;
+  const slotStart = new Date(`${fecha}T${horaInicio}`).getTime();
+  const slotEnd = new Date(`${fecha}T${horaFin}`).getTime();
+  return busyRanges.some((b) => {
+    const bStart = b.start.getTime();
+    const bEnd = b.end.getTime();
+    return slotStart < bEnd && slotEnd > bStart;
+  });
+}
+
+/**
  * Slots disponibles para un día: única fuente de verdad para "qué horas se pueden reservar".
  * Solo devuelve huecos que: están en horario de atención, no están bloqueados, no se solapan con ninguna cita (salvo canceladas) y son en el futuro.
- * La reserva pública y el dashboard deben mostrar solo estas horas; al guardar se valida que la hora elegida siga en esta lista.
+ * Si el negocio tiene Google Calendar conectado con "sync busy", también se excluyen los huecos ocupados en Google.
  */
 async function getSlotsDisponibles(negocioId, fecha, duracionMinutos) {
   const { getOpeningHours } = require('../utils/helpers');
@@ -165,6 +179,14 @@ async function getSlotsDisponibles(negocioId, fecha, duracionMinutos) {
   const dayOfWeek = new Date(fecha + 'T12:00:00').getDay();
   const dayHours = hours[dayOfWeek] || [];
   if (dayHours.length === 0) return [];
+
+  let busyRanges = [];
+  try {
+    const googleCalendar = require('./google-calendar');
+    if (await googleCalendar.isSyncBusyEnabled(negocioId)) {
+      busyRanges = await googleCalendar.getBusyRanges(negocioId, fecha);
+    }
+  } catch (_) {}
 
   const slots = [];
   for (const [startHour, endHour] of dayHours) {
@@ -179,7 +201,8 @@ async function getSlotsDisponibles(negocioId, fecha, duracionMinutos) {
       const hf = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
       const overlap = await haySolapamiento(negocioId, fecha, hi, hf, null);
       const dentro = await slotDentroHorarios(negocioId, fecha, hi, hf);
-      if (!overlap && dentro) {
+      const ocupadoEnGoogle = slotSolapaConBusy(fecha, hi, hf, busyRanges);
+      if (!overlap && dentro && !ocupadoEnGoogle) {
         const now = new Date();
         const slotDate = new Date(`${fecha}T${hi}`);
         if (slotDate > now) slots.push({ hora_inicio: hi, hora_fin: hf, display: hi });

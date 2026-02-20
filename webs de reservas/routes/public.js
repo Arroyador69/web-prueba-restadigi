@@ -160,6 +160,7 @@ router.post('/api/book', async (req, res) => {
       telefono: (telefono && String(telefono).trim()) ? String(telefono).trim() : null
     });
 
+    let citaId;
     try {
       const { id } = await citasService.create(NEGOCIO_ID, {
         paciente_id: paciente.id,
@@ -168,7 +169,7 @@ router.post('/api/book', async (req, res) => {
         hora_fin,
         estado: 'confirmada'
       });
-
+      citaId = id;
       const versionTexto = (await getQuery('SELECT version FROM textos_legales WHERE negocio_id = ?', [NEGOCIO_ID]))?.version || '1';
       const ip = req.ip || req.connection?.remoteAddress || null;
       await runQuery(
@@ -180,6 +181,15 @@ router.post('/api/book', async (req, res) => {
         return res.status(400).json({ error: 'Este horario ya no está disponible' });
       }
       throw err;
+    }
+
+    if (citaId) {
+      try {
+        const googleCalendar = require('../lib/google-calendar');
+        await googleCalendar.syncNewCita(NEGOCIO_ID, citaId);
+      } catch (e) {
+        console.error('[Google Calendar] syncNewCita:', e.message);
+      }
     }
 
     const appointment = {

@@ -698,6 +698,31 @@
                                :class="testEmailMessage.includes('enviado') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
                                x-text="testEmailMessage"></p>
                         </div>
+
+                        <div class="border-t pt-6 mt-6">
+                            <h3 class="font-semibold text-gray-900 mb-2">Google Calendar</h3>
+                            <p class="text-sm text-gray-500 mb-3">Conecta tu cuenta de Google para que cada reserva (desde la web o desde el panel) se cree automáticamente en tu calendario. Opcionalmente, los huecos que tengas ocupados en Google no se ofrecerán en la web.</p>
+                            <div x-show="googleCalendarMessage" class="mb-3 p-3 rounded text-sm" :class="googleCalendarMessage.includes('Conectado') || googleCalendarMessage.includes('correctamente') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'" x-text="googleCalendarMessage"></div>
+                            <template x-if="!googleCalendarConnected">
+                                <div>
+                                    <button type="button" @click="connectGoogleCalendar()" :disabled="googleCalendarLoading" class="btn-primary">
+                                        <span x-show="!googleCalendarLoading">Conectar con Google Calendar</span>
+                                        <span x-show="googleCalendarLoading">Cargando...</span>
+                                    </button>
+                                    <p class="text-xs text-gray-500 mt-2">Serás redirigido a Google para autorizar. Solo se crean y leen eventos en el calendario que elijas.</p>
+                                </div>
+                            </template>
+                            <template x-if="googleCalendarConnected">
+                                <div>
+                                    <p class="text-green-700 font-medium mb-2">Conectado. Las reservas se crearán en tu Google Calendar.</p>
+                                    <label class="flex items-center gap-2 mb-3 cursor-pointer">
+                                        <input type="checkbox" x-model="googleCalendarSyncBusy" @change="saveGoogleCalendarSyncBusy()">
+                                        <span class="text-sm">Usar también mi Google Calendar para no ofrecer huecos ocupados (si tienes otros eventos, no se mostrarán como disponibles en la web)</span>
+                                    </label>
+                                    <button type="button" @click="disconnectGoogleCalendar()" class="btn-secondary">Desconectar Google Calendar</button>
+                                </div>
+                            </template>
+                        </div>
                     </form>
 
                     <div class="border-t pt-6 mt-6">
@@ -952,6 +977,10 @@
                 reputacionStats: {},
                 reputacionMessage: '',
                 savingReputacion: false,
+                googleCalendarConnected: false,
+                googleCalendarSyncBusy: false,
+                googleCalendarMessage: '',
+                googleCalendarLoading: false,
                 slotsCitaModal: [],
                 savingModalCita: false,
                 modalCitaMessage: '',
@@ -1016,8 +1045,20 @@
                         this.loadLanding(),
                         this.loadHours(),
                         this.loadBlockedSlots(),
-                        this.loadUsers()
+                        this.loadUsers(),
+                        this.loadGoogleCalendarStatus()
                     ]);
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('google_calendar') === 'ok') {
+                        this.googleCalendarMessage = 'Conectado correctamente. Las reservas se crearán en tu Google Calendar.';
+                        this.activeTab = 'config';
+                        await this.loadGoogleCalendarStatus();
+                        window.history.replaceState({}, '', '/dashboard');
+                    } else if (params.get('google_calendar') === 'error') {
+                        this.googleCalendarMessage = decodeURIComponent(params.get('message') || 'Error al conectar');
+                        this.activeTab = 'config';
+                        window.history.replaceState({}, '', '/dashboard');
+                    }
                 },
 
                 async loadStats() {
@@ -1396,6 +1437,53 @@
                     } catch (error) {
                         console.error('Error cargando configuración:', error);
                     }
+                },
+
+                async loadGoogleCalendarStatus() {
+                    try {
+                        const res = await fetch('/dashboard/api/google-calendar/status');
+                        const data = await res.json();
+                        this.googleCalendarConnected = !!data.connected;
+                        this.googleCalendarSyncBusy = !!data.syncBusy;
+                    } catch (e) {
+                        this.googleCalendarConnected = false;
+                    }
+                },
+                async connectGoogleCalendar() {
+                    this.googleCalendarLoading = true;
+                    this.googleCalendarMessage = '';
+                    try {
+                        const res = await fetch('/dashboard/api/google-calendar/auth-url');
+                        const data = await res.json();
+                        if (data.url) {
+                            window.location.href = data.url;
+                        } else {
+                            this.googleCalendarMessage = data.error || 'No se pudo obtener el enlace. Configura GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en el servidor.';
+                        }
+                    } catch (e) {
+                        this.googleCalendarMessage = 'Error de conexión';
+                    } finally {
+                        this.googleCalendarLoading = false;
+                    }
+                },
+                async disconnectGoogleCalendar() {
+                    if (!confirm('¿Desconectar Google Calendar? Las reservas ya creadas en Google no se borrarán.')) return;
+                    try {
+                        await fetch('/dashboard/api/google-calendar/disconnect', { method: 'POST' });
+                        this.googleCalendarMessage = 'Desconectado correctamente.';
+                        await this.loadGoogleCalendarStatus();
+                    } catch (e) {
+                        this.googleCalendarMessage = 'Error al desconectar';
+                    }
+                },
+                async saveGoogleCalendarSyncBusy() {
+                    try {
+                        await fetch('/dashboard/api/google-calendar/sync-busy', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ enabled: this.googleCalendarSyncBusy })
+                        });
+                    } catch (e) {}
                 },
 
                 async saveSmtp() {

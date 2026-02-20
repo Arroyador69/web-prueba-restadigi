@@ -334,6 +334,10 @@ Derechos: Puede ejercer sus derechos de acceso, rectificación, supresión, limi
     // --- ReputacionPro: tablas y columnas para reseñas Google ---
     const { runReputacionProMigrations } = require('./reputacion-pro-migrations');
     await runReputacionProMigrations();
+
+    // --- Google Calendar: tokens y sync ---
+    const { runGoogleCalendarMigrations } = require('./google-calendar-migrations');
+    await runGoogleCalendarMigrations();
   } catch (err) {
     throw err;
   }

@@ -25,6 +25,7 @@ const plantillasService = require('../lib/plantillas');
 const facturasService = require('../lib/facturas');
 const { sendTestEmailWithNegocio } = require('../lib/email-negocio');
 const reputacionPro = require('../lib/reputacion-pro');
+const googleCalendar = require('../lib/google-calendar');
 
 // Textos legales RGPD de ejemplo (cuando no hay nada guardado)
 const TEXTOS_LEGALES_EJEMPLO = {
@@ -296,6 +297,7 @@ router.post('/api/citas', async (req, res) => {
       }
     }
     const { id } = await citasService.create(negocioId, req.body);
+    googleCalendar.syncNewCita(negocioId, id).catch((e) => console.error('[Google Calendar] syncNewCita:', e.message));
     res.status(201).json({ success: true, id });
   } catch (error) {
     res.status(400).json({ error: error.message || 'Error creando cita' });
@@ -305,10 +307,24 @@ router.post('/api/citas', async (req, res) => {
 router.put('/api/citas/:id', async (req, res) => {
   try {
     const negocioId = req.negocioId || 1;
-    const estadoAnterior = await citasService.getById(negocioId, req.params.id).then(c => c && c.estado);
+    const citaAntes = await citasService.getById(negocioId, req.params.id);
+    const estadoAnterior = citaAntes && citaAntes.estado;
     await citasService.update(negocioId, req.params.id, req.body);
     if (req.body.estado === 'completada' && estadoAnterior !== 'completada') {
       reputacionPro.jobs.scheduleReviewJob(negocioId, req.params.id).catch((e) => console.error('[ReputacionPro] Error programando job:', e.message));
+    }
+    if (citaAntes && citaAntes.google_calendar_event_id) {
+      const citaDespues = await citasService.getById(negocioId, req.params.id);
+      if (citaDespues && req.body.estado !== 'cancelada') {
+        googleCalendar.updateEvent(negocioId, citaAntes.google_calendar_event_id, {
+          fecha: citaDespues.fecha,
+          hora_inicio: citaDespues.hora_inicio,
+          hora_fin: citaDespues.hora_fin,
+          pacienteNombre: citaDespues.paciente_nombre
+        }).catch((e) => console.error('[Google Calendar] updateEvent:', e.message));
+      } else if (req.body.estado === 'cancelada') {
+        googleCalendar.deleteEvent(negocioId, citaAntes.google_calendar_event_id).catch((e) => console.error('[Google Calendar] deleteEvent:', e.message));
+      }
     }
     res.json({ success: true });
   } catch (error) {
@@ -319,8 +335,12 @@ router.put('/api/citas/:id', async (req, res) => {
 router.post('/api/citas/:id/cancel', async (req, res) => {
   try {
     const negocioId = req.negocioId || 1;
+    const cita = await citasService.getById(negocioId, req.params.id);
     const ok = await citasService.cancel(negocioId, req.params.id);
     if (!ok) return res.status(404).json({ error: 'Cita no encontrada' });
+    if (cita && cita.google_calendar_event_id) {
+      googleCalendar.deleteEvent(negocioId, cita.google_calendar_event_id).catch((e) => console.error('[Google Calendar] deleteEvent:', e.message));
+    }
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Error cancelando cita' });
@@ -330,8 +350,12 @@ router.post('/api/citas/:id/cancel', async (req, res) => {
 router.delete('/api/citas/:id', async (req, res) => {
   try {
     const negocioId = req.negocioId || 1;
+    const cita = await citasService.getById(negocioId, req.params.id);
     const ok = await citasService.remove(negocioId, req.params.id);
     if (!ok) return res.status(404).json({ error: 'Cita no encontrada' });
+    if (cita && cita.google_calendar_event_id) {
+      googleCalendar.deleteEvent(negocioId, cita.google_calendar_event_id).catch((e) => console.error('[Google Calendar] deleteEvent:', e.message));
+    }
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Error eliminando cita' });
@@ -813,6 +837,64 @@ router.post('/api/test-email', async (req, res) => {
     }
     console.error('Error en test-email', detail, error);
     res.status(500).json({ error: `No se pudo enviar${detail}` });
+  }
+});
+
+// --- Google Calendar: OAuth y sincronización ---
+router.get('/api/google-calendar/auth-url', (req, res) => {
+  const negocioId = req.negocioId || 1;
+  const baseUrl = googleCalendar.getBaseUrl(req);
+  const redirectUri = `${baseUrl.replace(/\/$/, '')}/dashboard/api/google-calendar/callback`;
+  const url = googleCalendar.getAuthUrl(negocioId, redirectUri);
+  if (!url) return res.status(503).json({ error: 'Google Calendar no configurado. Añade GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en el servidor.' });
+  res.json({ url });
+});
+
+router.get('/api/google-calendar/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  const baseUrl = googleCalendar.getBaseUrl(req);
+  const redirectUri = `${baseUrl.replace(/\/$/, '')}/dashboard/api/google-calendar/callback`;
+  if (error) {
+    return res.redirect('/dashboard?google_calendar=error&message=' + encodeURIComponent(error === 'access_denied' ? 'Has cancelado la autorización' : error));
+  }
+  const negocioId = state ? parseInt(state, 10) : (req.negocioId || 1);
+  try {
+    await googleCalendar.exchangeCodeForTokens(negocioId, code, redirectUri);
+    res.redirect('/dashboard?google_calendar=ok');
+  } catch (err) {
+    res.redirect('/dashboard?google_calendar=error&message=' + encodeURIComponent(err.message || 'Error al conectar'));
+  }
+});
+
+router.get('/api/google-calendar/status', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const connected = await googleCalendar.isConnected(negocioId);
+    const syncBusy = await googleCalendar.isSyncBusyEnabled(negocioId);
+    res.json({ connected, syncBusy });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/api/google-calendar/disconnect', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    await googleCalendar.disconnect(negocioId);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/api/google-calendar/sync-busy', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const enabled = !!req.body.enabled;
+    await googleCalendar.setSyncBusy(negocioId, enabled);
+    res.json({ success: true, syncBusy: enabled });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 

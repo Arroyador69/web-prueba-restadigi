@@ -305,24 +305,24 @@ async function runMigrations() {
       );
     }
 
-    // --- Textos legales RGPD por defecto (ejemplo política de privacidad y consentimiento) ---
-    const defaultPolitica = `POLÍTICA DE PRIVACIDAD (ejemplo RGPD)
+    // --- Textos legales por defecto (finlandés — demos FI) ---
+    const defaultPolitica = `TIETOSUOJAKÄYTÄNTÖ (esimerkki GDPR)
 
-Responsable del tratamiento: [Nombre del profesional/centro], con domicilio en [dirección] y contacto [email].
+Rekisterinpitäjä: [Ammattilaisen/vastaanoton nimi], osoite [osoite], yhteystieto [sähköposti].
 
-Finalidad: Gestión de citas, relación terapéutica o profesional y comunicaciones relativas al servicio.
+Tarkoitus: ajanvarausten hallinta, ammatillinen/terapeuttinen suhde ja palveluun liittyvä viestintä.
 
-Legitimación: Consentimiento del interesado y, en su caso, ejecución de contrato.
+Oikeusperuste: rekisteröidyn suostumus ja tarvittaessa sopimuksen täytäntöönpano.
 
-Datos que tratamos: nombre, apellidos, email, teléfono y cuantos datos facilite en el formulario de reserva o en sesión.
+Käsiteltävät tiedot: nimi, sähköposti, puhelinnumero sekä ajanvarauslomakkeessa tai istunnossa annetut tiedot.
 
-Conservación: Los datos se conservarán mientras exista relación y, tras ella, durante los plazos legales aplicables (incluida reclamación de responsabilidades).
+Säilytys: tiedot säilytetään suhteen ajan ja sen jälkeen sovellettavien lakisääteisten määräaikojen mukaisesti.
 
-Destinatarios: No se ceden datos a terceros salvo obligación legal.
+Vastaanottajat: tietoja ei luovuteta kolmansille osapuolille, ellei laki sitä edellytä.
 
-Derechos: Puede ejercer sus derechos de acceso, rectificación, supresión, limitación, oposición y portabilidad dirigiendo un escrito a [email] o ante la Agencia Española de Protección de Datos (www.aepd.es).`;
+Oikeudet: voit käyttää tarkastus-, oikaisu-, poisto-, rajoitus-, vastustamis- ja siirtämisoikeuksiasi ottamalla yhteyttä osoitteeseen [sähköposti] tai tietosuojavaltuutettuun (www.tietosuoja.fi).`;
 
-    const defaultConsentimiento = `Consiento el tratamiento de mis datos personales (nombre, email, teléfono y los que facilite) para la gestión de la cita y la relación terapéutica/profesional, de conformidad con la política de privacidad indicada.`;
+    const defaultConsentimiento = `Suostun henkilötietojeni (nimi, sähköposti, puhelinnumero ja muut antamani tiedot) käsittelyyn ajanvarauksen ja ammatillisen/terapeuttisen suhteen hallitsemiseksi yllä mainitun tietosuojakäytännön mukaisesti.`;
 
     const textosLegalesRow = await getQuery('SELECT id, politica_privacidad, consentimiento FROM textos_legales WHERE negocio_id = ?', [DEFAULT_NEGOCIO_ID]);
     const vacio = (t) => t == null || String(t).trim() === '';
@@ -340,15 +340,16 @@ Derechos: Puede ejercer sus derechos de acceso, rectificación, supresión, limi
       console.log('✅ Textos legales RGPD de ejemplo actualizados (campos vacíos)');
     }
 
-    // --- Contenido por defecto landing page ---
+    // --- Contenido por defecto landing page (FI + i18n_demo) ---
     const defaultLanding = JSON.stringify({
-      hero_title: 'Bienvenido a tu espacio de bienestar',
-      hero_subtitle: 'Acompañamiento profesional para tu crecimiento personal y salud emocional. Reserva tu cita de forma sencilla.',
+      i18n_demo: true,
+      hero_title: 'Tervetuloa hyvinvointitilaasi',
+      hero_subtitle: 'Ammatillista tukea henkilökohtaiseen kasvuun ja mielen hyvinvointiin. Varaa aikasi helposti.',
       hero_image_url: '',
-      about_title: 'Sobre la consulta',
-      about_text: 'Ofrecemos un espacio de escucha y acompañamiento profesional. La primera sesión es una oportunidad para conocernos y establecer objetivos. Si necesitas modificar o cancelar tu cita, contáctanos con al menos 24 horas de antelación.',
+      about_title: 'Vastaanotosta',
+      about_text: 'Tarjoamme kuuntelun ja ammatillisen tuen tilan. Ensimmäinen istunto on tilaisuus tutustua ja asettaa tavoitteita. Jos sinun täytyy muuttaa tai perua aika, ota yhteyttä vähintään 24 tuntia etukäteen.',
       about_image_url: '',
-      cta_text: 'Reservar cita',
+      cta_text: 'Varaa aika',
       sections: []
     });
     const landingRow = await getQuery('SELECT negocio_id FROM landing_page WHERE negocio_id = ?', [DEFAULT_NEGOCIO_ID]);

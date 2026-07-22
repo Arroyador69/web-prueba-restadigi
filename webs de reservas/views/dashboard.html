@@ -231,12 +231,12 @@
                                                 <template x-for="c in getCitasInCell(day.date, hour)" :key="c.id">
                                                     <div class="text-xs rounded p-2 mb-1 border cursor-pointer"
                                                          :class="c.estado === 'confirmada' ? 'bg-emerald-50 border-emerald-200' : c.estado === 'completada' ? 'bg-teal-50 border-teal-200' : c.estado === 'pasada' ? 'bg-slate-100 border-slate-200' : c.estado === 'cancelada' ? 'bg-red-50 border-red-200' : c.estado === 'pendiente' ? 'bg-amber-50 border-amber-200' : 'bg-orange-50 border-orange-200'"
-                                                         :title="(c.paciente_nombre || '') + (c.paciente_telefono ? ' · ' + t('tel_prefix') + c.paciente_telefono : '') + (c.tipo_sesion ? ' · ' + c.tipo_sesion : '')"
+                                                         :title="(c.paciente_nombre || '') + (c.paciente_telefono ? ' · ' + t('tel_prefix') + c.paciente_telefono : '') + (c.tipo_sesion ? ' · ' + labelTipoSesion(c.tipo_sesion) : '')"
                                                          @click="openModalCita(c)">
                                                         <div class="font-medium text-gray-900" x-text="c.paciente_nombre"></div>
                                                         <div class="text-gray-600" x-text="c.hora_inicio"></div>
                                                         <div x-show="c.paciente_telefono" class="text-gray-500 truncate" x-text="c.paciente_telefono"></div>
-                                                        <div x-show="c.tipo_sesion" class="text-gray-500" x-text="c.tipo_sesion"></div>
+                                                        <div x-show="c.tipo_sesion" class="text-gray-500" x-text="labelTipoSesion(c.tipo_sesion)"></div>
                                                         <button @click.stop="openDeleteModal(c)" class="mt-1 text-red-600 hover:underline" x-text="t('delete')"></button>
                                                     </div>
                                                 </template>
@@ -263,7 +263,7 @@
                                             <p class="text-sm text-gray-600" x-text="c.paciente_email"></p>
                                             <p x-show="c.paciente_telefono" class="text-sm text-gray-600" x-text="t('tel_prefix') + c.paciente_telefono"></p>
                                             <p class="text-sm text-gray-600 mt-1"><span x-text="formatCitaFecha(c.fecha)"></span> <span x-text="c.hora_inicio"></span> - <span x-text="c.hora_fin"></span></p>
-                                            <p class="text-xs mt-1"><span class="badge" :class="c.estado === 'confirmada' ? 'badge-confirmada' : c.estado === 'completada' ? 'badge-completada' : c.estado === 'pasada' ? 'badge-pasada' : c.estado === 'cancelada' ? 'badge-cancelada' : c.estado === 'pendiente' ? 'badge-pendiente' : 'badge-no-asistio'" x-text="c.estado"></span> <span x-show="c.tipo_sesion" x-text="' · ' + c.tipo_sesion"></span></p>
+                                            <p class="text-xs mt-1"><span class="badge" :class="c.estado === 'confirmada' ? 'badge-confirmada' : c.estado === 'completada' ? 'badge-completada' : c.estado === 'pasada' ? 'badge-pasada' : c.estado === 'cancelada' ? 'badge-cancelada' : c.estado === 'pendiente' ? 'badge-pendiente' : 'badge-no-asistio'" x-text="labelEstado(c.estado)"></span> <span x-show="c.tipo_sesion" x-text="' · ' + labelTipoSesion(c.tipo_sesion)"></span></p>
                                         </div>
                                         <div>
                                             <button @click="openModalCita(c)" class="text-blue-600 hover:underline mr-2" x-text="t('edit')"></button>
@@ -298,14 +298,14 @@
                                     <template x-for="s in slotsCitaModal" :key="s.hora_inicio"><option :value="s.hora_inicio" x-text="s.display || s.hora_inicio"></option></template>
                                 </select></div>
                             </div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('session_type')"></label><select x-model="modalCita.tipo_sesion" class="input-modern"><option value="">—</option><option value="online">Online</option><option value="presencial" x-text="t('in_person')"></option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('session_type')"></label><select x-model="modalCita.tipo_sesion" class="input-modern"><option value="">—</option><option value="online" x-text="t('online')"></option><option value="presencial" x-text="t('in_person')"></option></select></div>
                             <div x-show="modalCita.id"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('status')"></label><select x-model="modalCita.estado" class="input-modern"><option value="confirmada" x-text="t('st_confirmed_cap')"></option><option value="pendiente" x-text="t('st_pending_cap')"></option><option value="pasada" x-text="t('st_past_cap')"></option><option value="no_asistio" x-text="t('st_no_show_cap')"></option><option value="completada" x-text="t('st_completed_cap')"></option><option value="cancelada" x-text="t('st_cancelled_cap')"></option></select><p class="text-xs text-gray-500 mt-1" x-text="t('completed_review_hint')"></p></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('notes')"></label><textarea x-model="modalCita.notas" rows="2" class="input-modern"></textarea></div>
                             <div class="flex gap-2 justify-end">
                                 <button type="button" @click="modalCita.show = false" class="btn-secondary" x-text="t('cancel')"></button>
                                 <button type="submit" :disabled="savingModalCita" class="btn-primary"><span x-show="!savingModalCita" x-text="t('save')"></span><span x-show="savingModalCita" x-text="t('saving')"></span></button>
                             </div>
-                            <p x-show="modalCitaMessage" class="text-sm" :class="modalCitaMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="modalCitaMessage"></p>
+                            <p x-show="modalCitaMessage" class="text-sm" :class="isOkMsg(modalCitaMessage) ? 'text-green-600' : 'text-red-600'" x-text="modalCitaMessage"></p>
                         </form>
                     </div>
                 </div>
@@ -374,7 +374,7 @@
                                 <button type="submit" :disabled="creatingPaciente" class="btn-primary" x-text="t('create')"></button>
                                 <button type="button" @click="showPacienteForm = false" class="btn-secondary" x-text="t('cancel')"></button>
                             </div>
-                            <p x-show="pacienteMessage" class="md:col-span-2 text-sm" :class="pacienteMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="pacienteMessage"></p>
+                            <p x-show="pacienteMessage" class="md:col-span-2 text-sm" :class="isOkMsg(pacienteMessage) ? 'text-green-600' : 'text-red-600'" x-text="pacienteMessage"></p>
                         </form>
                     </div>
                     <div class="overflow-x-auto rounded-xl border border-gray-100">
@@ -386,7 +386,7 @@
                                         <td class="font-medium" x-text="p.nombre"></td>
                                         <td x-text="p.email"></td>
                                         <td x-text="p.telefono || '—'"></td>
-                                        <td><span class="badge" :class="p.estado==='activo' ? 'badge-confirmada' : p.estado==='en_proceso' ? 'badge-pendiente' : p.estado==='alta_terapeutica' ? 'badge-pasada' : 'badge-pasada'" x-text="p.estado"></span></td>
+                                        <td><span class="badge" :class="p.estado==='activo' ? 'badge-confirmada' : p.estado==='en_proceso' ? 'badge-pendiente' : p.estado==='alta_terapeutica' ? 'badge-pasada' : 'badge-pasada'" x-text="labelEstado(p.estado)"></span></td>
                                         <td class="text-right">
                                             <button @click="openFichaPaciente(p.id)" class="btn-link mr-2" x-text="t('file_card')"></button>
                                             <button @click="openEditPaciente(p)" class="btn-link mr-2" x-text="t('edit')"></button>
@@ -449,7 +449,7 @@
                                 <button type="button" @click="editPacienteModal.show = false" class="btn-secondary" x-text="t('cancel')"></button>
                                 <button type="submit" :disabled="savingEditPaciente" class="btn-primary"><span x-show="!savingEditPaciente" x-text="t('save_changes')"></span><span x-show="savingEditPaciente" x-text="t('saving')"></span></button>
                             </div>
-                            <p x-show="editPacienteMessage" class="text-sm" :class="editPacienteMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="editPacienteMessage"></p>
+                            <p x-show="editPacienteMessage" class="text-sm" :class="isOkMsg(editPacienteMessage) ? 'text-green-600' : 'text-red-600'" x-text="editPacienteMessage"></p>
                         </form>
                     </div>
                 </div>
@@ -511,7 +511,7 @@
                         </div>
                         <button type="submit" :disabled="savingLanding" class="btn-primary" x-text="t('save_landing')"></button>
                         <a href="/" target="_blank" rel="noopener" class="btn-secondary ml-2" x-text="t('view_public_site')"></a>
-                        <span x-show="landingMessage" class="ml-2 text-sm" :class="landingMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="landingMessage"></span>
+                        <span x-show="landingMessage" class="ml-2 text-sm" :class="isOkMsg(landingMessage) ? 'text-green-600' : 'text-red-600'" x-text="landingMessage"></span>
                     </form>
                 </div>
             </div>
@@ -543,7 +543,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('concept_req')"></label><input type="text" x-model="facturaForm.concepto" class="input-modern" required :placeholder="t('ph_concept')"></div>
                                     <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('total_paid_req')"></label><input type="number" step="0.01" min="0" x-model="facturaForm.totalPagado" @input="actualizarResumenFactura()" class="input-modern" required placeholder="60"></div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('vat_pct')"></label><input type="number" step="1" min="0" max="100" x-model="facturaForm.ivaPct" @input="actualizarResumenFactura()" class="input-modern" placeholder="21"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('vat_pct')"></label><input type="number" step="0.1" min="0" max="100" x-model="facturaForm.ivaPct" @input="actualizarResumenFactura()" class="input-modern" placeholder="25.5"></div>
                                     <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('description')"></label><input type="text" x-model="facturaForm.descripcion" class="input-modern" :placeholder="t('ph_desc')"></div>
                                     <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('payment_method')"></label><input type="text" x-model="facturaForm.forma_pago" class="input-modern" :placeholder="t('ph_payment')"></div>
                                 </div>
@@ -558,7 +558,7 @@
                                 <span x-show="!savingFactura" x-text="t('create_invoice')"></span>
                                 <span x-show="savingFactura" x-text="t('creating')"></span>
                             </button>
-                            <span x-show="facturaMessage" class="ml-2 text-sm" :class="facturaMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="facturaMessage"></span>
+                            <span x-show="facturaMessage" class="ml-2 text-sm" :class="isOkMsg(facturaMessage) ? 'text-green-600' : 'text-red-600'" x-text="facturaMessage"></span>
                         </form>
                     </div>
                 </template>
@@ -604,7 +604,7 @@
                             <p class="text-xs text-gray-500 mt-1" x-text="t(\'google_link_help\')"><//p>
                         </div>
                         <button type="submit" :disabled="savingReputacion" class="btn-primary" x-text="t('save_settings')"></button>
-                        <span x-show="reputacionMessage" class="ml-2 text-sm" :class="reputacionMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="reputacionMessage"></span>
+                        <span x-show="reputacionMessage" class="ml-2 text-sm" :class="isOkMsg(reputacionMessage) ? 'text-green-600' : 'text-red-600'" x-text="reputacionMessage"></span>
                     </form>
                     <div class="border-t pt-6">
                         <h3 class="font-semibold text-gray-900 mb-4" x-text="t('month_summary')"></h3>
@@ -662,18 +662,18 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('nif_cif')"></label>
-                                    <input type="text" x-model="negocio.nif" class="input-modern" placeholder="12345678A">
+                                    <input type="text" x-model="negocio.nif" class="input-modern" :placeholder="t('ph_nif')">
                                 </div>
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('fiscal_address')"></label>
-                                    <input type="text" x-model="negocio.direccion" class="input-modern" placeholder="Calle, número, código postal, ciudad">
+                                    <input type="text" x-model="negocio.direccion" class="input-modern" :placeholder="t('ph_fiscal_address')">
                                 </div>
                             </div>
                             <button type="button" @click="saveDatosFiscales()" :disabled="savingDatosFiscales" class="btn-secondary">
                                 <span x-show="!savingDatosFiscales">Guardar datos fiscales</span>
                                 <span x-show="savingDatosFiscales">Guardando...</span>
                             </button>
-                            <span x-show="datosFiscalesMessage" class="ml-2 text-sm" :class="datosFiscalesMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="datosFiscalesMessage"></span>
+                            <span x-show="datosFiscalesMessage" class="ml-2 text-sm" :class="isOkMsg(datosFiscalesMessage) ? 'text-green-600' : 'text-red-600'" x-text="datosFiscalesMessage"></span>
                         </div>
 
                         <button type="submit" :disabled="savingConfig" class="btn-primary">
@@ -682,7 +682,7 @@
                         </button>
 
                         <div x-show="configMessage" class="p-4 rounded-lg" 
-                             :class="configMessage.includes('correctamente') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                             :class="isOkMsg(configMessage) ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
                              x-text="configMessage">
                         </div>
 
@@ -706,7 +706,7 @@
                         <div class="border-t pt-6 mt-6">
                             <h3 class="font-semibold text-gray-900 mb-2" x-text="t('gcal_title')"></h3>
                             <p class="text-sm text-gray-500 mb-3" x-text="t('gcal_help')"></p>
-                            <div x-show="googleCalendarMessage" class="mb-3 p-3 rounded text-sm" :class="googleCalendarMessage.includes('Conectado') || googleCalendarMessage.includes('correctamente') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'" x-text="googleCalendarMessage"></div>
+                            <div x-show="googleCalendarMessage" class="mb-3 p-3 rounded text-sm" :class="googleCalendarMessage.includes('Conectado') || isOkMsg(googleCalendarMessage) ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'" x-text="googleCalendarMessage"></div>
                             <template x-if="!googleCalendarConnected">
                                 <div>
                                     <button type="button" @click="connectGoogleCalendar()" :disabled="googleCalendarLoading" class="btn-primary">
@@ -735,11 +735,11 @@
                         <form @submit.prevent="saveSmtp()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('smtp_host')"></label><input type="text" x-model="negocio.smtp_host" class="input-modern" placeholder="smtp.gmail.com"></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('port')"></label><input type="number" x-model="negocio.smtp_port" class="input-modern" placeholder="587"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('user')"></label><input type="text" x-model="negocio.smtp_user" class="input-modern" placeholder="tu@email.com"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('user')"></label><input type="text" x-model="negocio.smtp_user" class="input-modern" :placeholder="t('ph_smtp_user')"></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('password')"></label><input type="password" x-model="negocio.smtp_password" class="input-modern" placeholder="••••••••"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('from_email')"></label><input type="email" x-model="negocio.email_remitente" class="input-modern" placeholder="noreply@tudominio.com"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('from_name')"></label><input type="text" x-model="negocio.nombre_remitente" class="input-modern" placeholder="Mi Negocio"></div>
-                            <div class="md:col-span-2"><button type="submit" :disabled="savingSmtp" class="btn-primary" x-text="t('save_smtp')"></button><span x-show="smtpMessage" class="ml-2 text-sm" :class="smtpMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="smtpMessage"></span></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('from_email')"></label><input type="email" x-model="negocio.email_remitente" class="input-modern" :placeholder="t('ph_from_email')"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('from_name')"></label><input type="text" x-model="negocio.nombre_remitente" class="input-modern" :placeholder="t('ph_from_name')"></div>
+                            <div class="md:col-span-2"><button type="submit" :disabled="savingSmtp" class="btn-primary" x-text="t('save_smtp')"></button><span x-show="smtpMessage" class="ml-2 text-sm" :class="isOkMsg(smtpMessage) ? 'text-green-600' : 'text-red-600'" x-text="smtpMessage"></span></div>
                         </form>
                     </div>
 
@@ -750,7 +750,7 @@
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('subject')"></label><input type="text" x-model="plantillaRecordatorio.asunto" class="input-modern" :placeholder="t('demo_email_subject')"></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('body')"></label><textarea x-model="plantillaRecordatorio.cuerpo" rows="5" class="input-modern" :placeholder="t('demo_email_body')"></textarea></div>
                             <button type="submit" :disabled="savingPlantilla" class="btn-primary" x-text="t('save_template')"></button>
-                            <span x-show="plantillaMessage" class="ml-2 text-sm" :class="plantillaMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="plantillaMessage"></span>
+                            <span x-show="plantillaMessage" class="ml-2 text-sm" :class="isOkMsg(plantillaMessage) ? 'text-green-600' : 'text-red-600'" x-text="plantillaMessage"></span>
                         </form>
                     </div>
 
@@ -762,7 +762,7 @@
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('consent')"></label><textarea x-model="textosLegales.consentimiento" rows="4" class="input-modern" :placeholder="t('ph_consent')"></textarea></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('version')"></label><input type="text" x-model="textosLegales.version" class="input-modern w-24" placeholder="1"></div>
                             <button type="submit" :disabled="savingTextosLegales" class="btn-primary" x-text="t('save_legal')"></button>
-                            <span x-show="textosLegalesMessage" class="ml-2 text-sm" :class="textosLegalesMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="textosLegalesMessage"></span>
+                            <span x-show="textosLegalesMessage" class="ml-2 text-sm" :class="isOkMsg(textosLegalesMessage) ? 'text-green-600' : 'text-red-600'" x-text="textosLegalesMessage"></span>
                         </form>
                     </div>
                 </div>
@@ -815,7 +815,7 @@
                     </button>
 
                     <div x-show="hoursMessage" class="mt-4 p-4 rounded-lg" 
-                         :class="hoursMessage.includes('correctamente') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                         :class="isOkMsg(hoursMessage) ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
                          x-text="hoursMessage">
                     </div>
                 </div>
@@ -916,7 +916,7 @@
                                 <button type="button" @click="showUserForm = false; userForm = { name: '', email: '', password: '' }" class="btn-secondary" x-text="t('cancel')"></button>
                             </div>
                             <div x-show="userMessage" class="p-4 rounded-lg" 
-                                 :class="userMessage.includes('correctamente') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                                 :class="isOkMsg(userMessage) ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
                                  x-text="userMessage">
                             </div>
                         </form>
@@ -949,6 +949,32 @@
             const i18n = window.I18n.alpineHelpers();
             return {
                 ...i18n,
+                isOkMsg(msg) {
+                    if (!msg) return false;
+                    return /correctamente|successfully|onnist|tallennet|luotu|cread|saved|conectad|connected|yhdistetty|desconect|disconnect|katkaistu|subida|uploaded|ladattu|creada|created|lähetetty|enviado|sent/i.test(String(msg));
+                },
+                labelEstado(estado) {
+                    const map = {
+                        confirmada: 'st_confirmed_cap',
+                        completada: 'st_completed_cap',
+                        pasada: 'st_past_cap',
+                        cancelada: 'st_cancelled_cap',
+                        pendiente: 'st_pending_cap',
+                        no_asistio: 'st_no_show_cap',
+                        activo: 'st_active',
+                        en_proceso: 'st_in_progress',
+                        alta_terapeutica: 'st_discharged',
+                        inactivo: 'st_inactive'
+                    };
+                    const key = map[estado];
+                    return key ? this.t(key) : (estado || '');
+                },
+                labelTipoSesion(tipo) {
+                    if (!tipo) return '';
+                    if (tipo === 'online') return this.t('online');
+                    if (tipo === 'presencial') return this.t('in_person');
+                    return tipo;
+                },
                 activeTab: 'inicio',
                 stats: {},
                 citas: [],
@@ -1036,9 +1062,9 @@
                 facturas: [],
                 facturaForm: {
                     cliente_nombre: '', cliente_nif: '', cliente_direccion: '', cliente_cp: '', cliente_ciudad: '', cliente_provincia: '',
-                    concepto: '', descripcion: '', totalPagado: '', ivaPct: '21', forma_pago: ''
+                    concepto: '', descripcion: '', totalPagado: '', ivaPct: '25.5', forma_pago: ''
                 },
-                resumenFactura: { precioBase: '0,00 €', ivaPct: 21, ivaEur: '0,00 €', total: '0,00 €' },
+                resumenFactura: { precioBase: '0,00 €', ivaPct: 25.5, ivaEur: '0,00 €', total: '0,00 €' },
                 savingFactura: false,
                 facturaMessage: '',
 
@@ -1058,12 +1084,12 @@
                     this.applyDemoLegalTexts();
                     const params = new URLSearchParams(window.location.search);
                     if (params.get('google_calendar') === 'ok') {
-                        this.googleCalendarMessage = 'Conectado correctamente. Las reservas se crearán en tu Google Calendar.';
+                        this.googleCalendarMessage = this.t('msg_gc_connected');
                         this.activeTab = 'config';
                         await this.loadGoogleCalendarStatus();
                         window.history.replaceState({}, '', '/dashboard');
                     } else if (params.get('google_calendar') === 'error') {
-                        this.googleCalendarMessage = decodeURIComponent(params.get('message') || 'Error al conectar');
+                        this.googleCalendarMessage = decodeURIComponent(params.get('message') || this.t('msg_gc_connect_error'));
                         this.activeTab = 'config';
                         window.history.replaceState({}, '', '/dashboard');
                     }
@@ -1123,13 +1149,13 @@
                         const data = await res.json();
                         if (data.success) {
                             this.editPacienteModal.show = false;
-                            this.editPacienteMessage = 'Paciente actualizado correctamente';
+                            this.editPacienteMessage = this.t('msg_patient_updated');
                             await this.loadPacientes();
                         } else {
-                            this.editPacienteMessage = data.error || 'Error al guardar';
+                            this.editPacienteMessage = data.error || this.t('msg_save_error');
                         }
                     } catch (e) {
-                        this.editPacienteMessage = 'Error de conexión';
+                        this.editPacienteMessage = this.t('msg_conn_error');
                     } finally {
                         this.savingEditPaciente = false;
                     }
@@ -1148,7 +1174,7 @@
                             proximaCita: data.proximaCita || null
                         };
                     } catch (e) {
-                        alert('Error cargando ficha');
+                        alert(this.t('msg_ficha_error'));
                     }
                 },
 
@@ -1188,22 +1214,22 @@
                         a.download = 'paciente-' + id + '.json';
                         a.click();
                     } catch (e) {
-                        alert('Error exportando');
+                        alert(this.t('msg_export_error'));
                     }
                 },
 
                 async confirmDeletePaciente(p) {
-                    if (!confirm('¿Eliminar al paciente "' + p.nombre + '"? Se eliminarán también sus datos. Esta acción no se puede deshacer.')) return;
+                    if (!confirm(this.tf('msg_delete_patient_confirm', { name: p.nombre }))) return;
                     try {
                         const res = await fetch('/dashboard/api/pacientes/' + p.id, { method: 'DELETE' });
                         const data = await res.json().catch(() => ({}));
                         if (data.success) {
                             await this.loadPacientes();
                         } else {
-                            alert(data.error || 'Error eliminando paciente');
+                            alert(data.error || this.t('msg_delete_patient_error'));
                         }
                     } catch (e) {
-                        alert('Error de conexión al eliminar');
+                        alert(this.t('msg_conn_error_delete'));
                     }
                 },
 
@@ -1218,15 +1244,15 @@
                         });
                         const data = await res.json();
                         if (data.success) {
-                            this.pacienteMessage = 'Paciente creado correctamente';
+                            this.pacienteMessage = this.t('msg_patient_created');
                             this.pacienteForm = { nombre: '', email: '', telefono: '', estado: 'activo', precio_sesion: '', notas_privadas: '' };
                             this.showPacienteForm = false;
                             await this.loadPacientes();
                         } else {
-                            this.pacienteMessage = data.error || 'Error';
+                            this.pacienteMessage = data.error || this.t('msg_error');
                         }
                     } catch (e) {
-                        this.pacienteMessage = 'Error de conexión';
+                        this.pacienteMessage = this.t('msg_conn_error');
                     } finally {
                         this.creatingPaciente = false;
                     }
@@ -1378,7 +1404,7 @@
                             });
                             const data = await res.json();
                             if (data.success) { this.modalCita.show = false; await this.loadCitas(); }
-                            else this.modalCitaMessage = data.error || 'Error';
+                            else this.modalCitaMessage = data.error || this.t('msg_error');
                         } else {
                             if (!this.modalCita.hora_fin) this.setHoraFinFromSlot();
                             const res = await fetch('/dashboard/api/citas', {
@@ -1388,10 +1414,10 @@
                             });
                             const data = await res.json();
                             if (data.success) { this.modalCita.show = false; await this.loadCitas(); }
-                            else this.modalCitaMessage = data.error || 'Error';
+                            else this.modalCitaMessage = data.error || this.t('msg_error');
                         }
                     } catch (e) {
-                        this.modalCitaMessage = 'Error de conexión';
+                        this.modalCitaMessage = this.t('msg_conn_error');
                     } finally {
                         this.savingModalCita = false;
                     }
@@ -1411,10 +1437,10 @@
                             this.deleteModal = { show: false, step2: false, confirmText: '', id: null };
                             await this.loadCitas();
                         } else {
-                            alert(data.error || 'Error al eliminar');
+                            alert(data.error || this.t('msg_delete_error'));
                         }
                     } catch (error) {
-                        alert('Error al eliminar la cita');
+                        alert(this.t('msg_delete_appt_error'));
                     }
                     this.deleteModal = { show: false, step2: false, confirmText: '', id: null };
                 },
@@ -1481,22 +1507,22 @@
                         if (data.url) {
                             window.location.href = data.url;
                         } else {
-                            this.googleCalendarMessage = data.error || 'No se pudo obtener el enlace. Configura GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en el servidor.';
+                            this.googleCalendarMessage = data.error || this.t('msg_gc_link_error');
                         }
                     } catch (e) {
-                        this.googleCalendarMessage = 'Error de conexión';
+                        this.googleCalendarMessage = this.t('msg_conn_error');
                     } finally {
                         this.googleCalendarLoading = false;
                     }
                 },
                 async disconnectGoogleCalendar() {
-                    if (!confirm('¿Desconectar Google Calendar? Las reservas ya creadas en Google no se borrarán.')) return;
+                    if (!confirm(this.t('msg_gc_disconnect_confirm'))) return;
                     try {
                         await fetch('/dashboard/api/google-calendar/disconnect', { method: 'POST' });
-                        this.googleCalendarMessage = 'Desconectado correctamente.';
+                        this.googleCalendarMessage = this.t('msg_gc_disconnected');
                         await this.loadGoogleCalendarStatus();
                     } catch (e) {
-                        this.googleCalendarMessage = 'Error al desconectar';
+                        this.googleCalendarMessage = this.t('msg_gc_disconnect_error');
                     }
                 },
                 async saveGoogleCalendarSyncBusy() {
@@ -1519,9 +1545,9 @@
                             body: JSON.stringify(this.negocio)
                         });
                         const data = await res.json();
-                        this.smtpMessage = data.success ? 'SMTP guardado correctamente' : (data.error || 'Error');
+                        this.smtpMessage = data.success ? this.t('msg_smtp_saved') : (data.error || this.t('msg_error'));
                     } catch (e) {
-                        this.smtpMessage = 'Error de conexión';
+                        this.smtpMessage = this.t('msg_conn_error');
                     } finally {
                         this.savingSmtp = false;
                     }
@@ -1537,9 +1563,9 @@
                             body: JSON.stringify({ nombre: 'recordatorio', asunto: this.plantillaRecordatorio.asunto, cuerpo: this.plantillaRecordatorio.cuerpo })
                         });
                         const data = await res.json();
-                        this.plantillaMessage = data.success ? 'Plantilla guardada correctamente' : (data.error || 'Error');
+                        this.plantillaMessage = data.success ? this.t('msg_template_saved') : (data.error || this.t('msg_error'));
                     } catch (e) {
-                        this.plantillaMessage = 'Error de conexión';
+                        this.plantillaMessage = this.t('msg_conn_error');
                     } finally {
                         this.savingPlantilla = false;
                     }
@@ -1560,9 +1586,9 @@
                             body: JSON.stringify(payload)
                         });
                         const data = await res.json();
-                        this.textosLegalesMessage = data.success ? 'Textos legales guardados correctamente' : (data.error || 'Error');
+                        this.textosLegalesMessage = data.success ? this.t('msg_legal_saved') : (data.error || this.t('msg_error'));
                     } catch (e) {
-                        this.textosLegalesMessage = 'Error de conexión';
+                        this.textosLegalesMessage = this.t('msg_conn_error');
                     } finally {
                         this.savingTextosLegales = false;
                     }
@@ -1636,9 +1662,9 @@
                             body: JSON.stringify(this.landing)
                         });
                         const data = await res.json();
-                        this.landingMessage = data.success ? 'Landing guardada correctamente' : (data.error || 'Error');
+                        this.landingMessage = data.success ? this.t('msg_landing_saved') : (data.error || this.t('msg_error'));
                     } catch (e) {
-                        this.landingMessage = 'Error de conexión';
+                        this.landingMessage = this.t('msg_conn_error');
                     } finally {
                         this.savingLanding = false;
                     }
@@ -1658,12 +1684,12 @@
                         if (data.url) {
                             if (isHero) this.landing.hero_image_url = data.url;
                             else this.landing.about_image_url = data.url;
-                            this.landingMessage = 'Imagen subida. Guarda la landing para aplicar.';
+                            this.landingMessage = this.t('msg_image_uploaded');
                         } else {
-                            this.landingMessage = data.error || 'Error subiendo la imagen';
+                            this.landingMessage = data.error || this.t('msg_image_error');
                         }
                     } catch (e) {
-                        this.landingMessage = 'Error de conexión al subir';
+                        this.landingMessage = this.t('msg_conn_error_upload');
                     } finally {
                         if (isHero) this.uploadingImageHero = false; else this.uploadingImageAbout = false;
                         event.target.value = '';
@@ -1706,7 +1732,7 @@
                 },
 
                 async cancelAppointment(id) {
-                    if (!confirm('¿Estás seguro de cancelar esta cita?')) return;
+                    if (!confirm(this.t('msg_cancel_appt_confirm'))) return;
 
                     try {
                         const response = await fetch(`/dashboard/api/appointments/${id}/cancel`, {
@@ -1718,7 +1744,7 @@
                         }
                     } catch (error) {
                         console.error('Error cancelando cita:', error);
-                        alert('Error al cancelar la cita');
+                        alert(this.t('msg_cancel_appt_error'));
                     }
                 },
 
@@ -1733,9 +1759,9 @@
                             body: JSON.stringify(this.config)
                         });
                         const data = await response.json();
-                        this.configMessage = data.success ? 'Configuración guardada correctamente' : data.error;
+                        this.configMessage = data.success ? this.t('msg_config_saved') : data.error;
                     } catch (error) {
-                        this.configMessage = 'Error guardando configuración';
+                        this.configMessage = this.t('msg_config_error');
                     } finally {
                         this.savingConfig = false;
                     }
@@ -1751,9 +1777,9 @@
                             body: JSON.stringify({ nif: this.negocio.nif, direccion: this.negocio.direccion })
                         });
                         const data = await res.json();
-                        this.datosFiscalesMessage = data.success ? 'Datos fiscales guardados correctamente' : (data.error || 'Error');
+                        this.datosFiscalesMessage = data.success ? this.t('msg_tax_saved') : (data.error || this.t('msg_error'));
                     } catch (e) {
-                        this.datosFiscalesMessage = 'Error de conexión';
+                        this.datosFiscalesMessage = this.t('msg_conn_error');
                     } finally {
                         this.savingDatosFiscales = false;
                     }
@@ -1761,7 +1787,7 @@
 
                 actualizarResumenFactura() {
                     const total = parseFloat(this.facturaForm.totalPagado) || 0;
-                    const ivaPct = parseFloat(this.facturaForm.ivaPct) || 21;
+                    const ivaPct = parseFloat(this.facturaForm.ivaPct) || 25.5;
                     const precioBase = total / (1 + ivaPct / 100);
                     const ivaEur = total - precioBase;
                     this.resumenFactura = {
@@ -1786,17 +1812,17 @@
                     }
                 },
                 async eliminarFactura(f) {
-                    if (!f || !confirm('¿Eliminar la factura ' + (f.numero_factura || '') + '? Esta acción no se puede deshacer.')) return;
+                    if (!f || !confirm(this.tf('msg_invoice_delete_confirm', { n: f.numero_factura || '' }))) return;
                     try {
                         const res = await fetch('/dashboard/api/facturas/' + f.id, { method: 'DELETE' });
                         const data = await res.json().catch(() => ({}));
                         if (data.success) {
                             await this.loadFacturas();
                         } else {
-                            alert(data.error || 'Error al eliminar');
+                            alert(data.error || this.t('msg_delete_error'));
                         }
                     } catch (e) {
-                        alert('Error de conexión');
+                        alert(this.t('msg_conn_error'));
                     }
                 },
                 async crearFactura() {
@@ -1810,15 +1836,15 @@
                         });
                         const data = await res.json();
                         if (data.success) {
-                            this.facturaMessage = 'Factura ' + data.numero_factura + ' creada correctamente.';
-                            this.facturaForm = { cliente_nombre: '', cliente_nif: '', cliente_direccion: '', cliente_cp: '', cliente_ciudad: '', cliente_provincia: '', concepto: '', descripcion: '', totalPagado: '', ivaPct: '21', forma_pago: '' };
+                            this.facturaMessage = this.tf('msg_invoice_created', { n: data.numero_factura });
+                            this.facturaForm = { cliente_nombre: '', cliente_nif: '', cliente_direccion: '', cliente_cp: '', cliente_ciudad: '', cliente_provincia: '', concepto: '', descripcion: '', totalPagado: '', ivaPct: '25.5', forma_pago: '' };
                             this.actualizarResumenFactura();
                             await this.loadFacturas();
                         } else {
-                            this.facturaMessage = data.error || 'Error creando factura';
+                            this.facturaMessage = data.error || this.t('msg_invoice_error');
                         }
                     } catch (e) {
-                        this.facturaMessage = 'Error de conexión';
+                        this.facturaMessage = this.t('msg_conn_error');
                     } finally {
                         this.savingFactura = false;
                     }
@@ -1848,10 +1874,10 @@
                             body: JSON.stringify({ googleReviewUrl: this.reputacion.googleReviewUrl || '' })
                         });
                         const data = await res.json();
-                        this.reputacionMessage = data.success ? 'Configuración guardada correctamente' : (data.error || 'Error');
+                        this.reputacionMessage = data.success ? this.t('msg_rep_saved') : (data.error || this.t('msg_error'));
                         if (data.success) await this.loadReputacion();
                     } catch (e) {
-                        this.reputacionMessage = 'Error de conexión';
+                        this.reputacionMessage = this.t('msg_conn_error');
                     } finally {
                         this.savingReputacion = false;
                     }
@@ -1871,7 +1897,7 @@
                         clearTimeout(timeout);
                         const data = await response.json().catch(() => ({}));
                         const serverError = data.error || (response.ok ? '' : 'Error del servidor.');
-                        this.testEmailMessage = data.message || serverError || (response.ok ? 'Email de prueba enviado.' : `Error ${response.status}`);
+                        this.testEmailMessage = data.message || serverError || (response.ok ? this.t('msg_test_email_sent') : (this.t('msg_error') + ' ' + response.status));
                         if (!response.ok && serverError) {
                             console.error('[Test email] Respuesta del servidor:', response.status, data);
                         }
@@ -1909,9 +1935,9 @@
                             body: JSON.stringify({ openingHours: this.openingHours })
                         });
                         const data = await response.json();
-                        this.hoursMessage = data.success ? 'Horarios guardados correctamente' : data.error;
+                        this.hoursMessage = data.success ? this.t('msg_hours_saved') : data.error;
                     } catch (error) {
-                        this.hoursMessage = 'Error guardando horarios';
+                        this.hoursMessage = this.t('msg_hours_error');
                     } finally {
                         this.savingHours = false;
                     }
@@ -1919,7 +1945,7 @@
 
                 async saveBlock() {
                     if (!this.blockForm.startTime || !this.blockForm.endTime) {
-                        alert('Por favor, completa fecha de inicio y fin');
+                        alert(this.t('msg_block_dates_required'));
                         return;
                     }
 
@@ -1943,16 +1969,16 @@
                             this.showBlockForm = false;
                             await this.loadBlockedSlots();
                         } else {
-                            alert(data.error || 'Error guardando bloqueo');
+                            alert(data.error || this.t('msg_block_save_error'));
                         }
                     } catch (error) {
                         console.error('Error guardando bloqueo:', error);
-                        alert('Error al guardar el bloqueo');
+                        alert(this.t('msg_block_save_fail'));
                     }
                 },
 
                 async deleteBlock(id) {
-                    if (!confirm('¿Estás seguro de eliminar este bloqueo?')) return;
+                    if (!confirm(this.t('msg_block_delete_confirm'))) return;
 
                     try {
                         const response = await fetch(`/dashboard/api/blocked-slots/${id}`, {
@@ -1964,7 +1990,7 @@
                         }
                     } catch (error) {
                         console.error('Error eliminando bloqueo:', error);
-                        alert('Error al eliminar el bloqueo');
+                        alert(this.t('msg_block_delete_error'));
                     }
                 },
 
@@ -1980,15 +2006,15 @@
                         });
                         const data = await response.json();
                         if (data.success) {
-                            this.userMessage = 'Usuario creado correctamente';
+                            this.userMessage = this.t('msg_user_created');
                             this.userForm = { name: '', email: '', password: '' };
                             this.showUserForm = false;
                             await this.loadUsers();
                         } else {
-                            this.userMessage = data.error || 'Error creando usuario';
+                            this.userMessage = data.error || this.t('msg_user_error');
                         }
                     } catch (error) {
-                        this.userMessage = 'Error creando usuario';
+                        this.userMessage = this.t('msg_user_error');
                     } finally {
                         this.creatingUser = false;
                     }

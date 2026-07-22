@@ -1,17 +1,60 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 const bcrypt = require('bcryptjs');
 const { runQuery, allQuery, getQuery } = require('../utils/db');
-const { getBusinessConfig, getAvailableTimeSlots, getAppointmentDuration } = require('../utils/helpers');
 const { sendConfirmationEmail, sendNotificationToPsychologist } = require('../utils/email');
 const pacientesService = require('../lib/pacientes');
 const citasService = require('../lib/citas');
 const negocioService = require('../lib/negocio');
+const tenant = require('../lib/tenant');
 const reputacionPro = require('../lib/reputacion-pro');
 
-const NEGOCIO_ID = 1;
+const DEFAULT_NEGOCIO_ID = 1;
 
-// Servir imagen de la landing desde la BD (persistente en Railway)
+async function resolveNegocioId(req) {
+  const slug =
+    (req.params && req.params.slug) ||
+    (req.query && (req.query.tenant || req.query.slug)) ||
+    (req.body && (req.body.tenant || req.body.slug)) ||
+    null;
+  if (slug) {
+    const n = await tenant.getBySlug(slug);
+    if (!n) {
+      const err = new Error('Consulta no encontrada');
+      err.status = 404;
+      throw err;
+    }
+    return n.id;
+  }
+  return DEFAULT_NEGOCIO_ID;
+}
+
+function landingFile(res) {
+  return res.sendFile(path.join(__dirname, '..', 'views', 'landing.html'));
+}
+
+// Home: panel demos (ventas) o landing del negocio por defecto
+router.get('/', async (req, res) => {
+  if (process.env.MULTI_TENANT_HOME === 'demos') {
+    return res.redirect('/demos');
+  }
+  return landingFile(res);
+});
+
+// Landing aislada por tenant (enlace que se envía en la llamada)
+router.get('/d/:slug', async (req, res) => {
+  try {
+    const n = await tenant.getBySlug(req.params.slug);
+    if (!n) return res.status(404).send('Esta demo no existe o ha caducado.');
+    return landingFile(res);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send('Error');
+  }
+});
+
+// Servir imagen de la landing desde la BD
 router.get('/api/landing-image/:id', async (req, res) => {
   try {
     const row = await getQuery('SELECT mimetype, data FROM landing_images WHERE id = ?', [req.params.id]);
@@ -25,15 +68,10 @@ router.get('/api/landing-image/:id', async (req, res) => {
   }
 });
 
-// Landing pública (página editable + reserva)
-router.get('/', async (req, res) => {
-  res.sendFile('landing.html', { root: './views' });
-});
-
-// Contenido de la landing (hero, bloques, CTA) para la web pública
 router.get('/api/landing', async (req, res) => {
   try {
-    const row = await getQuery('SELECT content FROM landing_page WHERE negocio_id = ?', [NEGOCIO_ID]);
+    const negocioId = await resolveNegocioId(req);
+    const row = await getQuery('SELECT content FROM landing_page WHERE negocio_id = ?', [negocioId]);
     if (!row || !row.content) {
       return res.json({
         hero_title: '',
@@ -49,6 +87,7 @@ router.get('/api/landing', async (req, res) => {
     const content = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
     res.json(content);
   } catch (error) {
+    if (error.status === 404) return res.status(404).json({ error: error.message });
     console.error('Error obteniendo landing:', error);
     res.json({
       hero_title: '',
@@ -63,59 +102,65 @@ router.get('/api/landing', async (req, res) => {
   }
 });
 
-// Obtener configuración pública (para el frontend)
 router.get('/api/config', async (req, res) => {
   try {
-    const config = await getBusinessConfig();
+    const negocioId = await resolveNegocioId(req);
+    const n = await negocioService.getById(negocioId);
+    if (!n) return res.status(404).json({ error: 'Negocio no encontrado' });
     res.json({
-      businessName: config.businessName,
-      businessPhone: config.businessPhone,
-      businessEmail: config.businessEmail
+      businessName: n.nombre || '',
+      businessPhone: n.telefono || '',
+      businessEmail: n.email || '',
+      slug: n.slug || null,
+      tenantId: n.id
     });
   } catch (error) {
+    if (error.status === 404) return res.status(404).json({ error: error.message });
     res.status(500).json({ error: 'Error obteniendo configuración' });
   }
 });
 
-// Textos legales públicos (para checkbox RGPD en landing)
 router.get('/api/textos-legales', async (req, res) => {
   try {
-    const { getQuery } = require('../utils/db');
-    const row = await getQuery('SELECT politica_privacidad, consentimiento, version FROM textos_legales WHERE negocio_id = 1');
+    const negocioId = await resolveNegocioId(req);
+    const row = await getQuery(
+      'SELECT politica_privacidad, consentimiento, version FROM textos_legales WHERE negocio_id = ?',
+      [negocioId]
+    );
     res.json(row || { politica_privacidad: '', consentimiento: '', version: '1' });
   } catch (error) {
+    if (error.status === 404) return res.status(404).json({ error: error.message });
     res.json({ politica_privacidad: '', consentimiento: '', version: '1' });
   }
 });
 
-// Obtener horas disponibles para una fecha (usa tabla citas + horarios del negocio)
 router.get('/api/available-slots', async (req, res) => {
   try {
     const { date } = req.query;
-    if (!date) {
-      return res.status(400).json({ error: 'Fecha requerida' });
-    }
-    const duration = await negocioService.getDuracionCitaDefault(NEGOCIO_ID);
-    const slots = await citasService.getSlotsDisponibles(NEGOCIO_ID, date, duration);
+    if (!date) return res.status(400).json({ error: 'Fecha requerida' });
+    const negocioId = await resolveNegocioId(req);
+    const duration = await negocioService.getDuracionCitaDefault(negocioId);
+    const slots = await citasService.getSlotsDisponibles(negocioId, date, duration);
     res.json({
-      slots: slots.map(s => ({
+      slots: slots.map((s) => ({
         time: s.hora_inicio,
         display: (s.display || s.hora_inicio).slice(0, 5)
       }))
     });
   } catch (error) {
+    if (error.status === 404) return res.status(404).json({ error: error.message });
     console.error('Error obteniendo slots:', error);
     res.status(500).json({ error: 'Error obteniendo horas disponibles' });
   }
 });
 
-// Crear nueva reserva (paciente + cita + consentimiento RGPD). Solo citas reales: validación estricta.
 router.post('/api/book', async (req, res) => {
   try {
+    const negocioId = await resolveNegocioId(req);
     const { name, email, date, time, telefono, acepta_legal } = req.body;
 
-    const nombre = (name && typeof name === 'string') ? name.trim() : '';
-    const emailTrim = (email && typeof email === 'string') ? email.trim().toLowerCase() : '';
+    const nombre = name && typeof name === 'string' ? name.trim() : '';
+    const emailTrim = email && typeof email === 'string' ? email.trim().toLowerCase() : '';
 
     if (!nombre || nombre.length < 2) {
       return res.status(400).json({ error: 'El nombre debe tener al menos 2 caracteres.' });
@@ -142,27 +187,26 @@ router.post('/api/book', async (req, res) => {
       return res.status(400).json({ error: 'Formato de hora inválido' });
     }
     const hora_inicio = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-    const duration = await negocioService.getDuracionCitaDefault(NEGOCIO_ID);
+    const duration = await negocioService.getDuracionCitaDefault(negocioId);
     const [h, m] = hora_inicio.split(':').map(Number);
     const endMin = h * 60 + m + duration;
     const hora_fin = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
 
-    // Validar que el hueco sigue disponible (solo se pueden reservar slots que devuelve getSlotsDisponibles)
-    const slotsDisponibles = await citasService.getSlotsDisponibles(NEGOCIO_ID, date, duration);
-    const slotValido = slotsDisponibles.some(s => s.hora_inicio === hora_inicio);
+    const slotsDisponibles = await citasService.getSlotsDisponibles(negocioId, date, duration);
+    const slotValido = slotsDisponibles.some((s) => s.hora_inicio === hora_inicio);
     if (!slotValido) {
       return res.status(400).json({ error: 'Este horario no está disponible. Elige otra fecha u hora.' });
     }
 
-    const paciente = await pacientesService.getOrCreateByEmail(NEGOCIO_ID, {
-      nombre: nombre,
+    const paciente = await pacientesService.getOrCreateByEmail(negocioId, {
+      nombre,
       email: emailTrim,
-      telefono: (telefono && String(telefono).trim()) ? String(telefono).trim() : null
+      telefono: telefono && String(telefono).trim() ? String(telefono).trim() : null
     });
 
     let citaId;
     try {
-      const { id } = await citasService.create(NEGOCIO_ID, {
+      const { id } = await citasService.create(negocioId, {
         paciente_id: paciente.id,
         fecha: date,
         hora_inicio,
@@ -170,7 +214,8 @@ router.post('/api/book', async (req, res) => {
         estado: 'confirmada'
       });
       citaId = id;
-      const versionTexto = (await getQuery('SELECT version FROM textos_legales WHERE negocio_id = ?', [NEGOCIO_ID]))?.version || '1';
+      const versionTexto =
+        (await getQuery('SELECT version FROM textos_legales WHERE negocio_id = ?', [negocioId]))?.version || '1';
       const ip = req.ip || req.connection?.remoteAddress || null;
       await runQuery(
         'INSERT INTO consentimientos (paciente_id, fecha, ip, version_texto) VALUES (?, ?, ?, ?)',
@@ -186,7 +231,7 @@ router.post('/api/book', async (req, res) => {
     if (citaId) {
       try {
         const googleCalendar = require('../lib/google-calendar');
-        await googleCalendar.syncNewCita(NEGOCIO_ID, citaId);
+        await googleCalendar.syncNewCita(negocioId, citaId);
       } catch (e) {
         console.error('[Google Calendar] syncNewCita:', e.message);
       }
@@ -197,7 +242,8 @@ router.post('/api/book', async (req, res) => {
       client_name: paciente.nombre,
       client_email: paciente.email,
       appointment_date: `${date}T${hora_inicio}:00`,
-      duration
+      duration,
+      negocio_id: negocioId
     };
     let emailSent = false;
     try {
@@ -220,64 +266,50 @@ router.post('/api/book', async (req, res) => {
       emailSent
     });
   } catch (error) {
+    if (error.status === 404) return res.status(404).json({ error: error.message });
     console.error('Error creando reserva:', error);
     res.status(500).json({ error: 'Error al reservar la cita' });
   }
 });
 
-// ⚠️ ENDPOINT TEMPORAL: Crear primer usuario (solo si no hay usuarios)
-// Este endpoint solo funciona si la base de datos está vacía de usuarios
-// Útil para crear el primer usuario desde el navegador (Railway, etc.)
 router.post('/api/setup/first-user', async (req, res) => {
   try {
-    // Verificar si ya hay usuarios
     const existingUsers = await allQuery('SELECT COUNT(*) as count FROM users');
     const userCount = existingUsers[0]?.count || 0;
 
     if (userCount > 0) {
-      return res.status(403).json({ 
-        error: 'Ya existen usuarios en el sistema. Usa el dashboard para crear más usuarios.' 
+      return res.status(403).json({
+        error: 'Ya existen usuarios en el sistema. Usa el dashboard o /demos para crear más.'
       });
     }
 
     const { email, password, name } = req.body;
-
-    // Validaciones
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, contraseña y nombre son requeridos' });
     }
-
-    // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: 'Email inválido' });
     }
-
     if (password.length < 6) {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
     }
 
-    // Verificar si el email ya existe (por si acaso)
     const existingUser = await getQuery('SELECT id FROM users WHERE email = ?', [email]);
     if (existingUser) {
       return res.status(400).json({ error: 'Este email ya está registrado' });
     }
 
-    // Hash de la contraseña y crear usuario (negocio_id=1 para que vea las citas de la landing)
     const hashedPassword = await bcrypt.hash(password, 10);
-    await runQuery(
-      'INSERT INTO users (email, password, name, negocio_id) VALUES (?, ?, ?, 1)',
-      [email, hashedPassword, name]
-    );
-    // Comprobar que quedó guardado (y forzar flush con otra lectura)
-    const check = await allQuery('SELECT COUNT(*) as c FROM users');
-    if (process.env.NODE_ENV === 'production') {
-      console.log('✅ Primer usuario creado desde /setup. Usuarios en BD ahora:', (check[0] && check[0].c) || 0);
-    }
+    await runQuery('INSERT INTO users (email, password, name, negocio_id) VALUES (?, ?, ?, 1)', [
+      email,
+      hashedPassword,
+      name
+    ]);
 
     res.json({
       success: true,
-      message: 'Primer usuario creado correctamente. Ahora puedes iniciar sesión en /dashboard',
+      message: 'Primer usuario creado. Inicia sesión en /dashboard',
       user: { email, name }
     });
   } catch (error) {
@@ -286,22 +318,19 @@ router.post('/api/setup/first-user', async (req, res) => {
   }
 });
 
-// Listar emails de usuarios (solo para comprobar; requiere RESET_PASSWORD_SECRET)
 router.get('/api/check-users', (req, res) => {
   const secret = process.env.RESET_PASSWORD_SECRET;
   if (!secret || req.query.secret !== secret) {
     return res.status(403).json({ error: 'No autorizado' });
   }
   allQuery('SELECT id, email, name, created_at FROM users ORDER BY id')
-    .then(users => res.json({ users }))
-    .catch(err => {
+    .then((users) => res.json({ users }))
+    .catch((err) => {
       console.error(err);
       res.status(500).json({ error: 'Error leyendo usuarios' });
     });
 });
 
-// Restablecer contraseña (solo si RESET_PASSWORD_SECRET está definido en Railway)
-// Uso: pon RESET_PASSWORD_SECRET en Variables de Railway, llama a este endpoint, luego quita la variable
 router.post('/api/reset-password', async (req, res) => {
   const secret = process.env.RESET_PASSWORD_SECRET;
   if (!secret) {
@@ -331,7 +360,6 @@ router.post('/api/reset-password', async (req, res) => {
   }
 });
 
-// --- ReputacionPro: feedback público (valoración tras cita) ---
 router.get('/api/feedback/:sessionId', async (req, res) => {
   try {
     const session = await reputacionPro.feedback.getSessionForFeedback(req.params.sessionId);
@@ -350,10 +378,17 @@ router.post('/api/feedback/:sessionId', async (req, res) => {
     const { rating, comentario } = req.body;
     const r = parseInt(rating, 10);
     if (!r || r < 1 || r > 5) return res.status(400).json({ error: 'Valoración no válida' });
-    await reputacionPro.feedback.submitRating(session.negocioId, req.params.sessionId, r, comentario ? String(comentario).trim() : null);
+    await reputacionPro.feedback.submitRating(
+      session.negocioId,
+      req.params.sessionId,
+      r,
+      comentario ? String(comentario).trim() : null
+    );
     res.json({ success: true });
   } catch (error) {
-    if (error.message && error.message.includes('Ya has enviado')) return res.status(409).json({ error: error.message });
+    if (error.message && error.message.includes('Ya has enviado')) {
+      return res.status(409).json({ error: error.message });
+    }
     res.status(400).json({ error: error.message || 'Error' });
   }
 });

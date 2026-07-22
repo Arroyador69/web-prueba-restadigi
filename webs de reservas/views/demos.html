@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <title>Demos · llamadas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --ink: #0c1f1c;
+      --teal: #0f766e;
+      --teal-dark: #0d5c56;
+      --sand: #f3efe6;
+      --card: #fffdf8;
+    }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(15,118,110,.18), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(180,83,9,.12), transparent 50%),
+        var(--sand);
+      color: var(--ink);
+      min-height: 100vh;
+      -webkit-text-size-adjust: 100%;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    h1, h2 { font-family: 'Fraunces', Georgia, serif; }
+    [x-cloak] { display: none !important; }
+    .input {
+      width: 100%; min-height: 48px; font-size: 16px;
+      border: 1px solid #d6d0c4; border-radius: 12px;
+      padding: .75rem 1rem; background: #fff;
+    }
+    .input:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(15,118,110,.15); }
+    .btn {
+      min-height: 48px; border-radius: 12px; font-weight: 600;
+      padding: .75rem 1.25rem; border: none; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary { background: var(--teal); color: #fff; }
+    .btn-primary:hover { background: var(--teal-dark); }
+    .btn-ghost { background: transparent; border: 1px solid #cfc7b8; color: var(--ink); }
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(12,31,28,.08);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(12,31,28,.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="max-w-3xl mx-auto px-4 py-8 sm:py-12" x-data="demosApp()" x-cloak x-init="init()">
+    <header class="mb-8">
+      <p class="text-sm font-medium tracking-wide uppercase text-teal-800/70 mb-2">Ventas · multi-tenant</p>
+      <h1 class="text-3xl sm:text-4xl font-bold text-[var(--ink)]">Demos por llamada</h1>
+      <p class="mt-2 text-[var(--ink)]/70 max-w-xl">
+        Crea un espacio aislado en segundos, envía el enlace al móvil y los datos no se mezclan con otros psicólogos.
+      </p>
+    </header>
+
+    <!-- Login clave -->
+    <section class="card p-5 sm:p-6 mb-6" x-show="!authed">
+      <h2 class="text-xl font-semibold mb-3">Acceso equipo</h2>
+      <p class="text-sm text-[var(--ink)]/60 mb-4">Usa la clave <code class="text-xs bg-black/5 px-1 rounded">DEMO_ADMIN_SECRET</code> de Vercel.</p>
+      <form @submit.prevent="login" class="space-y-3">
+        <input class="input" type="password" x-model="secret" placeholder="Clave de demos" autocomplete="current-password" required>
+        <p class="text-red-600 text-sm" x-show="error" x-text="error"></p>
+        <button class="btn btn-primary w-full sm:w-auto" type="submit" :disabled="busy">Entrar</button>
+      </form>
+    </section>
+
+    <template x-if="authed">
+      <div>
+        <!-- Crear demo -->
+        <section class="card p-5 sm:p-6 mb-6">
+          <h2 class="text-xl font-semibold mb-1">Nueva demo (durante la llamada)</h2>
+          <p class="text-sm text-[var(--ink)]/60 mb-4">Nombre + email del psicólogo. Te devolvemos un enlace único para WhatsApp.</p>
+          <form @submit.prevent="createDemo" class="grid gap-3 sm:grid-cols-2">
+            <div class="sm:col-span-2">
+              <label class="block text-sm mb-1">Nombre consulta / psicólogo</label>
+              <input class="input" x-model="form.nombre" placeholder="María López Psicología" required>
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Email (para avisos y cuenta)</label>
+              <input class="input" type="email" x-model="form.email" placeholder="maria@email.com">
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Teléfono (opcional)</label>
+              <input class="input" type="tel" x-model="form.telefono" placeholder="+34 600 000 000">
+            </div>
+            <div class="sm:col-span-2 flex flex-wrap gap-3 items-center">
+              <button class="btn btn-primary" type="submit" :disabled="busy">Crear y copiar enlace</button>
+              <button class="btn btn-ghost" type="button" @click="logout">Salir</button>
+            </div>
+          </form>
+          <p class="text-red-600 text-sm mt-3" x-show="error" x-text="error"></p>
+          <div class="mt-4 p-4 rounded-xl bg-teal-50 border border-teal-100" x-show="lastUrl">
+            <p class="text-sm font-medium text-teal-900 mb-1">Enlace listo para enviar</p>
+            <a class="break-all text-teal-800 underline" :href="lastUrl" x-text="lastUrl" target="_blank" rel="noopener"></a>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button class="btn btn-primary text-sm" type="button" @click="copy(lastUrl)">Copiar</button>
+              <a class="btn btn-ghost text-sm inline-flex items-center" :href="'https://wa.me/?text=' + encodeURIComponent('Hola, aquí tienes tu demo para reservar desde el móvil: ' + lastUrl)" target="_blank" rel="noopener">Abrir WhatsApp</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Listado -->
+        <section class="card p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <h2 class="text-xl font-semibold">Demos recientes</h2>
+            <button class="btn btn-ghost text-sm" type="button" @click="loadDemos" :disabled="busy">Actualizar</button>
+          </div>
+          <p class="text-sm text-[var(--ink)]/50 mb-4" x-show="!demos.length">Aún no hay demos.</p>
+          <ul class="space-y-4">
+            <template x-for="d in demos" :key="d.id">
+              <li class="border border-black/5 rounded-xl p-4 bg-white/70">
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                  <div>
+                    <p class="font-semibold" x-text="d.nombre"></p>
+                    <p class="text-sm text-[var(--ink)]/60" x-text="(d.email || '—') + (d.telefono ? ' · ' + d.telefono : '')"></p>
+                    <p class="text-xs mt-1 text-[var(--ink)]/45">
+                      <span x-text="d.citas_count + ' citas'"></span> ·
+                      <span x-text="d.users_count + ' usuarios'"></span> ·
+                      <span x-text="d.slug"></span>
+                    </p>
+                    <a class="text-sm text-teal-800 underline break-all" :href="d.url" x-text="d.url" target="_blank" rel="noopener"></a>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <button class="btn btn-ghost text-sm" type="button" @click="copy(d.url)">Copiar link</button>
+                    <button class="btn btn-primary text-sm" type="button" @click="openActivate(d)">Activar usuario</button>
+                  </div>
+                </div>
+              </li>
+            </template>
+          </ul>
+        </section>
+
+        <!-- Modal activar -->
+        <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40" x-show="activateDemo" @keydown.escape.window="activateDemo=null">
+          <div class="card w-full max-w-md p-5 sm:p-6" @click.outside="activateDemo=null">
+            <h3 class="text-lg font-semibold mb-1">Crear acceso dashboard</h3>
+            <p class="text-sm text-[var(--ink)]/60 mb-4">
+              Tras la llamada: con el email del psicólogo le creas usuario ligado <strong>solo</strong> a este negocio.
+            </p>
+            <form class="space-y-3" @submit.prevent="activate">
+              <div>
+                <label class="block text-sm mb-1">Nombre</label>
+                <input class="input" x-model="activateForm.name" required>
+              </div>
+              <div>
+                <label class="block text-sm mb-1">Email login</label>
+                <input class="input" type="email" x-model="activateForm.email" required>
+              </div>
+              <div>
+                <label class="block text-sm mb-1">Contraseña temporal</label>
+                <input class="input" type="text" x-model="activateForm.password" required minlength="6">
+              </div>
+              <p class="text-red-600 text-sm" x-show="activateError" x-text="activateError"></p>
+              <p class="text-teal-800 text-sm" x-show="activateOk" x-text="activateOk"></p>
+              <div class="flex gap-2 pt-1">
+                <button class="btn btn-primary flex-1" type="submit" :disabled="busy">Crear usuario</button>
+                <button class="btn btn-ghost" type="button" @click="activateDemo=null">Cerrar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script>
+    function demosApp() {
+      return {
+        authed: false,
+        secret: '',
+        busy: false,
+        error: '',
+        form: { nombre: '', email: '', telefono: '' },
+        demos: [],
+        lastUrl: '',
+        activateDemo: null,
+        activateForm: { name: '', email: '', password: '' },
+        activateError: '',
+        activateOk: '',
+
+        async init() {
+          try {
+            const r = await fetch('/api/demos');
+            if (r.ok) {
+              this.authed = true;
+              const data = await r.json();
+              this.demos = data.demos || [];
+            }
+          } catch (e) {}
+        },
+
+        async login() {
+          this.busy = true; this.error = '';
+          try {
+            const r = await fetch('/api/demos/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ secret: this.secret })
+            });
+            const data = await r.json();
+            if (!r.ok) { this.error = data.error || 'Clave incorrecta'; return; }
+            this.authed = true;
+            this.secret = '';
+            await this.loadDemos();
+          } catch (e) {
+            this.error = 'Error de red';
+          } finally { this.busy = false; }
+        },
+
+        async logout() {
+          await fetch('/api/demos/logout', { method: 'POST' });
+          this.authed = false;
+          this.demos = [];
+          this.lastUrl = '';
+        },
+
+        async loadDemos() {
+          this.busy = true; this.error = '';
+          try {
+            const r = await fetch('/api/demos');
+            if (r.status === 401) { this.authed = false; return; }
+            const data = await r.json();
+            this.demos = data.demos || [];
+          } catch (e) {
+            this.error = 'No se pudieron cargar demos';
+          } finally { this.busy = false; }
+        },
+
+        async createDemo() {
+          this.busy = true; this.error = ''; this.lastUrl = '';
+          try {
+            const r = await fetch('/api/demos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(this.form)
+            });
+            const data = await r.json();
+            if (!r.ok) { this.error = data.error || 'Error'; return; }
+            this.lastUrl = data.url;
+            this.form = { nombre: '', email: '', telefono: '' };
+            await this.copy(data.url);
+            await this.loadDemos();
+          } catch (e) {
+            this.error = 'Error creando demo';
+          } finally { this.busy = false; }
+        },
+
+        openActivate(d) {
+          this.activateDemo = d;
+          this.activateError = '';
+          this.activateOk = '';
+          this.activateForm = {
+            name: d.nombre || '',
+            email: d.email || '',
+            password: 'Cambio' + Math.floor(1000 + Math.random() * 9000)
+          };
+        },
+
+        async activate() {
+          if (!this.activateDemo) return;
+          this.busy = true; this.activateError = ''; this.activateOk = '';
+          try {
+            const r = await fetch('/api/demos/' + this.activateDemo.id + '/activate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(this.activateForm)
+            });
+            const data = await r.json();
+            if (!r.ok) { this.activateError = data.error || 'Error'; return; }
+            this.activateOk = 'Usuario listo. Login: ' + (data.loginUrl || '/login') + ' · pass temporal en el campo de arriba.';
+            await this.loadDemos();
+          } catch (e) {
+            this.activateError = 'Error de red';
+          } finally { this.busy = false; }
+        },
+
+        async copy(text) {
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch (e) {
+            const ta = document.createElement('textarea');
+            ta.value = text; document.body.appendChild(ta); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta);
+          }
+        }
+      };
+    }
+  </script>
+</body>
+</html>

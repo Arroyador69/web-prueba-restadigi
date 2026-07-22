@@ -163,6 +163,32 @@ async function runMigrations() {
     await runIgnore('ALTER TABLE negocio ADD COLUMN email_remitente TEXT');
     await runIgnore('ALTER TABLE negocio ADD COLUMN nombre_remitente TEXT');
     await runIgnore('ALTER TABLE negocio ADD COLUMN nif TEXT');
+    await runIgnore('ALTER TABLE negocio ADD COLUMN slug TEXT');
+    await runIgnore('ALTER TABLE negocio ADD COLUMN is_demo INTEGER DEFAULT 0');
+    await runIgnore('ALTER TABLE negocio ADD COLUMN demo_created_at TIMESTAMP');
+
+    // Índice único de slug (idempotente)
+    if (isPg) {
+      await runQuery(
+        `CREATE UNIQUE INDEX IF NOT EXISTS negocio_slug_unique ON negocio (slug) WHERE slug IS NOT NULL`
+      ).catch(() => {});
+      // Permitir mismos horarios en distintos tenants
+      await runQuery(`ALTER TABLE opening_hours DROP CONSTRAINT IF EXISTS opening_hours_day_of_week_start_hour_end_hour_key`).catch(() => {});
+      await runQuery(
+        `CREATE UNIQUE INDEX IF NOT EXISTS opening_hours_negocio_day_range
+         ON opening_hours (negocio_id, day_of_week, start_hour, end_hour)`
+      ).catch(() => {});
+    } else {
+      await runQuery(
+        `CREATE UNIQUE INDEX IF NOT EXISTS negocio_slug_unique ON negocio (slug)`
+      ).catch(() => {});
+    }
+
+    // Slug por defecto para negocio 1
+    const n1 = await getQuery('SELECT id, slug, nombre FROM negocio WHERE id = ?', [DEFAULT_NEGOCIO_ID]);
+    if (n1 && !n1.slug) {
+      await runQuery(`UPDATE negocio SET slug = 'principal' WHERE id = ?`, [DEFAULT_NEGOCIO_ID]).catch(() => {});
+    }
 
     // --- Añadir negocio_id a tablas existentes ---
     await runIgnore('ALTER TABLE users ADD COLUMN negocio_id INTEGER DEFAULT 1');

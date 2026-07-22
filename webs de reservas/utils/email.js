@@ -55,13 +55,29 @@ async function getBusinessConfig() {
   return configObj;
 }
 
+async function resolveBusinessFromAppointment(appointment) {
+  if (appointment && appointment.negocio_id) {
+    const n = await getQuery('SELECT nombre, telefono, email FROM negocio WHERE id = ?', [appointment.negocio_id]);
+    if (n) {
+      return {
+        businessName: n.nombre || config.businessName,
+        businessPhone: n.telefono || config.businessPhone,
+        businessEmail: n.email || config.businessEmail
+      };
+    }
+  }
+  const businessConfig = await getBusinessConfig();
+  return {
+    businessName: businessConfig.businessName || config.businessName,
+    businessPhone: businessConfig.businessPhone || config.businessPhone,
+    businessEmail: businessConfig.businessEmail || config.businessEmail
+  };
+}
+
 // Enviar email de confirmación de cita
 async function sendConfirmationEmail(appointment) {
   try {
-    const businessConfig = await getBusinessConfig();
-    const businessName = businessConfig.businessName || config.businessName;
-    const businessPhone = businessConfig.businessPhone || config.businessPhone;
-    const businessEmail = businessConfig.businessEmail || config.businessEmail;
+    const { businessName, businessPhone, businessEmail } = await resolveBusinessFromAppointment(appointment);
 
     const date = new Date(appointment.appointment_date);
     const formattedDate = date.toLocaleDateString('es-ES', {
@@ -218,9 +234,7 @@ async function sendReminderEmail(appointment) {
 // Enviar notificación al psicólogo cuando un paciente reserva (mismo SMTP)
 async function sendNotificationToPsychologist(appointment) {
   try {
-    const businessConfig = await getBusinessConfig();
-    const businessName = businessConfig.businessName || config.businessName;
-    const businessEmail = businessConfig.businessEmail || config.businessEmail;
+    const { businessName, businessEmail } = await resolveBusinessFromAppointment(appointment);
 
     if (!businessEmail) {
       console.warn('No hay email del negocio configurado; no se envía notificación al psicólogo.');

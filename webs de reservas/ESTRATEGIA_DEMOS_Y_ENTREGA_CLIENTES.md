@@ -6,6 +6,19 @@ Este documento describe la forma recomendada de dar demos del sistema a psicólo
 
 ## 1. Fase demo: que cada psicólogo pueda probar “su” sistema
 
+**Objetivo actual (recomendado):** Un solo deploy en **Vercel + Neon**, multi-tenant por `slug`.
+
+- Panel `/demos` → creas un tenant por llamada → URL `https://tu-app.vercel.app/d/nombre-xxxx`.
+- Cada slug tiene su propio `negocio_id`: pacientes, citas y landing **no se mezclan**.
+- Cuando compre: **Activar usuario** con su email → `/login` ve solo su negocio.
+- Guía: [VERCEL_DEPLOY.md](./VERCEL_DEPLOY.md).
+
+**Alternativa antigua (Railway):** Un proyecto Railway por demo (más caro/lento a ~100 llamadas/día). Ver secciones siguientes solo si sigues en Railway.
+
+---
+
+## 1b. Railway (legado): un proyecto por demo
+
 **Objetivo:** Un despliegue por demo; cada uno con sus propios datos y su propia URL.
 
 - Usar **una sola cuenta de Railway (de negocio)** y **varios proyectos** (uno por psicólogo demo).

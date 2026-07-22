@@ -1,17 +1,25 @@
 /**
- * Adapter PostgreSQL para Railway (DATABASE_URL).
+ * Adapter PostgreSQL (Neon / Vercel Postgres / Railway).
  * Misma interfaz que SQLite: runQuery, getQuery, allQuery.
- * Los datos persisten en la BD gestionada por Railway; no dependen de volúmenes.
  */
 const { Pool } = require('pg');
 
+const connectionString = process.env.DATABASE_URL || '';
+const needsSsl =
+  /neon\.tech|vercel-storage|supabase|railway|render\.com|sslmode=require/i.test(connectionString) ||
+  process.env.PGSSLMODE === 'require' ||
+  process.env.NODE_ENV === 'production';
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('railway') ? { rejectUnauthorized: false } : undefined
+  connectionString,
+  ssl: needsSsl ? { rejectUnauthorized: false } : undefined,
+  max: process.env.VERCEL ? 3 : 10,
+  idleTimeoutMillis: process.env.VERCEL ? 5000 : 30000,
+  connectionTimeoutMillis: 10000
 });
 
-if (process.env.NODE_ENV === 'production') {
-  console.log('💾 Base de datos: PostgreSQL (Railway) – persistencia garantizada');
+if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+  console.log('💾 Base de datos: PostgreSQL – persistencia multi-tenant');
 }
 
 function toPgParams(sql) {
@@ -38,7 +46,7 @@ function runQuery(query, params = []) {
 
 function getQuery(query, params = []) {
   const pgSql = toPgParams(query);
-  return pool.query(pgSql, params).then((res) => res.rows && res.rows[0] ? res.rows[0] : null);
+  return pool.query(pgSql, params).then((res) => (res.rows && res.rows[0] ? res.rows[0] : null));
 }
 
 function allQuery(query, params = []) {
@@ -61,5 +69,6 @@ module.exports = {
   getDb,
   runQuery,
   getQuery,
-  allQuery
+  allQuery,
+  pool
 };

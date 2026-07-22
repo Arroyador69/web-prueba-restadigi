@@ -168,6 +168,7 @@
     <script>
         function landingApp() {
             return {
+                tenantSlug: '',
                 config: { businessName: '', businessPhone: '', businessEmail: '' },
                 landing: { hero_title: '', hero_subtitle: '', hero_image_url: '', about_title: '', about_text: '', about_image_url: '', cta_text: 'Reservar cita', sections: [] },
                 form: { name: '', email: '', telefono: '', date: '', time: '', acepta_legal: false },
@@ -180,27 +181,42 @@
                 success: '',
                 minDate: new Date().toISOString().split('T')[0],
 
+                detectTenant() {
+                    const m = window.location.pathname.match(/^\/d\/([a-z0-9-]+)\/?$/i);
+                    this.tenantSlug = m ? m[1].toLowerCase() : '';
+                },
+
+                apiUrl(path) {
+                    if (!this.tenantSlug) return path;
+                    const sep = path.includes('?') ? '&' : '?';
+                    return path + sep + 'tenant=' + encodeURIComponent(this.tenantSlug);
+                },
+
                 async init() {
+                    this.detectTenant();
                     await Promise.all([this.loadConfig(), this.loadLanding(), this.loadTextosLegales()]);
+                    if (this.config.businessName) {
+                        document.title = this.config.businessName + ' · Reserva tu cita';
+                    }
                 },
 
                 async loadConfig() {
                     try {
-                        const r = await fetch('/api/config');
+                        const r = await fetch(this.apiUrl('/api/config'));
                         this.config = await r.json();
                     } catch (e) {}
                 },
 
                 async loadLanding() {
                     try {
-                        const r = await fetch('/api/landing');
+                        const r = await fetch(this.apiUrl('/api/landing'));
                         this.landing = await r.json();
                     } catch (e) {}
                 },
 
                 async loadTextosLegales() {
                     try {
-                        const r = await fetch('/api/textos-legales');
+                        const r = await fetch(this.apiUrl('/api/textos-legales'));
                         this.textosLegales = await r.json();
                     } catch (e) {}
                 },
@@ -218,7 +234,7 @@
                     this.form.time = '';
                     this.error = '';
                     try {
-                        const r = await fetch('/api/available-slots?date=' + encodeURIComponent(this.form.date));
+                        const r = await fetch(this.apiUrl('/api/available-slots?date=' + encodeURIComponent(this.form.date)));
                         const data = await r.json();
                         this.availableSlots = data.slots || [];
                     } catch (e) {
@@ -241,17 +257,19 @@
                     }
 
                     try {
+                        const body = {
+                            name: name,
+                            email: (this.form.email || '').trim().toLowerCase(),
+                            telefono: (this.form.telefono || '').trim() || undefined,
+                            date: this.form.date,
+                            time: this.form.time,
+                            acepta_legal: !!this.form.acepta_legal
+                        };
+                        if (this.tenantSlug) body.tenant = this.tenantSlug;
                         const response = await fetch('/api/book', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                name: name,
-                                email: (this.form.email || '').trim().toLowerCase(),
-                                telefono: (this.form.telefono || '').trim() || undefined,
-                                date: this.form.date,
-                                time: this.form.time,
-                                acepta_legal: !!this.form.acepta_legal
-                            })
+                            body: JSON.stringify(body)
                         });
                         const data = await response.json();
 

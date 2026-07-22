@@ -67,6 +67,9 @@ async function initPostgres() {
       direccion TEXT,
       nif TEXT,
       duracion_cita_default INTEGER NOT NULL DEFAULT 50,
+      slug TEXT,
+      is_demo INTEGER DEFAULT 0,
+      demo_created_at TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       smtp_host TEXT,
@@ -77,6 +80,10 @@ async function initPostgres() {
       nombre_remitente TEXT
     )
   `);
+  await runQuery(`ALTER TABLE negocio ADD COLUMN IF NOT EXISTS slug TEXT`).catch(() => {});
+  await runQuery(`ALTER TABLE negocio ADD COLUMN IF NOT EXISTS is_demo INTEGER DEFAULT 0`).catch(() => {});
+  await runQuery(`ALTER TABLE negocio ADD COLUMN IF NOT EXISTS demo_created_at TIMESTAMP`).catch(() => {});
+  await runQuery(`CREATE UNIQUE INDEX IF NOT EXISTS negocio_slug_unique ON negocio (slug) WHERE slug IS NOT NULL`).catch(() => {});
   await runQuery(`
     CREATE TABLE IF NOT EXISTS pacientes (
       id SERIAL PRIMARY KEY,
@@ -186,7 +193,7 @@ async function initPostgres() {
   const negocioExists = await getQuery('SELECT id FROM negocio WHERE id = 1');
   if (!negocioExists) {
     await runQuery(
-      `INSERT INTO negocio (id, nombre, telefono, email, direccion, duracion_cita_default) VALUES (1, ?, ?, ?, ?, ?)`,
+      `INSERT INTO negocio (id, nombre, telefono, email, direccion, duracion_cita_default, slug, is_demo) VALUES (1, ?, ?, ?, ?, ?, 'principal', 0)`,
       [
         config.businessName || 'Mi Negocio',
         config.businessPhone || '',
@@ -196,19 +203,27 @@ async function initPostgres() {
       ]
     );
     await runQuery("SELECT setval(pg_get_serial_sequence('negocio', 'id'), (SELECT COALESCE(MAX(id), 1) FROM negocio))").catch(() => {});
-    console.log('✅ Negocio por defecto creado (id=1)');
+    console.log('✅ Negocio por defecto creado (id=1, slug=principal)');
+  } else {
+    await runQuery(`UPDATE negocio SET slug = 'principal' WHERE id = 1 AND (slug IS NULL OR slug = '')`).catch(() => {});
   }
 
-  // Horarios y config inicial (desde config.js)
+  // Horarios y config inicial (desde config.js) — negocio 1
   for (const day of Object.keys(config.openingHours || {})) {
     const ranges = config.openingHours[day];
     if (Array.isArray(ranges)) {
       for (const range of ranges) {
         if (Array.isArray(range) && range.length === 2) {
           await runQuery(
-            `INSERT INTO opening_hours (day_of_week, start_hour, end_hour) VALUES (?, ?, ?) ON CONFLICT (day_of_week, start_hour, end_hour) DO NOTHING`,
+            `INSERT INTO opening_hours (negocio_id, day_of_week, start_hour, end_hour) VALUES (1, ?, ?, ?)
+             ON CONFLICT DO NOTHING`,
             [parseInt(day, 10), range[0], range[1]]
-          ).catch(() => {});
+          ).catch(async () => {
+            await runQuery(
+              `INSERT INTO opening_hours (negocio_id, day_of_week, start_hour, end_hour) VALUES (1, ?, ?, ?)`,
+              [parseInt(day, 10), range[0], range[1]]
+            ).catch(() => {});
+          });
         }
       }
     }

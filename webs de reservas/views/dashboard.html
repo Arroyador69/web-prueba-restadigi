@@ -9,8 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/js/i18n.js"></script>
-    <script src="/js/brand-theme.js"></script>
+    <script>
+      // Aviso CDN solo informativo; no afecta al panel.
+      tailwind.config = { corePlugins: { preflight: true } };
+    </script>
+    <script src="/js/i18n.js?v=20260722b"></script>
+    <script src="/js/brand-theme.js?v=20260722b"></script>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -582,8 +586,6 @@
                 </div>
             </div>
 
-            </div>
-
             <!-- Tab: Stats landing -->
             <div x-show="activeTab === 'lp_stats'" class="fade-in">
                 <div class="card bg-white p-6">
@@ -1108,7 +1110,7 @@
         </main>
     </div>
 
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js" defer></script>
     <script>
         function dashboard() {
             const i18n = window.I18n.alpineHelpers();

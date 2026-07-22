@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS negocio (
   nombre_remitente TEXT,
   google_review_url TEXT,
   reputacion_activa INTEGER DEFAULT 1,
+  color_primary TEXT,
+  color_secondary TEXT,
   google_calendar_refresh_token TEXT,
   google_calendar_calendar_id TEXT,
   google_calendar_sync_busy INTEGER DEFAULT 0
@@ -234,3 +236,7 @@ ON CONFLICT DO NOTHING;
 -- SELECT id, nombre, slug, email, is_demo FROM negocio ORDER BY id;
 -- SELECT id, email, name, negocio_id FROM users ORDER BY id;
 -- SELECT negocio_id, COUNT(*) FROM citas GROUP BY negocio_id;
+
+-- Migración colores (Neon ya existente)
+ALTER TABLE negocio ADD COLUMN IF NOT EXISTS color_primary TEXT;
+ALTER TABLE negocio ADD COLUMN IF NOT EXISTS color_secondary TEXT;

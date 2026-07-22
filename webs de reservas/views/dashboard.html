@@ -10,11 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/js/i18n.js"></script>
+    <script src="/js/brand-theme.js"></script>
     <style>
         :root {
             --primary-color: #2563eb;
             --primary-hover: #1d4ed8;
             --primary-light: rgba(37, 99, 235, 0.12);
+            --secondary-color: #0f172a;
             --card-radius: 14px;
             --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
             --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
@@ -82,6 +84,21 @@
 
         /* Header */
         .header-brand-initial { width: 42px; height: 42px; border-radius: 12px; background: var(--primary-color); color: #fff; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .header-brand-name { color: var(--secondary-color); }
+        .color-swatch {
+            width: 48px; height: 48px; border-radius: 12px; border: 2px solid #e2e8f0;
+            -webkit-appearance: none; appearance: none; padding: 0; cursor: pointer;
+            background: transparent; min-width: 48px; min-height: 48px;
+        }
+        .color-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-swatch::-webkit-color-swatch { border: none; border-radius: 10px; }
+        .color-swatch::-moz-color-swatch { border: none; border-radius: 10px; }
+        .preset-dot {
+            width: 44px; height: 44px; border-radius: 9999px; border: 2px solid #fff;
+            box-shadow: 0 0 0 1px #e2e8f0; cursor: pointer; -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .preset-dot.is-active { box-shadow: 0 0 0 2px var(--primary-color); }
         @media (max-width: 640px) { .header-brand-initial { width: 36px; height: 36px; font-size: 1rem; } }
         .safe-area-padding { padding-left: env(safe-area-inset-left, 0); padding-right: env(safe-area-inset-right, 0); }
         /* Móvil: navegación con scroll horizontal */
@@ -113,7 +130,7 @@
                             <div class="header-brand-initial" x-text="(config.businessName || negocio.nombre || 'M').charAt(0).toUpperCase()"></div>
                         </template>
                         <div class="min-w-0">
-                            <h1 class="text-base sm:text-xl font-bold text-gray-900 truncate" x-text="config.businessName || negocio.nombre || t('dash_panel')"></h1>
+                            <h1 class="text-base sm:text-xl font-bold header-brand-name truncate" x-text="config.businessName || negocio.nombre || t('dash_panel')"></h1>
                             <p class="text-xs sm:text-sm text-gray-500 hidden sm:block" x-text="t('dash_panel')"></p>
                         </div>
                     </div>
@@ -462,6 +479,46 @@
                     <p class="text-sm text-gray-500 mb-6" x-text="t('landing_help')"></p>
                     <form @submit.prevent="saveLanding()" class="space-y-6">
                         <div class="border-b border-gray-100 pb-6">
+                            <h3 class="font-semibold text-gray-900 mb-1" x-text="t('brand_colors')"></h3>
+                            <p class="text-sm text-gray-500 mb-4" x-text="t('brand_colors_help')"></p>
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 mb-2" x-text="t('color_presets')"></p>
+                                    <div class="flex flex-wrap gap-3">
+                                        <template x-for="p in brandPresets" :key="'l-'+p.primary">
+                                            <button type="button" class="preset-dot" :class="brandColors.primary === p.primary && 'is-active'" :style="'background:' + p.primary" :title="p.label" @click="applyPreset(p)" aria-label="preset"></button>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2" x-text="t('color_primary')"></label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="color" class="color-swatch" x-model="brandColors.primary" @input="previewBrandColors()">
+                                            <input type="text" class="input-modern font-mono text-sm" maxlength="7" x-model="brandColors.primary" @change="normalizeBrandColor('primary')">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2" x-text="t('color_secondary')"></label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="color" class="color-swatch" x-model="brandColors.secondary" @input="previewBrandColors()">
+                                            <input type="text" class="input-modern font-mono text-sm" maxlength="7" x-model="brandColors.secondary" @change="normalizeBrandColor('secondary')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="rounded-xl border border-gray-100 p-4 bg-slate-50/80">
+                                    <p class="text-xs font-medium text-gray-500 mb-2" x-text="t('color_preview')"></p>
+                                    <p class="text-lg font-bold mb-3" :style="'color: var(--secondary-color)'" x-text="t('color_preview_title')"></p>
+                                    <button type="button" class="btn-primary" x-text="t('color_preview_btn')"></button>
+                                </div>
+                                <button type="button" @click="saveBrandColors()" :disabled="savingBrandColors" class="btn-secondary">
+                                    <span x-show="!savingBrandColors" x-text="t('save_colors')"></span>
+                                    <span x-show="savingBrandColors" x-text="t('saving')"></span>
+                                </button>
+                                <span x-show="brandColorsMessage" class="ml-2 text-sm" :class="isOkMsg(brandColorsMessage) ? 'text-green-600' : 'text-red-600'" x-text="brandColorsMessage"></span>
+                            </div>
+                        </div>
+                        <div class="border-b border-gray-100 pb-6">
                             <h3 class="font-semibold text-gray-900 mb-3" x-text="t('hero_header')"></h3>
                             <div class="space-y-4">
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('main_title')"></label><input type="text" x-model="landing.hero_title" class="input-modern" :placeholder="t('main_title_ph'))"></div>
@@ -654,6 +711,47 @@
                             <p class="text-xs text-gray-500 mt-1">
                                 <span x-text="t('appt_duration_help')"></span>
                             </p>
+                        </div>
+
+                        <div class="border-t pt-6 mt-2">
+                            <h3 class="font-semibold text-gray-900 mb-1" x-text="t('brand_colors')"></h3>
+                            <p class="text-sm text-gray-500 mb-4" x-text="t('brand_colors_help')"></p>
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 mb-2" x-text="t('color_presets')"></p>
+                                    <div class="flex flex-wrap gap-3">
+                                        <template x-for="p in brandPresets" :key="p.primary">
+                                            <button type="button" class="preset-dot" :class="brandColors.primary === p.primary && 'is-active'" :style="'background:' + p.primary" :title="p.label" @click="applyPreset(p)" aria-label="preset"></button>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2" x-text="t('color_primary')"></label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="color" class="color-swatch" x-model="brandColors.primary" @input="previewBrandColors()">
+                                            <input type="text" class="input-modern font-mono text-sm" maxlength="7" x-model="brandColors.primary" @change="normalizeBrandColor('primary')" :aria-label="t('hex_label')">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2" x-text="t('color_secondary')"></label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="color" class="color-swatch" x-model="brandColors.secondary" @input="previewBrandColors()">
+                                            <input type="text" class="input-modern font-mono text-sm" maxlength="7" x-model="brandColors.secondary" @change="normalizeBrandColor('secondary')" :aria-label="t('hex_label')">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="rounded-xl border border-gray-100 p-4 bg-slate-50/80">
+                                    <p class="text-xs font-medium text-gray-500 mb-2" x-text="t('color_preview')"></p>
+                                    <p class="text-lg font-bold mb-3" :style="'color: var(--secondary-color)'" x-text="t('color_preview_title')"></p>
+                                    <button type="button" class="btn-primary" x-text="t('color_preview_btn')"></button>
+                                </div>
+                                <button type="button" @click="saveBrandColors()" :disabled="savingBrandColors" class="btn-primary">
+                                    <span x-show="!savingBrandColors" x-text="t('save_colors')"></span>
+                                    <span x-show="savingBrandColors" x-text="t('saving')"></span>
+                                </button>
+                                <span x-show="brandColorsMessage" class="ml-2 text-sm" :class="isOkMsg(brandColorsMessage) ? 'text-green-600' : 'text-red-600'" x-text="brandColorsMessage"></span>
+                            </div>
                         </div>
 
                         <div class="border-t pt-6 mt-4">
@@ -1045,6 +1143,10 @@
                 testEmailSending: false,
                 testEmailMessage: '',
                 negocio: {},
+                brandColors: { primary: '#2563eb', secondary: '#0f172a' },
+                brandPresets: (window.BrandTheme && window.BrandTheme.PRESETS) || [],
+                savingBrandColors: false,
+                brandColorsMessage: '',
                 plantillaRecordatorio: { asunto: '', cuerpo: '' },
                 savingSmtp: false,
                 smtpMessage: '',
@@ -1462,6 +1564,8 @@
                         }
                         const negocioData = await negocioRes.json();
                         if (negocioData.nombre !== undefined) this.negocio = negocioData;
+                        this.syncBrandColorsFromNegocio(negocioData);
+                        this.previewBrandColors();
                         const plantillaData = await plantillaRes.json();
                         if (plantillaData.plantilla) {
                             this.plantillaRecordatorio = { asunto: plantillaData.plantilla.asunto || '', cuerpo: plantillaData.plantilla.cuerpo || '' };
@@ -1782,6 +1886,66 @@
                         this.datosFiscalesMessage = this.t('msg_conn_error');
                     } finally {
                         this.savingDatosFiscales = false;
+                    }
+                },
+
+                syncBrandColorsFromNegocio(n) {
+                    const src = n || this.negocio || {};
+                    const BT = window.BrandTheme;
+                    const primary = (BT && BT.normalizeHex(src.color_primary)) || (BT && BT.DEFAULT_PRIMARY) || '#2563eb';
+                    const secondary = (BT && BT.normalizeHex(src.color_secondary)) || (BT && BT.DEFAULT_SECONDARY) || '#0f172a';
+                    this.brandColors = { primary: primary, secondary: secondary };
+                },
+
+                previewBrandColors() {
+                    if (window.BrandTheme) {
+                        window.BrandTheme.apply(this.brandColors.primary, this.brandColors.secondary);
+                    }
+                },
+
+                normalizeBrandColor(which) {
+                    const BT = window.BrandTheme;
+                    if (!BT) return;
+                    const key = which === 'secondary' ? 'secondary' : 'primary';
+                    const norm = BT.normalizeHex(this.brandColors[key]);
+                    if (norm) this.brandColors[key] = norm;
+                    else this.brandColors[key] = key === 'secondary' ? BT.DEFAULT_SECONDARY : BT.DEFAULT_PRIMARY;
+                    this.previewBrandColors();
+                },
+
+                applyPreset(p) {
+                    if (!p) return;
+                    this.brandColors = { primary: p.primary, secondary: p.secondary };
+                    this.previewBrandColors();
+                },
+
+                async saveBrandColors() {
+                    this.normalizeBrandColor('primary');
+                    this.normalizeBrandColor('secondary');
+                    this.savingBrandColors = true;
+                    this.brandColorsMessage = '';
+                    try {
+                        const res = await fetch('/dashboard/api/negocio', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                color_primary: this.brandColors.primary,
+                                color_secondary: this.brandColors.secondary
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            this.negocio.color_primary = this.brandColors.primary;
+                            this.negocio.color_secondary = this.brandColors.secondary;
+                            this.brandColorsMessage = this.t('msg_colors_saved');
+                            this.previewBrandColors();
+                        } else {
+                            this.brandColorsMessage = data.error || this.t('msg_error');
+                        }
+                    } catch (e) {
+                        this.brandColorsMessage = this.t('msg_conn_error');
+                    } finally {
+                        this.savingBrandColors = false;
                     }
                 },
 

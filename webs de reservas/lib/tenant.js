@@ -83,9 +83,9 @@ async function createDemoTenant({ nombre, email, telefono, duracion = 50 } = {})
     hero_title: `Tervetuloa: ${name}`,
     hero_subtitle: 'Ammatillista tukea. Varaa kokeiluaikasi minuutissa puhelimella.',
     hero_image_url: '',
-    about_title: 'Vastaanotosta',
+    about_title: 'Yrityksestä',
     about_text:
-      'Kuuntelun ja tuen tila. Tämä on henkilökohtainen demo: tietosi näkyvät vain tässä vastaanotossa eivätkä sekoitu muihin ammattilaisiin.',
+      'Ammattimainen tila asiakkaillesi. Tämä on henkilökohtainen demo: tietosi näkyvät vain tässä yrityksessä eivätkä sekoitu muihin.',
     about_image_url: '',
     cta_text: 'Varaa aika',
     sections: []
@@ -99,7 +99,7 @@ Rekisterinpitäjä: ${name}${mail ? `, yhteystieto ${mail}` : ''}.
 Tarkoitus: demonstraatioajan hallinta ja palveluun liittyvä viestintä.
 Oikeusperuste: rekisteröidyn suostumus.
 Oikeudet: tarkastus-, oikaisu- ja poistopyynnöt rekisterinpitäjälle.`;
-  const consentimiento = `Suostun tietojeni (nimi, sähköposti, puhelin) käsittelyyn demonstraatioajan hallitsemiseksi vastaanotossa ${name}.`;
+  const consentimiento = `Suostun tietojeni (nimi, sähköposti, puhelin) käsittelyyn demonstraatioajan hallitsemiseksi yrityksessä ${name}.`;
   await runQuery(
     'INSERT INTO textos_legales (negocio_id, politica_privacidad, consentimiento, version) VALUES (?, ?, ?, ?)',
     [id, politica, consentimiento, '1']

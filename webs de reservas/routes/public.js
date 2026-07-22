@@ -113,7 +113,9 @@ router.get('/api/config', async (req, res) => {
       businessEmail: n.email || '',
       slug: n.slug || null,
       tenantId: n.id,
-      isDemo: !!(n.is_demo === 1 || n.is_demo === true || n.is_demo === '1')
+      isDemo: !!(n.is_demo === 1 || n.is_demo === true || n.is_demo === '1'),
+      colorPrimary: n.color_primary || '#2563eb',
+      colorSecondary: n.color_secondary || '#0f172a'
     });
   } catch (error) {
     if (error.status === 404) return res.status(404).json({ error: error.message });

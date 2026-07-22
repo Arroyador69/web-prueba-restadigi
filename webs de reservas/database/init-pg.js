@@ -83,6 +83,8 @@ async function initPostgres() {
   await runQuery(`ALTER TABLE negocio ADD COLUMN IF NOT EXISTS slug TEXT`).catch(() => {});
   await runQuery(`ALTER TABLE negocio ADD COLUMN IF NOT EXISTS is_demo INTEGER DEFAULT 0`).catch(() => {});
   await runQuery(`ALTER TABLE negocio ADD COLUMN IF NOT EXISTS demo_created_at TIMESTAMP`).catch(() => {});
+  await runQuery(`ALTER TABLE negocio ADD COLUMN IF NOT EXISTS color_primary TEXT`).catch(() => {});
+  await runQuery(`ALTER TABLE negocio ADD COLUMN IF NOT EXISTS color_secondary TEXT`).catch(() => {});
   await runQuery(`CREATE UNIQUE INDEX IF NOT EXISTS negocio_slug_unique ON negocio (slug) WHERE slug IS NOT NULL`).catch(() => {});
   await runQuery(`
     CREATE TABLE IF NOT EXISTS pacientes (

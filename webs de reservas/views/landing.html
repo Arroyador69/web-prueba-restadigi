@@ -10,11 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/js/i18n.js"></script>
+    <script src="/js/brand-theme.js"></script>
     <style>
         :root {
             --primary-color: #2563eb;
             --primary-hover: #1d4ed8;
             --primary-light: rgba(37, 99, 235, 0.12);
+            --secondary-color: #0f172a;
             --card-radius: 14px;
             --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
             --transition-fast: 0.2s ease;
@@ -40,7 +42,7 @@
         <header class="bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] safe-area-padding">
             <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
                 <div class="flex justify-between items-center gap-3">
-                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 truncate min-w-0" x-text="config.businessName || t('landing_clinic')"></h1>
+                    <h1 class="text-lg sm:text-xl font-bold truncate min-w-0" style="color: var(--secondary-color)" x-text="config.businessName || t('landing_clinic')"></h1>
                     <div class="flex items-center gap-2 shrink-0">
                         <div x-html="langHtml"></div>
                         <a :href="'tel:' + (config.businessPhone || '')" class="touch-target shrink-0 py-2 px-3 text-sm sm:text-base text-gray-600 hover:text-[var(--primary-color)] transition-colors rounded-lg -m-2" x-show="config.businessPhone" x-text="config.businessPhone"></a>
@@ -56,7 +58,7 @@
                     <img :src="landing.hero_image_url" alt="" class="hero-image mb-8" @error="$el.style.display='none'">
                 </template>
                 <div class="text-center">
-                    <h2 class="text-2xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 px-1" x-text="displayHeroTitle()"></h2>
+                    <h2 class="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4 px-1" style="color: var(--secondary-color)" x-text="displayHeroTitle()"></h2>
                     <p class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto whitespace-pre-line px-1" x-text="displayHeroSubtitle()"></p>
                     <a href="#reservar" class="btn-reservar w-full sm:w-auto inline-block mt-6 sm:mt-8 scroll-smooth" x-text="displayCta()"></a>
                 </div>
@@ -67,7 +69,7 @@
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                         <div>
-                            <h3 class="text-2xl font-bold text-gray-900 mb-4" x-text="displayAboutTitle()"></h3>
+                            <h3 class="text-2xl font-bold mb-4" style="color: var(--secondary-color)" x-text="displayAboutTitle()"></h3>
                             <p class="text-gray-600 whitespace-pre-line leading-relaxed" x-text="displayAboutText()"></p>
                         </div>
                         <template x-if="landing.about_image_url">
@@ -80,7 +82,7 @@
             <!-- Reserva -->
             <section id="reservar" class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 scroll-mt-6 sm:scroll-mt-8">
                 <div class="bg-white rounded-[var(--card-radius)] shadow-[var(--shadow-card)] p-4 sm:p-8">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2" x-text="t('landing_book_title')"></h3>
+                    <h3 class="text-2xl font-bold mb-2" style="color: var(--secondary-color)" x-text="t('landing_book_title')"></h3>
                     <p class="text-gray-600 mb-6" x-text="t('landing_book_intro')"></p>
 
                     <form @submit.prevent="bookAppointment()" class="space-y-5">
@@ -268,6 +270,9 @@
                     try {
                         const r = await fetch(this.apiUrl('/api/config'));
                         this.config = await r.json();
+                        if (window.BrandTheme) {
+                            window.BrandTheme.apply(this.config.colorPrimary, this.config.colorSecondary);
+                        }
                     } catch (e) {}
                 },
 

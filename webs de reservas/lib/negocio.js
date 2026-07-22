@@ -3,6 +3,17 @@
  */
 const { getQuery, runQuery, allQuery } = require('../utils/db');
 
+function normalizeHex(value) {
+  let h = String(value || '').trim();
+  if (!h) return null;
+  if (h[0] !== '#') h = '#' + h;
+  if (!/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(h)) return null;
+  if (h.length === 4) {
+    h = '#' + h[1] + h[1] + h[2] + h[2] + h[3] + h[3];
+  }
+  return h.toLowerCase();
+}
+
 async function getById(negocioId) {
   const n = await getQuery('SELECT * FROM negocio WHERE id = ?', [negocioId]);
   return n || null;
@@ -12,7 +23,7 @@ async function update(negocioId, data) {
   const {
     nombre, telefono, email, direccion, nif, duracion_cita_default,
     smtp_host, smtp_port, smtp_user, smtp_password, email_remitente, nombre_remitente,
-    google_review_url, reputacion_activa
+    google_review_url, reputacion_activa, color_primary, color_secondary
   } = data;
   const updates = [];
   const params = [];
@@ -30,6 +41,14 @@ async function update(negocioId, data) {
   if (nombre_remitente !== undefined) { updates.push('nombre_remitente = ?'); params.push(nombre_remitente ? String(nombre_remitente).trim() : null); }
   if (google_review_url !== undefined) { updates.push('google_review_url = ?'); params.push(google_review_url ? String(google_review_url).trim() : null); }
   if (reputacion_activa !== undefined) { updates.push('reputacion_activa = ?'); params.push(reputacion_activa ? 1 : 0); }
+  if (color_primary !== undefined) {
+    const hex = normalizeHex(color_primary);
+    if (hex) { updates.push('color_primary = ?'); params.push(hex); }
+  }
+  if (color_secondary !== undefined) {
+    const hex = normalizeHex(color_secondary);
+    if (hex) { updates.push('color_secondary = ?'); params.push(hex); }
+  }
   if (updates.length === 0) return { success: true };
   params.push(negocioId);
   await runQuery(
@@ -48,5 +67,6 @@ async function getDuracionCitaDefault(negocioId) {
 module.exports = {
   getById,
   update,
-  getDuracionCitaDefault
+  getDuracionCitaDefault,
+  normalizeHex
 };

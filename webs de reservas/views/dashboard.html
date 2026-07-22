@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#2563eb">
-    <title>Dashboard - Gestión de Citas</title>
+    <title>Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/i18n.js"></script>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -99,7 +100,7 @@
     </style>
 </head>
 <body class="bg-[#f8fafc] min-h-screen">
-    <div x-data="dashboard()" x-cloak x-init="init()">
+    <div x-data="dashboard()" x-cloak x-init="init()" @app-lang-changed.window="lang = $event.detail.lang; langHtml = window.I18n.langSelectorHtml()">
         <!-- Header profesional -->
         <header class="bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sticky top-0 z-40 safe-area-padding">
             <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -112,11 +113,14 @@
                             <div class="header-brand-initial" x-text="(config.businessName || negocio.nombre || 'M').charAt(0).toUpperCase()"></div>
                         </template>
                         <div class="min-w-0">
-                            <h1 class="text-base sm:text-xl font-bold text-gray-900 truncate" x-text="config.businessName || negocio.nombre || 'Panel de gestión'"></h1>
-                            <p class="text-xs sm:text-sm text-gray-500 hidden sm:block" x-show="config.businessName || negocio.nombre">Panel de gestión</p>
+                            <h1 class="text-base sm:text-xl font-bold text-gray-900 truncate" x-text="config.businessName || negocio.nombre || t('dash_panel')"></h1>
+                            <p class="text-xs sm:text-sm text-gray-500 hidden sm:block" x-text="t('dash_panel')"></p>
                         </div>
                     </div>
-                    <button @click="logout()" class="btn-ghost text-gray-600 hover:text-gray-900 flex-shrink-0 min-h-[44px] py-2 px-3 text-sm sm:text-base">Cerrar sesión</button>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <div x-html="langHtml"></div>
+                        <button @click="logout()" class="btn-ghost text-gray-600 hover:text-gray-900 min-h-[44px] py-2 px-3 text-sm sm:text-base" x-text="t('dash_logout')"></button>
+                    </div>
                 </div>
             </div>
         </header>
@@ -125,16 +129,16 @@
         <div class="bg-white border-b border-gray-100 safe-area-padding">
             <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                 <nav class="nav-tabs-wrap flex gap-1 py-2">
-                    <button @click="activeTab = 'inicio'; loadStats()" class="nav-tab" :class="activeTab === 'inicio' && 'nav-tab-active'">Inicio</button>
-                    <button @click="activeTab = 'appointments'" class="nav-tab" :class="activeTab === 'appointments' && 'nav-tab-active'">Citas</button>
-                    <button @click="activeTab = 'pacientes'; loadPacientes()" class="nav-tab" :class="activeTab === 'pacientes' && 'nav-tab-active'">Pacientes</button>
-                    <button @click="activeTab = 'landing'; loadLanding()" class="nav-tab" :class="activeTab === 'landing' && 'nav-tab-active'">Landing</button>
-                    <button @click="activeTab = 'facturas'; loadFacturas()" class="nav-tab" :class="activeTab === 'facturas' && 'nav-tab-active'">Facturas</button>
-                    <button @click="activeTab = 'reputacion'; loadReputacion()" class="nav-tab" :class="activeTab === 'reputacion' && 'nav-tab-active'">Reputación</button>
-                    <button @click="activeTab = 'config'" class="nav-tab" :class="activeTab === 'config' && 'nav-tab-active'">Configuración</button>
-                    <button @click="activeTab = 'hours'" class="nav-tab" :class="activeTab === 'hours' && 'nav-tab-active'">Horarios</button>
-                    <button @click="activeTab = 'blocked'" class="nav-tab" :class="activeTab === 'blocked' && 'nav-tab-active'">Bloqueos</button>
-                    <button @click="activeTab = 'users'" class="nav-tab" :class="activeTab === 'users' && 'nav-tab-active'">Usuarios</button>
+                    <button @click="activeTab = 'inicio'; loadStats()" class="nav-tab" :class="activeTab === 'inicio' && 'nav-tab-active'" x-text="t('tab_home')"></button>
+                    <button @click="activeTab = 'appointments'" class="nav-tab" :class="activeTab === 'appointments' && 'nav-tab-active'" x-text="t('tab_appointments')"></button>
+                    <button @click="activeTab = 'pacientes'; loadPacientes()" class="nav-tab" :class="activeTab === 'pacientes' && 'nav-tab-active'" x-text="t('tab_patients')"></button>
+                    <button @click="activeTab = 'landing'; loadLanding()" class="nav-tab" :class="activeTab === 'landing' && 'nav-tab-active'" x-text="t('tab_landing')"></button>
+                    <button @click="activeTab = 'facturas'; loadFacturas()" class="nav-tab" :class="activeTab === 'facturas' && 'nav-tab-active'" x-text="t('tab_invoices')"></button>
+                    <button @click="activeTab = 'reputacion'; loadReputacion()" class="nav-tab" :class="activeTab === 'reputacion' && 'nav-tab-active'" x-text="t('tab_reputation')"></button>
+                    <button @click="activeTab = 'config'" class="nav-tab" :class="activeTab === 'config' && 'nav-tab-active'" x-text="t('tab_config')"></button>
+                    <button @click="activeTab = 'hours'" class="nav-tab" :class="activeTab === 'hours' && 'nav-tab-active'" x-text="t('tab_hours')"></button>
+                    <button @click="activeTab = 'blocked'" class="nav-tab" :class="activeTab === 'blocked' && 'nav-tab-active'" x-text="t('tab_blocked')"></button>
+                    <button @click="activeTab = 'users'" class="nav-tab" :class="activeTab === 'users' && 'nav-tab-active'" x-text="t('tab_users')"></button>
                 </nav>
             </div>
         </div>
@@ -150,7 +154,7 @@
                         <div class="card-body flex items-start gap-4">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-[var(--primary-color)] bg-[var(--primary-light)]" aria-hidden="true">📅</div>
                             <div class="min-w-0">
-                                <h3 class="text-sm font-medium text-gray-500">Sesiones este mes</h3>
+                                <h3 class="text-sm font-medium text-gray-500" x-text="t('dash_sessions_month')"></h3>
                                 <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="stats.sesionesRealizadas ?? '—'"></p>
                             </div>
                         </div>
@@ -159,7 +163,7 @@
                         <div class="card-body flex items-start gap-4">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-[var(--primary-color)] bg-[var(--primary-light)]" aria-hidden="true">€</div>
                             <div class="min-w-0">
-                                <h3 class="text-sm font-medium text-gray-500">Facturación estimada (€)</h3>
+                                <h3 class="text-sm font-medium text-gray-500" x-text="t('dash_billing')"></h3>
                                 <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="stats.facturacionEstimada ?? '—'"></p>
                             </div>
                         </div>
@@ -168,7 +172,7 @@
                         <div class="card-body flex items-start gap-4">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-red-600 bg-red-50" aria-hidden="true">✕</div>
                             <div class="min-w-0">
-                                <h3 class="text-sm font-medium text-gray-500">Cancelaciones</h3>
+                                <h3 class="text-sm font-medium text-gray-500" x-text="t('dash_cancellations')"></h3>
                                 <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="stats.cancelaciones ?? '—'"></p>
                             </div>
                         </div>
@@ -177,7 +181,7 @@
                         <div class="card-body flex items-start gap-4">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-emerald-600 bg-emerald-50" aria-hidden="true">👥</div>
                             <div class="min-w-0">
-                                <h3 class="text-sm font-medium text-gray-500">Pacientes activos (mes)</h3>
+                                <h3 class="text-sm font-medium text-gray-500" x-text="t('dash_active_patients')"></h3>
                                 <p class="text-2xl font-bold text-gray-900 mt-0.5" x-text="stats.pacientesActivos ?? '—'"></p>
                             </div>
                         </div>
@@ -190,11 +194,11 @@
             <div x-show="activeTab === 'appointments'">
                 <div class="card bg-white p-4 sm:p-6">
                     <div class="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between sm:items-center gap-3 mb-5 sm:mb-6">
-                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Citas</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900" x-text="t('dash_appointments')"></h2>
                         <div class="flex flex-wrap items-center gap-2">
-                            <button @click="openModalCita()" class="btn-primary text-sm sm:text-base">+ Crear cita</button>
+                            <button @click="openModalCita()" class="btn-primary text-sm sm:text-base" x-text="t('dash_new_appointment')"></button>
                             <button @click="appointmentViewMode = appointmentViewMode === 'calendar' ? 'list' : 'calendar'" class="btn-secondary text-sm" x-text="appointmentViewMode === 'calendar' ? 'Vista lista' : 'Vista calendario'"></button>
-                            <button @click="loadCitas()" class="btn-ghost min-h-[44px] text-sm">Actualizar</button>
+                            <button @click="loadCitas()" class="btn-ghost min-h-[44px] text-sm" x-text="t('dash_refresh')"></button>
                         </div>
                     </div>
 
@@ -202,13 +206,13 @@
                     <div x-show="appointmentViewMode === 'calendar'" class="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
                         <div class="flex flex-wrap gap-2 items-center mb-3 sm:mb-4">
                             <div class="flex gap-2 flex-wrap">
-                                <button @click="prevWeek()" class="btn-secondary text-xs sm:text-sm py-2">← Anterior</button>
-                                <button @click="goToToday()" class="btn-secondary text-xs sm:text-sm py-2">Hoy</button>
-                                <button @click="nextWeek()" class="btn-secondary text-xs sm:text-sm py-2">Siguiente →</button>
+                                <button @click="prevWeek()" class="btn-secondary text-xs sm:text-sm py-2" x-text="t('dash_prev')"></button>
+                                <button @click="goToToday()" class="btn-secondary text-xs sm:text-sm py-2" x-text="t('dash_today')"></button>
+                                <button @click="nextWeek()" class="btn-secondary text-xs sm:text-sm py-2" x-text="t('dash_next')"></button>
                             </div>
                             <h3 class="font-semibold text-gray-800 text-sm sm:text-base" x-text="getCalendarWeekLabel()"></h3>
                         </div>
-                        <p class="text-xs text-gray-500 mb-2">Leyenda: <span class="badge badge-confirmada">confirmada</span> <span class="badge badge-completada">completada</span> <span class="badge badge-pasada">pasada</span> <span class="badge badge-cancelada">cancelada</span> <span class="badge badge-pendiente">pendiente</span> <span class="badge badge-no-asistio">no asistió</span></p>
+                        <p class="text-xs text-gray-500 mb-2"><span x-text="t('dash_legend')"></span>: <span class="badge badge-confirmada" x-text="t('st_confirmed')"></span> <span class="badge badge-completada" x-text="t('st_completed')"></span> <span class="badge badge-pasada" x-text="t('st_past')"></span> <span class="badge badge-cancelada" x-text="t('st_cancelled')"></span> <span class="badge badge-pendiente" x-text="t('st_pending')"></span> <span class="badge badge-no-asistio" x-text="t('st_no_show')"></span></p>
                         <table class="w-full border border-gray-200 text-sm" style="min-width: 800px;">
                             <thead>
                                 <tr class="bg-gray-100">
@@ -338,15 +342,15 @@
             <div x-show="activeTab === 'pacientes'">
                 <div class="card bg-white p-6">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900">Pacientes</h2>
-                        <button @click="showPacienteForm = !showPacienteForm" class="btn-primary">+ Nuevo paciente</button>
+                        <h2 class="text-2xl font-bold text-gray-900" x-text="t('patients_title')"></h2>
+                        <button @click="showPacienteForm = !showPacienteForm" class="btn-primary" x-text="t('patients_new')"></button>
                     </div>
                     <div class="mb-5 space-y-3">
-                        <label class="block text-sm font-medium text-gray-700">Buscar paciente</label>
+                        <label class="block text-sm font-medium text-gray-700" x-text="t('patients_search')"></label>
                         <div class="flex flex-wrap gap-3 items-center">
                             <input type="text" x-model="pacienteBusqueda" @input.debounce.200ms="loadPacientes()" class="input-modern min-w-0 flex-1 sm:min-w-[280px] py-2.5 text-base" placeholder="Nombre, email o teléfono del cliente...">
                             <div class="flex items-center gap-2 shrink-0">
-                                <span class="text-sm text-gray-500 whitespace-nowrap">Estado:</span>
+                                <span class="text-sm text-gray-500 whitespace-nowrap" x-text="t('patients_status') + ':'"></span>
                                 <select x-model="pacienteEstadoFilter" @change="loadPacientes()" class="input-modern w-[180px]">
                                     <option value="">Todos los estados</option>
                                     <option value="activo">Activo</option>
@@ -767,10 +771,10 @@
             <!-- Tab: Hours -->
             <div x-show="activeTab === 'hours'">
                 <div class="card bg-white p-6">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Horarios de Atención</h2>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6" x-text="t('hours_title')"></h2>
                     
                     <div class="space-y-4">
-                        <template x-for="(dayName, dayIndex) in ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']" :key="dayIndex">
+                        <template x-for="(dayName, dayIndex) in dayNames()" :key="dayIndex">
                             <div class="card bg-white/80 border border-gray-100 p-4">
                                 <div class="flex items-center justify-between mb-3">
                                     <h3 class="font-semibold text-gray-900" x-text="dayName"></h3>
@@ -942,7 +946,10 @@
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script>
         function dashboard() {
+            const i18n = window.I18n.alpineHelpers();
             return {
+                ...i18n,
+                langHtml: window.I18n.langSelectorHtml(),
                 activeTab: 'inicio',
                 stats: {},
                 citas: [],

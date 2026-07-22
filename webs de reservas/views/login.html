@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#2563eb">
-    <title>Iniciar sesión - Dashboard</title>
+    <title>Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/i18n.js"></script>
     <style>
         [x-cloak] { display: none !important; }
         body { -webkit-text-size-adjust: 100%; padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0); }
@@ -14,59 +15,35 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div x-data="loginApp()" x-cloak class="w-full max-w-md px-4">
+    <div x-data="loginApp()" x-cloak class="w-full max-w-md px-4" @app-lang-changed.window="lang = $event.detail.lang">
+        <div class="flex justify-end mb-3" x-html="langHtml"></div>
         <div class="bg-white rounded-lg shadow-lg p-4 sm:p-8">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 text-center">Dashboard</h1>
-            <p class="text-gray-600 text-center mb-6 sm:mb-8 text-sm sm:text-base">Inicia sesión para gestionar tus citas</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 text-center" x-text="t('login_title')"></h1>
+            <p class="text-gray-600 text-center mb-6 sm:mb-8 text-sm sm:text-base" x-text="t('login_subtitle')"></p>
 
             <form @submit.prevent="login()" class="space-y-6">
-                <!-- Email -->
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                        Email
-                    </label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        x-model="form.email"
-                        required
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2" x-text="t('email')"></label>
+                    <input type="email" id="email" x-model="form.email" required
                         class="w-full input-touch border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="tu@email.com"
-                    >
+                        :placeholder="t('login_email_ph')">
                 </div>
-
-                <!-- Password -->
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                        Contraseña
-                    </label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        x-model="form.password"
-                        required
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2" x-text="t('password')"></label>
+                    <input type="password" id="password" x-model="form.password" required
                         class="w-full input-touch border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Tu contraseña"
-                    >
+                        :placeholder="t('login_pass_ph')">
                 </div>
-
-                <!-- Error Message -->
                 <div x-show="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                     <p x-text="error"></p>
                 </div>
-
-                <!-- Submit Button -->
-                <button 
-                    type="submit"
-                    :disabled="submitting"
-                    class="w-full btn-touch bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
-                    <span x-show="!submitting">Iniciar sesión</span>
-                    <span x-show="submitting">Iniciando sesión...</span>
+                <button type="submit" :disabled="submitting"
+                    class="w-full btn-touch bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                    <span x-show="!submitting" x-text="t('login_btn')"></span>
+                    <span x-show="submitting" x-text="t('login_loading')"></span>
                 </button>
-
                 <p class="text-center text-sm text-gray-500 mt-4">
-                    <a href="/reset-password" class="text-blue-600 hover:underline">¿Olvidaste tu contraseña? Restablecer</a>
+                    <a href="/reset-password" class="text-blue-600 hover:underline" x-text="t('login_forgot')"></a>
                 </p>
             </form>
         </div>
@@ -75,43 +52,32 @@
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script>
         function loginApp() {
+            const i = window.I18n.alpineHelpers();
             return {
-                form: {
-                    email: '',
-                    password: ''
-                },
-                submitting: false,
+                ...i,
+                langHtml: window.I18n.langSelectorHtml(),
+                form: { email: '', password: '' },
                 error: '',
-
+                submitting: false,
                 async login() {
                     this.submitting = true;
                     this.error = '';
-
                     try {
                         const response = await fetch('/login', {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(this.form),
-                            credentials: 'same-origin'
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.form)
                         });
-
-                        const data = await response.json().catch(() => ({ error: 'Respuesta inválida del servidor' }));
-
-                        if (data.error) {
-                            this.error = data.error;
-                        } else {
-                            window.location.replace('/dashboard');
-                        }
-                    } catch (error) {
-                        console.error('Error en login:', error);
-                        this.error = 'Error al iniciar sesión. Por favor, intenta de nuevo.';
+                        const data = await response.json();
+                        if (data.error) this.error = data.error;
+                        else window.location.href = '/dashboard';
+                    } catch (e) {
+                        this.error = 'Error';
                     } finally {
                         this.submitting = false;
                     }
                 }
-            }
+            };
         }
     </script>
 </body>

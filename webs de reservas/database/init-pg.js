@@ -163,13 +163,15 @@ async function initPostgres() {
       concepto TEXT NOT NULL,
       descripcion TEXT,
       precio_base REAL NOT NULL,
-      iva_pct REAL NOT NULL DEFAULT 21,
+      iva_pct REAL NOT NULL DEFAULT 25.5,
       iva_eur REAL NOT NULL,
       total REAL NOT NULL,
       forma_pago TEXT,
+      idioma TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await runQuery(`ALTER TABLE facturas ADD COLUMN IF NOT EXISTS idioma TEXT`).catch(() => {});
   await runQuery(`
     CREATE TABLE IF NOT EXISTS landing_images (
       id SERIAL PRIMARY KEY,

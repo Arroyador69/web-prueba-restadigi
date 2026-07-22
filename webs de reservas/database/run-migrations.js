@@ -168,6 +168,7 @@ async function runMigrations() {
     await runIgnore('ALTER TABLE negocio ADD COLUMN demo_created_at TIMESTAMP');
     await runIgnore('ALTER TABLE negocio ADD COLUMN color_primary TEXT');
     await runIgnore('ALTER TABLE negocio ADD COLUMN color_secondary TEXT');
+    await runIgnore('ALTER TABLE facturas ADD COLUMN idioma TEXT');
 
     // Índice único de slug (idempotente)
     if (isPg) {

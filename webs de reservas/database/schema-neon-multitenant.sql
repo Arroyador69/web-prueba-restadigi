@@ -169,6 +169,7 @@ CREATE TABLE IF NOT EXISTS facturas (
   iva_eur REAL NOT NULL,
   total REAL NOT NULL,
   forma_pago TEXT,
+  idioma TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -240,3 +241,4 @@ ON CONFLICT DO NOTHING;
 -- Migración colores (Neon ya existente)
 ALTER TABLE negocio ADD COLUMN IF NOT EXISTS color_primary TEXT;
 ALTER TABLE negocio ADD COLUMN IF NOT EXISTS color_secondary TEXT;
+ALTER TABLE facturas ADD COLUMN IF NOT EXISTS idioma TEXT;

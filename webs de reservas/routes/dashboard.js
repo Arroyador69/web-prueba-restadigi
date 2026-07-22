@@ -729,10 +729,17 @@ router.post('/api/facturas', async (req, res) => {
 router.get('/api/facturas/:id/pdf', async (req, res) => {
   try {
     const negocioId = req.negocioId || 1;
-    const buffer = await facturasService.generatePdfBuffer(negocioId, req.params.id);
+    const langOverride = req.query && req.query.lang;
+    const buffer = await facturasService.generatePdfBuffer(negocioId, req.params.id, {
+      lang: langOverride
+    });
     if (!buffer) return res.status(404).send('Factura no encontrada');
     const factura = await facturasService.getById(negocioId, req.params.id);
-    const filename = `factura-${(factura && factura.numero_factura) || req.params.id}.pdf`;
+    const lang = facturasService.normalizeLang(
+      (factura && factura.idioma) || langOverride || 'fi'
+    );
+    const prefix = lang === 'en' ? 'invoice' : lang === 'fi' ? 'lasku' : 'factura';
+    const filename = `${prefix}-${(factura && factura.numero_factura) || req.params.id}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
     res.send(buffer);

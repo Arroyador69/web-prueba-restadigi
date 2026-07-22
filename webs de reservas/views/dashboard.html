@@ -582,7 +582,8 @@
 
                 <template x-if="facturaTab === 'nueva'">
                     <div class="card bg-white p-6">
-                        <h2 class="text-xl font-bold text-gray-900 mb-6" x-text="t('new_invoice')"></h2>
+                        <h2 class="text-xl font-bold text-gray-900 mb-2" x-text="t('new_invoice')"></h2>
+                        <p class="text-sm text-gray-500 mb-6" x-text="t('invoice_lang_hint')"></p>
                         <form @submit.prevent="crearFactura()" class="space-y-6">
                             <div class="card bg-slate-50/80 rounded-xl p-5 border border-slate-100">
                                 <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2"><span class="text-lg">👤</span> <span x-text="t('client_data')"></span></h3>
@@ -626,7 +627,7 @@
                         <p x-show="facturas.length === 0" class="text-gray-500 py-4" x-text="t('no_invoices')"></p>
                         <div x-show="facturas.length > 0" class="overflow-x-auto">
                             <table class="table-modern w-full">
-                                <thead><tr><th x-text="t('number_col')"></th><th x-text="t('date')"></th><th x-text="t('client')"></th><th x-text="t('concept')"></th><th x-text="t('total')"></th><th x-text="t('actions')"></th></tr></thead>
+                                <thead><tr><th x-text="t('number_col')"></th><th x-text="t('date')"></th><th x-text="t('client')"></th><th x-text="t('concept')"></th><th x-text="t('total')"></th><th x-text="t('lang_col')"></th><th x-text="t('actions')"></th></tr></thead>
                                 <tbody>
                                     <template x-for="f in facturas" :key="f.id">
                                         <tr>
@@ -635,6 +636,7 @@
                                             <td x-text="f.cliente_nombre"></td>
                                             <td x-text="f.concepto"></td>
                                             <td x-text="formatEuroFactura(f.total)"></td>
+                                            <td class="uppercase text-xs font-medium text-gray-500" x-text="(f.idioma || 'fi')"></td>
                                             <td class="flex gap-2 items-center justify-end">
                                                 <a :href="'/dashboard/api/facturas/' + f.id + '/pdf'" target="_blank" rel="noopener" class="btn-link" x-text="t('view_pdf')"></a>
                                                 <button type="button" @click="eliminarFactura(f)" class="text-red-600 hover:text-red-700 text-sm font-medium" x-text="t('delete')"></button>
@@ -1996,7 +1998,10 @@
                         const res = await fetch('/dashboard/api/facturas', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(this.facturaForm)
+                            body: JSON.stringify({
+                                ...this.facturaForm,
+                                idioma: this.lang || (window.I18n && window.I18n.getLang && window.I18n.getLang()) || 'fi'
+                            })
                         });
                         const data = await res.json();
                         if (data.success) {

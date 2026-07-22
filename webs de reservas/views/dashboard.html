@@ -277,8 +277,8 @@
                     <!-- Vista lista (filtros solo en lista) -->
                     <div x-show="appointmentViewMode === 'list'">
                         <div class="mb-4 flex gap-4">
-                            <input type="date" x-model="filters.startDate" @change="loadCitas()" class="input-modern" :placeholder="t('date_start_ph'))">
-                            <input type="date" x-model="filters.endDate" @change="loadCitas()" class="input-modern" :placeholder="t('date_end_ph'))">
+                            <input type="date" x-model="filters.startDate" @change="loadCitas()" class="input-modern" :placeholder=\"t('date_start_ph')\">
+                            <input type="date" x-model="filters.endDate" @change="loadCitas()" class="input-modern" :placeholder=\"t('date_end_ph')\">
                         </div>
                         <div class="space-y-4">
                             <template x-for="c in citas" :key="c.id">
@@ -374,7 +374,7 @@
                     <div class="mb-5 space-y-3">
                         <label class="block text-sm font-medium text-gray-700" x-text="t('patients_search')"></label>
                         <div class="flex flex-wrap gap-3 items-center">
-                            <input type="text" x-model="pacienteBusqueda" @input.debounce.200ms="loadPacientes()" class="input-modern min-w-0 flex-1 sm:min-w-[280px] py-2.5 text-base" :placeholder="t('search_patient_ph'))">
+                            <input type="text" x-model="pacienteBusqueda" @input.debounce.200ms="loadPacientes()" class="input-modern min-w-0 flex-1 sm:min-w-[280px] py-2.5 text-base" :placeholder=\"t('search_patient_ph')\">
                             <div class="flex items-center gap-2 shrink-0">
                                 <span class="text-sm text-gray-500 whitespace-nowrap" x-text="t('patients_status') + ':'"></span>
                                 <select x-model="pacienteEstadoFilter" @change="loadPacientes()" class="input-modern w-[180px]">
@@ -395,7 +395,7 @@
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('phone')"></label><input type="tel" x-model="pacienteForm.telefono" class="input-modern"></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('status')"></label><select x-model="pacienteForm.estado" class="input-modern"><option value="activo" x-text="t('st_active')"></option><option value="en_proceso" x-text="t('st_in_progress')"></option><option value="alta_terapeutica" x-text="t('st_discharged')"></option><option value="inactivo" x-text="t('st_inactive')"></option></select></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('session_price')"></label><input type="number" step="0.01" x-model="pacienteForm.precio_sesion" class="input-modern"></div>
-                            <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('patient_notes')"></label><textarea x-model="pacienteForm.notas_privadas" class="input-modern" rows="3" :placeholder="t('patient_notes_ph'))"></textarea></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('patient_notes')"></label><textarea x-model="pacienteForm.notas_privadas" class="input-modern" rows="3" :placeholder=\"t('patient_notes_ph')\"></textarea></div>
                             <div class="md:col-span-2 flex gap-2">
                                 <button type="submit" :disabled="creatingPaciente" class="btn-primary" x-text="t('create')"></button>
                                 <button type="button" @click="showPacienteForm = false" class="btn-secondary" x-text="t('cancel')"></button>
@@ -470,7 +470,7 @@
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('phone')"></label><input type="tel" x-model="editPacienteForm.telefono" class="input-modern"></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('status')"></label><select x-model="editPacienteForm.estado" class="input-modern"><option value="activo" x-text="t('st_active')"></option><option value="en_proceso" x-text="t('st_in_progress')"></option><option value="alta_terapeutica" x-text="t('st_discharged')"></option><option value="inactivo" x-text="t('st_inactive')"></option></select></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('session_price')"></label><input type="number" step="0.01" x-model="editPacienteForm.precio_sesion" class="input-modern"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('patient_notes')"></label><textarea x-model="editPacienteForm.notas_privadas" class="input-modern" rows="4" :placeholder="t('patient_notes_ph'))"></textarea><p class="text-xs text-gray-500 mt-1" x-text="t('patient_notes_hint')"></p></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('patient_notes')"></label><textarea x-model="editPacienteForm.notas_privadas" class="input-modern" rows="4" :placeholder=\"t('patient_notes_ph')\"></textarea><p class="text-xs text-gray-500 mt-1" x-text="t('patient_notes_hint')"></p></div>
                             <div class="flex gap-2 pt-2">
                                 <button type="button" @click="editPacienteModal.show = false" class="btn-secondary" x-text="t('cancel')"></button>
                                 <button type="submit" :disabled="savingEditPaciente" class="btn-primary"><span x-show="!savingEditPaciente" x-text="t('save_changes')"></span><span x-show="savingEditPaciente" x-text="t('saving')"></span></button>
@@ -530,8 +530,8 @@
                         <div class="border-b border-gray-100 pb-6">
                             <h3 class="font-semibold text-gray-900 mb-3" x-text="t('hero_header')"></h3>
                             <div class="space-y-4">
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('main_title')"></label><input type="text" x-model="landing.hero_title" class="input-modern" :placeholder="t('main_title_ph'))"></div>
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('subtitle')"></label><textarea x-model="landing.hero_subtitle" rows="2" class="input-modern" :placeholder="t('subtitle_ph'))"></textarea></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('main_title')"></label><input type="text" x-model="landing.hero_title" class="input-modern" :placeholder=\"t('main_title_ph')\"></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('subtitle')"></label><textarea x-model="landing.hero_subtitle" rows="2" class="input-modern" :placeholder=\"t('subtitle_ph')\"></textarea></div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('hero_image')"></label>
                                     <div class="flex flex-wrap items-center gap-2 mt-1">
@@ -542,7 +542,7 @@
                                         </button>
                                         <span class="text-xs text-gray-500" x-text="t('image_formats')"></span>
                                     </div>
-                                    <input type="text" x-model="landing.hero_image_url" class="input-modern mt-2" :placeholder="t('or_paste_url'))">
+                                    <input type="text" x-model="landing.hero_image_url" class="input-modern mt-2" :placeholder=\"t('or_paste_url')\">
                                     <div x-show="landing.hero_image_url" class="mt-2">
                                         <img :src="landing.hero_image_url" alt="Vista previa" class="rounded-lg border border-gray-200 max-h-24 object-cover" @error="$el.style.display='none'">
                                     </div>
@@ -552,8 +552,8 @@
                         <div class="border-b border-gray-100 pb-6">
                             <h3 class="font-semibold text-gray-900 mb-3" x-text="t('about_block')"></h3>
                             <div class="space-y-4">
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('title')"></label><input type="text" x-model="landing.about_title" class="input-modern" :placeholder="t('about_title_ph'))"></div>
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('text')"></label><textarea x-model="landing.about_text" rows="4" class="input-modern" :placeholder="t('about_text_ph'))"></textarea></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('title')"></label><input type="text" x-model="landing.about_title" class="input-modern" :placeholder=\"t('about_title_ph')\"></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('text')"></label><textarea x-model="landing.about_text" rows="4" class="input-modern" :placeholder=\"t('about_text_ph')\"></textarea></div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('block_image')"></label>
                                     <div class="flex flex-wrap items-center gap-2 mt-1">
@@ -564,7 +564,7 @@
                                         </button>
                                         <span class="text-xs text-gray-500" x-text="t('image_formats')"></span>
                                     </div>
-                                    <input type="text" x-model="landing.about_image_url" class="input-modern mt-2" :placeholder="t('or_paste_url'))">
+                                    <input type="text" x-model="landing.about_image_url" class="input-modern mt-2" :placeholder=\"t('or_paste_url')\">
                                     <div x-show="landing.about_image_url" class="mt-2">
                                         <img :src="landing.about_image_url" alt="Vista previa" class="rounded-lg border border-gray-200 max-h-24 object-cover" @error="$el.style.display='none'">
                                     </div>
@@ -573,7 +573,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('cta_button_text')"></label>
-                            <input type="text" x-model="landing.cta_text" class="input-modern w-64" :placeholder="t('landing_cta'))">
+                            <input type="text" x-model="landing.cta_text" class="input-modern w-64" :placeholder=\"t('landing_cta')\">
                         </div>
                         <button type="submit" :disabled="savingLanding" class="btn-primary" x-text="t('save_landing')"></button>
                         <a href="/" target="_blank" rel="noopener" class="btn-secondary ml-2" x-text="t('view_public_site')"></a>
@@ -955,9 +955,9 @@
                                 <div class="space-y-2">
                                     <template x-for="(range, rangeIndex) in (openingHours[dayIndex] || [])" :key="rangeIndex">
                                         <div class="flex items-center gap-2">
-                                            <input type="number" x-model="range[0]" min="0" max="23" class="input-modern w-20" :placeholder="t('start'))">
+                                            <input type="number" x-model="range[0]" min="0" max="23" class="input-modern w-20" :placeholder=\"t('start')\">
                                             <span>-</span>
-                                            <input type="number" x-model="range[1]" min="0" max="23" class="input-modern w-20" :placeholder="t('end'))">
+                                            <input type="number" x-model="range[1]" min="0" max="23" class="input-modern w-20" :placeholder=\"t('end')\">
                                             <span class="text-sm text-gray-600">h</span>
                                             <button 
                                                 @click="removeTimeRange(dayIndex, rangeIndex)"
@@ -1012,7 +1012,7 @@
                         </div>
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2" x-text="t('reason_optional')"></label>
-                            <input type="text" x-model="blockForm.reason" class="input-modern" :placeholder="t('reason_ph'))">
+                            <input type="text" x-model="blockForm.reason" class="input-modern" :placeholder=\"t('reason_ph')\">
                         </div>
                         <div class="flex gap-2">
                             <button @click="saveBlock()" class="btn-primary" x-text="t('save_block')"></button>

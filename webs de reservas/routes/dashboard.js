@@ -51,9 +51,9 @@ Derechos: Puede ejercer sus derechos de acceso, rectificación, supresión, limi
 // Aplicar autenticación a todas las rutas del dashboard
 router.use(requireAuth);
 
-// Dashboard principal
+// Dashboard principal (ruta absoluta para Vercel)
 router.get('/', (req, res) => {
-  res.sendFile('dashboard.html', { root: './views' });
+  res.sendFile(path.join(__dirname, '..', 'views', 'dashboard.html'));
 });
 
 // Obtener todas las citas

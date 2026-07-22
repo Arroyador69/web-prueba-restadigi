@@ -1,12 +1,15 @@
 const express = require('express');
+const path = require('path');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { getQuery } = require('../utils/db');
 const { requireGuest } = require('../middleware/auth');
 
-// Login
+const VIEWS = path.join(__dirname, '..', 'views');
+
+// Login (ruta absoluta: en Vercel cwd no es la carpeta de la app)
 router.get('/login', requireGuest, (req, res) => {
-  res.sendFile('login.html', { root: './views' });
+  res.sendFile(path.join(VIEWS, 'login.html'));
 });
 
 router.post('/login', requireGuest, async (req, res) => {

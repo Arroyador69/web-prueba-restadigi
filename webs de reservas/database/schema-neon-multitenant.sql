@@ -242,3 +242,13 @@ ON CONFLICT DO NOTHING;
 ALTER TABLE negocio ADD COLUMN IF NOT EXISTS color_primary TEXT;
 ALTER TABLE negocio ADD COLUMN IF NOT EXISTS color_secondary TEXT;
 ALTER TABLE facturas ADD COLUMN IF NOT EXISTS idioma TEXT;
+
+CREATE TABLE IF NOT EXISTS landing_events (
+  id SERIAL PRIMARY KEY,
+  negocio_id INTEGER NOT NULL REFERENCES negocio(id),
+  event_type TEXT NOT NULL,
+  meta TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS landing_events_negocio_type_idx ON landing_events (negocio_id, event_type);
+CREATE INDEX IF NOT EXISTS landing_events_negocio_created_idx ON landing_events (negocio_id, created_at);

@@ -150,6 +150,7 @@
                     <button @click="activeTab = 'appointments'" class="nav-tab" :class="activeTab === 'appointments' && 'nav-tab-active'" x-text="t('tab_appointments')"></button>
                     <button @click="activeTab = 'pacientes'; loadPacientes()" class="nav-tab" :class="activeTab === 'pacientes' && 'nav-tab-active'" x-text="t('tab_patients')"></button>
                     <button @click="activeTab = 'landing'; loadLanding()" class="nav-tab" :class="activeTab === 'landing' && 'nav-tab-active'" x-text="t('tab_landing')"></button>
+                    <button @click="activeTab = 'lp_stats'; loadLandingStats()" class="nav-tab" :class="activeTab === 'lp_stats' && 'nav-tab-active'" x-text="t('tab_lp_stats')"></button>
                     <button @click="activeTab = 'facturas'; loadFacturas()" class="nav-tab" :class="activeTab === 'facturas' && 'nav-tab-active'" x-text="t('tab_invoices')"></button>
                     <button @click="activeTab = 'reputacion'; loadReputacion()" class="nav-tab" :class="activeTab === 'reputacion' && 'nav-tab-active'" x-text="t('tab_reputation')"></button>
                     <button @click="activeTab = 'config'" class="nav-tab" :class="activeTab === 'config' && 'nav-tab-active'" x-text="t('tab_config')"></button>
@@ -578,6 +579,63 @@
                         <a href="/" target="_blank" rel="noopener" class="btn-secondary ml-2" x-text="t('view_public_site')"></a>
                         <span x-show="landingMessage" class="ml-2 text-sm" :class="isOkMsg(landingMessage) ? 'text-green-600' : 'text-red-600'" x-text="landingMessage"></span>
                     </form>
+                </div>
+            </div>
+
+            </div>
+
+            <!-- Tab: Stats landing -->
+            <div x-show="activeTab === 'lp_stats'" class="fade-in">
+                <div class="card bg-white p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-1" x-text="t('lp_stats_title')"></h2>
+                    <p class="text-sm text-gray-500 mb-6" x-text="t('lp_stats_help')"></p>
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                        <div class="rounded-xl border border-gray-100 p-4 bg-slate-50/80">
+                            <p class="text-xs font-medium text-gray-500" x-text="t('lp_visits')"></p>
+                            <p class="text-2xl font-bold mt-1" style="color: var(--secondary-color)" x-text="landingStats.visits ?? 0"></p>
+                        </div>
+                        <div class="rounded-xl border border-gray-100 p-4 bg-slate-50/80">
+                            <p class="text-xs font-medium text-gray-500" x-text="t('lp_book_clicks')"></p>
+                            <p class="text-2xl font-bold mt-1" style="color: var(--secondary-color)" x-text="landingStats.bookClicks ?? 0"></p>
+                        </div>
+                        <div class="rounded-xl border border-gray-100 p-4 bg-slate-50/80">
+                            <p class="text-xs font-medium text-gray-500" x-text="t('lp_bookings')"></p>
+                            <p class="text-2xl font-bold mt-1" style="color: var(--secondary-color)" x-text="landingStats.bookings ?? 0"></p>
+                        </div>
+                        <div class="rounded-xl border border-gray-100 p-4 bg-slate-50/80">
+                            <p class="text-xs font-medium text-gray-500" x-text="t('lp_click_rate')"></p>
+                            <p class="text-2xl font-bold mt-1" style="color: var(--primary-color)" x-text="(landingStats.clickRate ?? 0) + '%'"></p>
+                        </div>
+                        <div class="rounded-xl border border-gray-100 p-4 bg-slate-50/80 col-span-2 lg:col-span-1">
+                            <p class="text-xs font-medium text-gray-500" x-text="t('lp_conversion')"></p>
+                            <p class="text-2xl font-bold mt-1" style="color: var(--primary-color)" x-text="(landingStats.conversionRate ?? 0) + '%'"></p>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-3" x-text="t('lp_last14')"></h3>
+                    <p x-show="!(landingStats.last14Days && landingStats.last14Days.length)" class="text-gray-500 text-sm py-2" x-text="t('lp_empty')"></p>
+                    <div x-show="landingStats.last14Days && landingStats.last14Days.length" class="overflow-x-auto">
+                        <table class="table-modern w-full">
+                            <thead>
+                                <tr>
+                                    <th x-text="t('lp_day')"></th>
+                                    <th x-text="t('lp_visits')"></th>
+                                    <th x-text="t('lp_book_clicks')"></th>
+                                    <th x-text="t('lp_bookings')"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="row in (landingStats.last14Days || [])" :key="row.day">
+                                    <tr>
+                                        <td x-text="row.day"></td>
+                                        <td x-text="row.visits"></td>
+                                        <td x-text="row.bookClicks"></td>
+                                        <td x-text="row.bookings"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn-secondary mt-4" @click="loadLandingStats()" x-text="t('demos_refresh')"></button>
                 </div>
             </div>
 
@@ -1157,6 +1215,7 @@
                 brandPresets: (window.BrandTheme && window.BrandTheme.PRESETS) || [],
                 savingBrandColors: false,
                 brandColorsMessage: '',
+                landingStats: { visits: 0, bookClicks: 0, bookings: 0, clickRate: 0, conversionRate: 0, last14Days: [] },
                 plantillaRecordatorio: { asunto: '', cuerpo: '' },
                 savingSmtp: false,
                 smtpMessage: '',
@@ -1705,6 +1764,23 @@
                         this.textosLegalesMessage = this.t('msg_conn_error');
                     } finally {
                         this.savingTextosLegales = false;
+                    }
+                },
+
+                async loadLandingStats() {
+                    try {
+                        const res = await fetch('/dashboard/api/landing-stats');
+                        const data = await res.json();
+                        this.landingStats = {
+                            visits: data.visits || 0,
+                            bookClicks: data.bookClicks || 0,
+                            bookings: data.bookings || 0,
+                            clickRate: data.clickRate || 0,
+                            conversionRate: data.conversionRate || 0,
+                            last14Days: Array.isArray(data.last14Days) ? data.last14Days : []
+                        };
+                    } catch (e) {
+                        this.landingStats = { visits: 0, bookClicks: 0, bookings: 0, clickRate: 0, conversionRate: 0, last14Days: [] };
                     }
                 },
 

@@ -9,6 +9,7 @@ const citasService = require('../lib/citas');
 const negocioService = require('../lib/negocio');
 const tenant = require('../lib/tenant');
 const reputacionPro = require('../lib/reputacion-pro');
+const landingStats = require('../lib/landing-stats');
 
 const DEFAULT_NEGOCIO_ID = 1;
 
@@ -268,6 +269,7 @@ router.post('/api/book', async (req, res) => {
         : 'Cita reservada correctamente. Si no recibes el email, revisa spam o contacta al negocio.',
       emailSent
     });
+    landingStats.track(negocioId, 'book_success').catch(() => {});
   } catch (error) {
     if (error.status === 404) return res.status(404).json({ error: error.message });
     console.error('Error creando reserva:', error);
@@ -318,6 +320,21 @@ router.post('/api/setup/first-user', async (req, res) => {
   } catch (error) {
     console.error('Error creando primer usuario:', error);
     res.status(500).json({ error: 'Error creando usuario' });
+  }
+});
+
+router.post('/api/landing-event', async (req, res) => {
+  try {
+    const negocioId = await resolveNegocioId(req);
+    const type = req.body && req.body.type;
+    const result = await landingStats.track(negocioId, type, {
+      path: req.body && req.body.path ? String(req.body.path).slice(0, 120) : null
+    });
+    if (!result.ok) return res.status(400).json({ error: 'Evento no válido' });
+    res.json({ ok: true });
+  } catch (error) {
+    if (error.status === 404) return res.status(404).json({ error: error.message });
+    res.status(500).json({ error: 'Error registrando evento' });
   }
 });
 

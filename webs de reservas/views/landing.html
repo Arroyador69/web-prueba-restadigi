@@ -60,7 +60,7 @@
                 <div class="text-center">
                     <h2 class="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4 px-1" style="color: var(--secondary-color)" x-text="displayHeroTitle()"></h2>
                     <p class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto whitespace-pre-line px-1" x-text="displayHeroSubtitle()"></p>
-                    <a href="#reservar" class="btn-reservar w-full sm:w-auto inline-block mt-6 sm:mt-8 scroll-smooth" x-text="displayCta()"></a>
+                    <a href="#reservar" @click="trackEvent('book_click')" class="btn-reservar w-full sm:w-auto inline-block mt-6 sm:mt-8 scroll-smooth" x-text="displayCta()"></a>
                 </div>
             </section>
 
@@ -259,6 +259,36 @@
                     this.detectTenant();
                     await Promise.all([this.loadConfig(), this.loadLanding(), this.loadTextosLegales()]);
                     this.updatePageTitle();
+                    this.trackVisitOnce();
+                },
+
+                trackVisitOnce() {
+                    try {
+                        const key = 'landing_visit_' + (this.tenantSlug || 'default');
+                        if (sessionStorage.getItem(key)) return;
+                        sessionStorage.setItem(key, '1');
+                    } catch (e) {}
+                    this.trackEvent('visit');
+                },
+
+                trackEvent(type) {
+                    try {
+                        if (type === 'book_click') {
+                            const key = 'landing_book_click_' + (this.tenantSlug || 'default');
+                            try {
+                                if (sessionStorage.getItem(key)) return;
+                                sessionStorage.setItem(key, '1');
+                            } catch (e) {}
+                        }
+                        const body = { type: type, path: window.location.pathname };
+                        if (this.tenantSlug) body.tenant = this.tenantSlug;
+                        fetch('/api/landing-event', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(body),
+                            keepalive: true
+                        }).catch(function () {});
+                    } catch (e) {}
                 },
 
                 onLangChanged(e) {
@@ -323,6 +353,7 @@
                 },
 
                 async bookAppointment() {
+                    this.trackEvent('book_click');
                     this.submitting = true;
                     this.error = '';
                     this.success = '';

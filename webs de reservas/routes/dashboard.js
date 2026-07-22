@@ -774,10 +774,14 @@ router.post('/api/users', async (req, res) => {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
     }
 
-    // Verificar si el email ya existe
-    const existingUser = await getQuery('SELECT id FROM users WHERE email = ?', [email]);
+    // Verificar si el email ya existe (login global: un email = un negocio)
+    const existingUser = await getQuery('SELECT id, negocio_id FROM users WHERE email = ?', [email]);
     if (existingUser) {
-      return res.status(400).json({ error: 'Este email ya está registrado' });
+      const negocioId = req.negocioId != null ? req.negocioId : 1;
+      if (Number(existingUser.negocio_id) === Number(negocioId)) {
+        return res.status(400).json({ error: 'Este email ya está registrado en tu negocio' });
+      }
+      return res.status(400).json({ error: 'Este email ya pertenece a otro negocio. Usa otro email.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -801,13 +805,33 @@ router.post('/api/users', async (req, res) => {
   }
 });
 
-// Obtener usuarios
+// Obtener usuarios (solo del negocio de la sesión — multi-tenant)
 router.get('/api/users', async (req, res) => {
   try {
-    const users = await allQuery('SELECT id, email, name, created_at FROM users ORDER BY created_at DESC');
+    const negocioId = req.negocioId != null ? req.negocioId : 1;
+    const users = await allQuery(
+      `SELECT id, email, name, created_at, negocio_id
+       FROM users
+       WHERE negocio_id = ?
+       ORDER BY created_at DESC`,
+      [negocioId]
+    );
     res.json({ users });
   } catch (error) {
     res.status(500).json({ error: 'Error obteniendo usuarios' });
+  }
+});
+
+// Estadísticas de la landing (solo este negocio)
+router.get('/api/landing-stats', async (req, res) => {
+  try {
+    const negocioId = req.negocioId || 1;
+    const landingStats = require('../lib/landing-stats');
+    const stats = await landingStats.getStats(negocioId);
+    res.json(stats);
+  } catch (error) {
+    console.error('landing-stats:', error);
+    res.status(500).json({ error: 'Error obteniendo estadísticas de landing' });
   }
 });
 

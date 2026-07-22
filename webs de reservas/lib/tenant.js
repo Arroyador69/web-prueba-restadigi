@@ -162,6 +162,7 @@ async function deleteTenant(negocioId) {
   await runQuery(`DELETE FROM facturas WHERE negocio_id = ?`, [id]).catch(() => {});
   await runQuery(`DELETE FROM plantillas_email WHERE negocio_id = ?`, [id]).catch(() => {});
   await runQuery(`DELETE FROM textos_legales WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM landing_events WHERE negocio_id = ?`, [id]).catch(() => {});
   await runQuery(`DELETE FROM landing_page WHERE negocio_id = ?`, [id]).catch(() => {});
   await runQuery(`DELETE FROM landing_images WHERE negocio_id = ?`, [id]).catch(() => {});
   await runQuery(`DELETE FROM opening_hours WHERE negocio_id = ?`, [id]).catch(() => {});

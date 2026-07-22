@@ -170,6 +170,28 @@ async function runMigrations() {
     await runIgnore('ALTER TABLE negocio ADD COLUMN color_secondary TEXT');
     await runIgnore('ALTER TABLE facturas ADD COLUMN idioma TEXT');
 
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS landing_events (
+        id SERIAL PRIMARY KEY,
+        negocio_id INTEGER NOT NULL REFERENCES negocio(id),
+        event_type TEXT NOT NULL,
+        meta TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `).catch(async () => {
+      await runQuery(`
+        CREATE TABLE IF NOT EXISTS landing_events (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          negocio_id INTEGER NOT NULL,
+          event_type TEXT NOT NULL,
+          meta TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `).catch(() => {});
+    });
+    await runIgnore('CREATE INDEX IF NOT EXISTS landing_events_negocio_type_idx ON landing_events (negocio_id, event_type)');
+    await runIgnore('CREATE INDEX IF NOT EXISTS landing_events_negocio_created_idx ON landing_events (negocio_id, created_at)');
+
     // Índice único de slug (idempotente)
     if (isPg) {
       await runQuery(

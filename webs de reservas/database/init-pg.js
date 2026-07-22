@@ -173,6 +173,17 @@ async function initPostgres() {
   `);
   await runQuery(`ALTER TABLE facturas ADD COLUMN IF NOT EXISTS idioma TEXT`).catch(() => {});
   await runQuery(`
+    CREATE TABLE IF NOT EXISTS landing_events (
+      id SERIAL PRIMARY KEY,
+      negocio_id INTEGER NOT NULL REFERENCES negocio(id),
+      event_type TEXT NOT NULL,
+      meta TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `).catch(() => {});
+  await runQuery(`CREATE INDEX IF NOT EXISTS landing_events_negocio_type_idx ON landing_events (negocio_id, event_type)`).catch(() => {});
+  await runQuery(`CREATE INDEX IF NOT EXISTS landing_events_negocio_created_idx ON landing_events (negocio_id, created_at)`).catch(() => {});
+  await runQuery(`
     CREATE TABLE IF NOT EXISTS landing_images (
       id SERIAL PRIMARY KEY,
       negocio_id INTEGER NOT NULL REFERENCES negocio(id),

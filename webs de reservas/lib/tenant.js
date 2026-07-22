@@ -115,7 +115,7 @@ Derechos: acceso, rectificación, supresión ante el responsable o AEPD (www.aep
 }
 
 async function listDemos({ limit = 50 } = {}) {
-  return allQuery(
+  const demos = await allQuery(
     `SELECT n.id, n.nombre, n.email, n.telefono, n.slug, n.is_demo, n.demo_created_at, n.created_at,
             (SELECT COUNT(*) FROM citas c WHERE c.negocio_id = n.id) AS citas_count,
             (SELECT COUNT(*) FROM users u WHERE u.negocio_id = n.id) AS users_count
@@ -125,6 +125,48 @@ async function listDemos({ limit = 50 } = {}) {
      LIMIT ?`,
     [Math.min(parseInt(limit, 10) || 50, 200)]
   );
+  for (const d of demos) {
+    d.users = await allQuery(
+      `SELECT id, email, name, created_at FROM users WHERE negocio_id = ? ORDER BY id ASC`,
+      [d.id]
+    );
+  }
+  return demos;
+}
+
+/**
+ * Borra un tenant completo y todos sus datos (usuarios, citas, pacientes, etc.).
+ * No permite borrar el negocio principal (id=1 / slug principal).
+ */
+async function deleteTenant(negocioId) {
+  const id = parseInt(negocioId, 10);
+  if (!id) throw new Error('ID inválido');
+  const negocio = await getById(id);
+  if (!negocio) throw new Error('Negocio no encontrado');
+  if (id === 1 || negocio.slug === 'principal') {
+    throw new Error('No se puede eliminar el negocio principal');
+  }
+
+  // Orden por FKs
+  await runQuery(
+    `DELETE FROM consentimientos WHERE paciente_id IN (SELECT id FROM pacientes WHERE negocio_id = ?)`,
+    [id]
+  ).catch(() => {});
+  await runQuery(`DELETE FROM reputacion_jobs WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM review_requests WHERE professional_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM citas WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM pacientes WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM facturas WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM plantillas_email WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM textos_legales WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM landing_page WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM landing_images WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM opening_hours WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM blocked_slots WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM users WHERE negocio_id = ?`, [id]).catch(() => {});
+  await runQuery(`DELETE FROM negocio WHERE id = ?`, [id]);
+
+  return { deleted: true, id, slug: negocio.slug, nombre: negocio.nombre };
 }
 
 /**
@@ -181,6 +223,7 @@ module.exports = {
   getById,
   createDemoTenant,
   listDemos,
+  deleteTenant,
   activateUserForNegocio,
   publicUrlForSlug
 };

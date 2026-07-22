@@ -25,6 +25,26 @@ function requireDemoAdmin(req, res, next) {
   return res.status(401).json({ error: 'No autorizado. Introduce la clave de demos.' });
 }
 
+function linksForDemo(d, base) {
+  const landingUrl = tenant.publicUrlForSlug(d.slug, base);
+  const loginUrl = `${base}/login`;
+  const dashboardUrl = `${base}/dashboard`;
+  const users = (d.users || []).map((u) => ({
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    created_at: u.created_at,
+    loginUrl,
+    dashboardUrl
+  }));
+  return {
+    landingUrl,
+    loginUrl,
+    dashboardUrl,
+    users
+  };
+}
+
 router.post('/api/demos/login', (req, res) => {
   const secret = process.env.DEMO_ADMIN_SECRET;
   if (!secret) {
@@ -47,10 +67,18 @@ router.get('/api/demos', requireDemoAdmin, async (req, res) => {
     const demos = await tenant.listDemos({ limit: req.query.limit || 100 });
     const base = `${req.protocol}://${req.get('host')}`;
     res.json({
-      demos: demos.map((d) => ({
-        ...d,
-        url: tenant.publicUrlForSlug(d.slug, base)
-      }))
+      baseUrl: base,
+      demos: demos.map((d) => {
+        const links = linksForDemo(d, base);
+        return {
+          ...d,
+          url: links.landingUrl,
+          landingUrl: links.landingUrl,
+          loginUrl: links.loginUrl,
+          dashboardUrl: links.dashboardUrl,
+          users: links.users
+        };
+      })
     });
   } catch (err) {
     console.error('list demos:', err);
@@ -78,6 +106,9 @@ router.post('/api/demos', requireDemoAdmin, async (req, res) => {
         slug: negocio.slug
       },
       url,
+      landingUrl: url,
+      loginUrl: `${base}/login`,
+      dashboardUrl: `${base}/dashboard`,
       message: 'Demo creado. Envíale este enlace por WhatsApp/SMS durante la llamada.'
     });
   } catch (err) {
@@ -101,12 +132,28 @@ router.post('/api/demos/:id/activate', requireDemoAdmin, async (req, res) => {
       success: true,
       user,
       loginUrl: `${base}/login`,
+      dashboardUrl: `${base}/dashboard`,
       landingUrl: tenant.publicUrlForSlug(user.slug, base),
       message: 'Usuario creado. Puede entrar en /login con ese email y contraseña.'
     });
   } catch (err) {
     console.error('activate demo:', err);
     res.status(400).json({ error: err.message || 'Error activando usuario' });
+  }
+});
+
+/** Eliminar demo/tenant completo (datos + usuarios). No borra el principal. */
+router.delete('/api/demos/:id', requireDemoAdmin, async (req, res) => {
+  try {
+    const result = await tenant.deleteTenant(req.params.id);
+    res.json({
+      success: true,
+      ...result,
+      message: `Eliminado: ${result.nombre} (${result.slug})`
+    });
+  } catch (err) {
+    console.error('delete demo:', err);
+    res.status(400).json({ error: err.message || 'Error eliminando demo' });
   }
 });
 

@@ -45,7 +45,8 @@ async function getById(id) {
  * negocio + horarios + landing + textos legales + plantilla email.
  */
 async function createDemoTenant({ nombre, email, telefono, duracion = 50 } = {}) {
-  const name = (nombre && String(nombre).trim()) || 'Consulta de prueba';
+  // Textos de ejemplo por defecto en finlandés; la landing los traduce con i18n_demo.
+  const name = (nombre && String(nombre).trim()) || 'Kokeiluvastaanotto';
   const mail = email ? String(email).trim().toLowerCase() : null;
   const phone = telefono ? String(telefono).trim() : null;
   const slug = await uniqueSlug(name);
@@ -78,25 +79,27 @@ async function createDemoTenant({ nombre, email, telefono, duracion = 50 } = {})
   }
 
   const defaultLanding = JSON.stringify({
-    hero_title: `Bienvenido/a a ${name}`,
-    hero_subtitle: 'Acompañamiento profesional. Reserva tu cita de prueba en un minuto desde el móvil.',
+    i18n_demo: true,
+    hero_title: `Tervetuloa: ${name}`,
+    hero_subtitle: 'Ammatillista tukea. Varaa kokeiluaikasi minuutissa puhelimella.',
     hero_image_url: '',
-    about_title: 'Sobre la consulta',
-    about_text: 'Espacio de escucha y acompañamiento. Esta es una demo personalizada: tus datos solo se ven en esta consulta y no se mezclan con otros profesionales.',
+    about_title: 'Vastaanotosta',
+    about_text:
+      'Kuuntelun ja tuen tila. Tämä on henkilökohtainen demo: tietosi näkyvät vain tässä vastaanotossa eivätkä sekoitu muihin ammattilaisiin.',
     about_image_url: '',
-    cta_text: 'Reservar cita',
+    cta_text: 'Varaa aika',
     sections: []
   });
   await runQuery('INSERT INTO landing_page (negocio_id, content) VALUES (?, ?)', [id, defaultLanding]).catch(() => {});
 
-  const politica = `POLÍTICA DE PRIVACIDAD (demo)
+  const politica = `TIETOSUOJAKÄYTÄNTÖ (demo)
 
-Responsable: ${name}${mail ? `, contacto ${mail}` : ''}.
+Rekisterinpitäjä: ${name}${mail ? `, yhteystieto ${mail}` : ''}.
 
-Finalidad: gestión de la cita de demostración y comunicaciones relativas al servicio.
-Legitimación: consentimiento del interesado.
-Derechos: acceso, rectificación, supresión ante el responsable o AEPD (www.aepd.es).`;
-  const consentimiento = `Consiento el tratamiento de mis datos (nombre, email, teléfono) para gestionar la cita de demostración en ${name}.`;
+Tarkoitus: demonstraatioajan hallinta ja palveluun liittyvä viestintä.
+Oikeusperuste: rekisteröidyn suostumus.
+Oikeudet: tarkastus-, oikaisu- ja poistopyynnöt rekisterinpitäjälle.`;
+  const consentimiento = `Suostun tietojeni (nimi, sähköposti, puhelin) käsittelyyn demonstraatioajan hallitsemiseksi vastaanotossa ${name}.`;
   await runQuery(
     'INSERT INTO textos_legales (negocio_id, politica_privacidad, consentimiento, version) VALUES (?, ?, ?, ?)',
     [id, politica, consentimiento, '1']
@@ -106,8 +109,8 @@ Derechos: acceso, rectificación, supresión ante el responsable o AEPD (www.aep
     `INSERT INTO plantillas_email (negocio_id, nombre, asunto, cuerpo) VALUES (?, 'recordatorio', ?, ?)`,
     [
       id,
-      'Recordatorio: cita el {{fecha}} a las {{hora}}',
-      `Hola {{nombre_paciente}},\n\nTe recordamos tu cita en {{nombre_negocio}} el {{fecha}} a las {{hora}}.\n\nSaludos.`
+      'Muistutus: aika {{fecha}} klo {{hora}}',
+      `Hei {{nombre_paciente}},\n\nMuistutamme ajastasi vastaanotossa {{nombre_negocio}} {{fecha}} klo {{hora}}.\n\nTerveisin.`
     ]
   ).catch(() => {});
 

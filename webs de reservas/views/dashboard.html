@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="fi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -327,7 +327,7 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2" x-text="t('final_confirm')"></h3>
                                 <p class="text-gray-600 mb-2"><span x-text="t('type_delete_to_confirm')"></span></p>
-                                <input type="text" x-model="deleteModal.confirmText" placeholder="ELIMINAR" class="input-modern mb-4" @keydown.enter.prevent="confirmDeleteCita()">
+                                <input type="text" x-model="deleteModal.confirmText" :placeholder="t('type_delete_word')" class="input-modern mb-4" @keydown.enter.prevent="confirmDeleteCita()">
                                 <div class="flex gap-2 justify-end">
                                     <button @click="deleteModal.show = false; deleteModal.step2 = false; deleteModal.confirmText = ''; deleteModal.id = null" class="btn-secondary" x-text="t('cancel')"></button>
                                     <button @click="confirmDeleteCita()" :disabled="!['ELIMINAR','DELETE','POISTA'].includes((deleteModal.confirmText||'').toUpperCase())" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors duration-200" x-text="t('confirm_delete')"></button>
@@ -530,22 +530,22 @@
                             <div class="card bg-slate-50/80 rounded-xl p-5 border border-slate-100">
                                 <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2"><span class="text-lg">👤</span> <span x-text="t('client_data')"></span></h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('full_name_req')"></label><input type="text" x-model="facturaForm.cliente_nombre" class="input-modern" required placeholder="Juan Pérez"></div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('nif')"></label><input type="text" x-model="facturaForm.cliente_nif" class="input-modern" placeholder="12345678A"></div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('address')"></label><input type="text" x-model="facturaForm.cliente_direccion" class="input-modern" placeholder="Calle Mayor, 123"></div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('postal_code')"></label><input type="text" x-model="facturaForm.cliente_cp" class="input-modern" placeholder="29640"></div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('city')"></label><input type="text" x-model="facturaForm.cliente_ciudad" class="input-modern" placeholder="Fuengirola"></div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('province')"></label><input type="text" x-model="facturaForm.cliente_provincia" class="input-modern" placeholder="Málaga"></div>
+                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('full_name_req')"></label><input type="text" x-model="facturaForm.cliente_nombre" class="input-modern" required :placeholder="t('ph_client_name')"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('nif')"></label><input type="text" x-model="facturaForm.cliente_nif" class="input-modern" :placeholder="t('ph_nif')"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('address')"></label><input type="text" x-model="facturaForm.cliente_direccion" class="input-modern" :placeholder="t('ph_address')"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('postal_code')"></label><input type="text" x-model="facturaForm.cliente_cp" class="input-modern" :placeholder="t('ph_cp')"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('city')"></label><input type="text" x-model="facturaForm.cliente_ciudad" class="input-modern" :placeholder="t('ph_city')"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('province')"></label><input type="text" x-model="facturaForm.cliente_provincia" class="input-modern" :placeholder="t('ph_province')"></div>
                                 </div>
                             </div>
                             <div class="card bg-slate-50/80 rounded-xl p-5 border border-slate-100">
                                 <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2"><span class="text-lg">€</span> <span x-text="t('concept_price')"></span></h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('concept_req')"></label><input type="text" x-model="facturaForm.concepto" class="input-modern" required placeholder="Sesión de psicología"></div>
+                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('concept_req')"></label><input type="text" x-model="facturaForm.concepto" class="input-modern" required :placeholder="t('ph_concept')"></div>
                                     <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('total_paid_req')"></label><input type="number" step="0.01" min="0" x-model="facturaForm.totalPagado" @input="actualizarResumenFactura()" class="input-modern" required placeholder="60"></div>
                                     <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('vat_pct')"></label><input type="number" step="1" min="0" max="100" x-model="facturaForm.ivaPct" @input="actualizarResumenFactura()" class="input-modern" placeholder="21"></div>
-                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('description')"></label><input type="text" x-model="facturaForm.descripcion" class="input-modern" placeholder="Sesión individual 50 min"></div>
-                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('payment_method')"></label><input type="text" x-model="facturaForm.forma_pago" class="input-modern" placeholder="Transferencia bancaria"></div>
+                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('description')"></label><input type="text" x-model="facturaForm.descripcion" class="input-modern" :placeholder="t('ph_desc')"></div>
+                                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('payment_method')"></label><input type="text" x-model="facturaForm.forma_pago" class="input-modern" :placeholder="t('ph_payment')"></div>
                                 </div>
                             </div>
                             <div class="card bg-emerald-50/80 rounded-xl p-5 border border-emerald-100">
@@ -747,8 +747,8 @@
                         <h3 class="font-semibold text-gray-900 mb-2" x-text="t('reminder_tpl')"></h3>
                         <p class="text-sm text-gray-500 mb-2">Variables: <code class="bg-gray-100 px-1">{{nombre_paciente}}</code>, <code class="bg-gray-100 px-1">{{fecha}}</code>, <code class="bg-gray-100 px-1">{{hora}}</code>, <code class="bg-gray-100 px-1">{{nombre_negocio}}</code></p>
                         <form @submit.prevent="savePlantillaRecordatorio()" class="space-y-4">
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('subject')"></label><input type="text" x-model="plantillaRecordatorio.asunto" class="input-modern" placeholder="Recordatorio: cita el {{fecha}} a las {{hora}}"></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('body')"></label><textarea x-model="plantillaRecordatorio.cuerpo" rows="5" class="input-modern" placeholder="Hola {{nombre_paciente}}, Te recordamos tu cita en {{nombre_negocio}} el {{fecha}} a las {{hora}}. Saludos."></textarea></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('subject')"></label><input type="text" x-model="plantillaRecordatorio.asunto" class="input-modern" :placeholder="t('demo_email_subject')"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('body')"></label><textarea x-model="plantillaRecordatorio.cuerpo" rows="5" class="input-modern" :placeholder="t('demo_email_body')"></textarea></div>
                             <button type="submit" :disabled="savingPlantilla" class="btn-primary" x-text="t('save_template')"></button>
                             <span x-show="plantillaMessage" class="ml-2 text-sm" :class="plantillaMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="plantillaMessage"></span>
                         </form>
@@ -758,8 +758,8 @@
                         <h3 class="font-semibold text-gray-900 mb-2" x-text="t('legal_texts')"></h3>
                         <p class="text-sm text-gray-500 mb-4" x-text="t('legal_help')"></p>
                         <form @submit.prevent="saveTextosLegales()" class="space-y-4">
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('privacy_policy')"></label><textarea x-model="textosLegales.politica_privacidad" rows="4" class="input-modern" placeholder="Texto de la política de privacidad..."></textarea></div>
-                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('consent')"></label><textarea x-model="textosLegales.consentimiento" rows="4" class="input-modern" placeholder="Texto del consentimiento para el tratamiento de datos..."></textarea></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('privacy_policy')"></label><textarea x-model="textosLegales.politica_privacidad" rows="4" class="input-modern" :placeholder="t('ph_privacy')"></textarea></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('consent')"></label><textarea x-model="textosLegales.consentimiento" rows="4" class="input-modern" :placeholder="t('ph_consent')"></textarea></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('version')"></label><input type="text" x-model="textosLegales.version" class="input-modern w-24" placeholder="1"></div>
                             <button type="submit" :disabled="savingTextosLegales" class="btn-primary" x-text="t('save_legal')"></button>
                             <span x-show="textosLegalesMessage" class="ml-2 text-sm" :class="textosLegalesMessage.includes('correctamente') ? 'text-green-600' : 'text-red-600'" x-text="textosLegalesMessage"></span>
@@ -1027,7 +1027,7 @@
                 textosLegales: { politica_privacidad: '', consentimiento: '', version: '1' },
                 savingTextosLegales: false,
                 textosLegalesMessage: '',
-                landing: { hero_title: '', hero_subtitle: '', hero_image_url: '', about_title: '', about_text: '', about_image_url: '', cta_text: 'Reservar cita', sections: [] },
+                landing: { i18n_demo: false, hero_title: '', hero_subtitle: '', hero_image_url: '', about_title: '', about_text: '', about_image_url: '', cta_text: '', sections: [] },
                 savingLanding: false,
                 landingMessage: '',
                 uploadingImageHero: false,
@@ -1054,6 +1054,8 @@
                         this.loadUsers(),
                         this.loadGoogleCalendarStatus()
                     ]);
+                    this.applyDemoLandingTexts();
+                    this.applyDemoLegalTexts();
                     const params = new URLSearchParams(window.location.search);
                     if (params.get('google_calendar') === 'ok') {
                         this.googleCalendarMessage = 'Conectado correctamente. Las reservas se crearán en tu Google Calendar.';
@@ -1400,7 +1402,8 @@
                 },
 
                 async confirmDeleteCita() {
-                    if (this.deleteModal.confirmText !== 'ELIMINAR' || !this.deleteModal.id) return;
+                    const word = String(this.deleteModal.confirmText || '').trim().toUpperCase();
+                    if (!['ELIMINAR', 'DELETE', 'POISTA'].includes(word) || !this.deleteModal.id) return;
                     try {
                         const response = await fetch('/dashboard/api/citas/' + this.deleteModal.id, { method: 'DELETE' });
                         const data = await response.json();
@@ -1439,7 +1442,21 @@
                         }
                         const textosRes = await fetch('/dashboard/api/textos-legales').catch(() => ({ json: () => ({}) }));
                         const textosData = await textosRes.json();
-                        if (textosData.politica_privacidad !== undefined) this.textosLegales = { politica_privacidad: textosData.politica_privacidad || '', consentimiento: textosData.consentimiento || '', version: textosData.version || '1' };
+                        if (textosData.politica_privacidad !== undefined) {
+                            const pol = textosData.politica_privacidad || '';
+                            const isDemoLegal =
+                                pol.includes('POLÍTICA DE PRIVACIDAD (demo)') ||
+                                pol.includes('TIETOSUOJAKÄYTÄNTÖ (demo)') ||
+                                pol.includes('PRIVACY POLICY (demo)') ||
+                                pol.includes('POLÍTICA DE PRIVACIDAD (ejemplo');
+                            this.textosLegales = {
+                                politica_privacidad: pol,
+                                consentimiento: textosData.consentimiento || '',
+                                version: textosData.version || '1',
+                                _i18n_demo: isDemoLegal
+                            };
+                            if (isDemoLegal) this.applyDemoLegalTexts();
+                        }
                     } catch (error) {
                         console.error('Error cargando configuración:', error);
                     }
@@ -1532,10 +1549,15 @@
                     this.savingTextosLegales = true;
                     this.textosLegalesMessage = '';
                     try {
+                        const payload = {
+                            politica_privacidad: this.textosLegales.politica_privacidad || '',
+                            consentimiento: this.textosLegales.consentimiento || '',
+                            version: this.textosLegales.version || '1'
+                        };
                         const res = await fetch('/dashboard/api/textos-legales', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(this.textosLegales)
+                            body: JSON.stringify(payload)
                         });
                         const data = await res.json();
                         this.textosLegalesMessage = data.success ? 'Textos legales guardados correctamente' : (data.error || 'Error');
@@ -1551,18 +1573,57 @@
                         const res = await fetch('/dashboard/api/landing');
                         const data = await res.json();
                         this.landing = {
+                            i18n_demo: !!data.i18n_demo,
                             hero_title: data.hero_title || '',
                             hero_subtitle: data.hero_subtitle || '',
                             hero_image_url: data.hero_image_url || '',
                             about_title: data.about_title || '',
                             about_text: data.about_text || '',
                             about_image_url: data.about_image_url || '',
-                            cta_text: data.cta_text || 'Reservar cita',
+                            cta_text: data.cta_text || '',
                             sections: Array.isArray(data.sections) ? data.sections : []
                         };
+                        // Detectar demos antiguas con textos de ejemplo
+                        if (!this.landing.i18n_demo) {
+                            const sub = this.landing.hero_subtitle || '';
+                            if (
+                                sub.includes('Acompañamiento profesional') ||
+                                sub.includes('Ammatillista tukea') ||
+                                sub.includes('Professional support. Book your trial')
+                            ) {
+                                this.landing.i18n_demo = true;
+                            }
+                        }
+                        this.applyDemoLandingTexts();
                     } catch (e) {
-                        this.landing = { hero_title: '', hero_subtitle: '', hero_image_url: '', about_title: '', about_text: '', about_image_url: '', cta_text: 'Reservar cita', sections: [] };
+                        this.landing = { i18n_demo: false, hero_title: '', hero_subtitle: '', hero_image_url: '', about_title: '', about_text: '', about_image_url: '', cta_text: '', sections: [] };
                     }
+                },
+
+                applyDemoLandingTexts() {
+                    if (!this.landing || !this.landing.i18n_demo) return;
+                    const name = (this.negocio && this.negocio.nombre) || this.t('demo_default_name');
+                    this.landing.hero_title = this.tf('demo_hero_title', { name: name });
+                    this.landing.hero_subtitle = this.t('demo_hero_subtitle');
+                    this.landing.about_title = this.t('demo_about_title');
+                    this.landing.about_text = this.t('demo_about_text');
+                    this.landing.cta_text = this.t('landing_cta');
+                },
+
+                onLangChanged(e) {
+                    if (i18n.onLangChanged) i18n.onLangChanged.call(this, e);
+                    this.applyDemoLandingTexts();
+                    if (this.textosLegales && this.textosLegales._i18n_demo) {
+                        this.applyDemoLegalTexts();
+                    }
+                },
+
+                applyDemoLegalTexts() {
+                    if (!this.textosLegales || !this.textosLegales._i18n_demo) return;
+                    const name = (this.negocio && this.negocio.nombre) || this.t('demo_default_name');
+                    const contact = (this.negocio && this.negocio.email) ? (', ' + this.negocio.email) : '';
+                    this.textosLegales.politica_privacidad = this.tf('demo_privacy', { name: name, contact: contact });
+                    this.textosLegales.consentimiento = this.tf('demo_consent', { name: name });
                 },
 
                 async saveLanding() {

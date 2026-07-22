@@ -478,13 +478,14 @@ router.get('/api/landing', async (req, res) => {
     const row = await getQuery('SELECT content FROM landing_page WHERE negocio_id = ?', [negocioId]);
     if (!row || !row.content) {
       return res.json({
+        i18n_demo: false,
         hero_title: '',
         hero_subtitle: '',
         hero_image_url: '',
         about_title: '',
         about_text: '',
         about_image_url: '',
-        cta_text: 'Reservar cita',
+        cta_text: '',
         sections: []
       });
     }
@@ -500,13 +501,14 @@ router.post('/api/landing', async (req, res) => {
     const negocioId = req.negocioId || 1;
     const content = req.body;
     const contentStr = JSON.stringify({
+      i18n_demo: !!content.i18n_demo,
       hero_title: content.hero_title || '',
       hero_subtitle: content.hero_subtitle || '',
       hero_image_url: content.hero_image_url || '',
       about_title: content.about_title || '',
       about_text: content.about_text || '',
       about_image_url: content.about_image_url || '',
-      cta_text: content.cta_text || 'Reservar cita',
+      cta_text: content.cta_text || '',
       sections: Array.isArray(content.sections) ? content.sections : []
     });
     const existing = await getQuery('SELECT negocio_id FROM landing_page WHERE negocio_id = ?', [negocioId]);

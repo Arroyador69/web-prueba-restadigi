@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="fi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -56,19 +56,19 @@
                     <img :src="landing.hero_image_url" alt="" class="hero-image mb-8" @error="$el.style.display='none'">
                 </template>
                 <div class="text-center">
-                    <h2 class="text-2xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 px-1" x-text="landing.hero_title || t('landing_welcome')"></h2>
-                    <p class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto whitespace-pre-line px-1" x-text="landing.hero_subtitle || t('landing_default_sub')"></p>
-                    <a href="#reservar" class="btn-reservar w-full sm:w-auto inline-block mt-6 sm:mt-8 scroll-smooth" x-text="landing.cta_text || t('landing_cta')"></a>
+                    <h2 class="text-2xl sm:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 px-1" x-text="displayHeroTitle()"></h2>
+                    <p class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto whitespace-pre-line px-1" x-text="displayHeroSubtitle()"></p>
+                    <a href="#reservar" class="btn-reservar w-full sm:w-auto inline-block mt-6 sm:mt-8 scroll-smooth" x-text="displayCta()"></a>
                 </div>
             </section>
 
             <!-- Sobre la consulta -->
-            <section class="bg-white py-12 sm:py-16" x-show="landing.about_title || landing.about_text">
+            <section class="bg-white py-12 sm:py-16" x-show="displayAboutTitle() || displayAboutText()">
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                         <div>
-                            <h3 class="text-2xl font-bold text-gray-900 mb-4" x-text="landing.about_title || t('landing_about')"></h3>
-                            <p class="text-gray-600 whitespace-pre-line leading-relaxed" x-text="landing.about_text"></p>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4" x-text="displayAboutTitle()"></h3>
+                            <p class="text-gray-600 whitespace-pre-line leading-relaxed" x-text="displayAboutText()"></p>
                         </div>
                         <template x-if="landing.about_image_url">
                             <img :src="landing.about_image_url" alt="" class="rounded-[var(--card-radius)] shadow-[var(--shadow-card)] w-full object-cover max-h-72" @error="$el.style.display='none'">
@@ -175,8 +175,8 @@
             return {
                 ...i,
                 tenantSlug: '',
-                config: { businessName: '', businessPhone: '', businessEmail: '' },
-                landing: { hero_title: '', hero_subtitle: '', hero_image_url: '', about_title: '', about_text: '', about_image_url: '', cta_text: '', sections: [] },
+                config: { businessName: '', businessPhone: '', businessEmail: '', isDemo: false },
+                landing: { i18n_demo: false, hero_title: '', hero_subtitle: '', hero_image_url: '', about_title: '', about_text: '', about_image_url: '', cta_text: '', sections: [] },
                 form: { name: '', email: '', telefono: '', date: '', time: '', acepta_legal: false },
                 showPolitica: false,
                 textosLegales: { politica_privacidad: '', consentimiento: '' },
@@ -198,12 +198,70 @@
                     return path + sep + 'tenant=' + encodeURIComponent(this.tenantSlug);
                 },
 
+                bizName() {
+                    return this.config.businessName || this.t('demo_default_name');
+                },
+
+                contactSuffix() {
+                    return this.config.businessEmail ? (', ' + this.config.businessEmail) : '';
+                },
+
+                useDemoI18n() {
+                    if (this.landing && this.landing.i18n_demo) return true;
+                    if (this.config && this.config.isDemo) {
+                        const sub = (this.landing && this.landing.hero_subtitle) || '';
+                        // Demos antiguas con textos de ejemplo (ES/FI/EN)
+                        if (
+                            sub.includes('Acompañamiento profesional') ||
+                            sub.includes('Ammatillista tukea') ||
+                            sub.includes('Professional support. Book your trial')
+                        ) return true;
+                    }
+                    const pol = (this.textosLegales && this.textosLegales.politica_privacidad) || '';
+                    if (
+                        pol.includes('POLÍTICA DE PRIVACIDAD (demo)') ||
+                        pol.includes('TIETOSUOJAKÄYTÄNTÖ (demo)') ||
+                        pol.includes('PRIVACY POLICY (demo)')
+                    ) return true;
+                    return false;
+                },
+
+                displayHeroTitle() {
+                    if (this.useDemoI18n()) return this.tf('demo_hero_title', { name: this.bizName() });
+                    return this.landing.hero_title || this.t('landing_welcome');
+                },
+                displayHeroSubtitle() {
+                    if (this.useDemoI18n()) return this.t('demo_hero_subtitle');
+                    return this.landing.hero_subtitle || this.t('landing_default_sub');
+                },
+                displayCta() {
+                    if (this.useDemoI18n()) return this.t('landing_cta');
+                    return this.landing.cta_text || this.t('landing_cta');
+                },
+                displayAboutTitle() {
+                    if (this.useDemoI18n()) return this.t('demo_about_title');
+                    return this.landing.about_title || '';
+                },
+                displayAboutText() {
+                    if (this.useDemoI18n()) return this.t('demo_about_text');
+                    return this.landing.about_text || '';
+                },
+
+                updatePageTitle() {
+                    if (this.config.businessName) {
+                        document.title = this.tf('page_title_book', { name: this.config.businessName });
+                    }
+                },
+
                 async init() {
                     this.detectTenant();
                     await Promise.all([this.loadConfig(), this.loadLanding(), this.loadTextosLegales()]);
-                    if (this.config.businessName) {
-                        document.title = this.config.businessName + ' · Reserva tu cita';
-                    }
+                    this.updatePageTitle();
+                },
+
+                onLangChanged(e) {
+                    if (i.onLangChanged) i.onLangChanged.call(this, e);
+                    this.updatePageTitle();
                 },
 
                 async loadConfig() {
@@ -228,10 +286,19 @@
                 },
 
                 textosLegalesHtml() {
-                    const p = (this.textosLegales.politica_privacidad || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-                    const c = (this.textosLegales.consentimiento || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-                    if (!p && !c) return '<p class="text-gray-500">Al reservar aceptas el tratamiento de tus datos para gestionar la cita.</p>';
-                    return (p ? '<h4>Política de privacidad</h4><p>' + p + '</p>' : '') + (c ? '<h4 class="mt-4">Consentimiento</h4><p>' + c + '</p>' : '');
+                    let p, c;
+                    if (this.useDemoI18n()) {
+                        p = this.tf('demo_privacy', { name: this.bizName(), contact: this.contactSuffix() });
+                        c = this.tf('demo_consent', { name: this.bizName() });
+                    } else {
+                        p = this.textosLegales.politica_privacidad || '';
+                        c = this.textosLegales.consentimiento || '';
+                    }
+                    p = String(p).replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                    c = String(c).replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                    if (!p && !c) return '<p class="text-gray-500">' + this.t('demo_legal_fallback') + '</p>';
+                    return (p ? '<h4>' + this.t('landing_privacy_h') + '</h4><p>' + p + '</p>' : '') +
+                        (c ? '<h4 class="mt-4">' + this.t('landing_consent_h') + '</h4><p>' + c + '</p>' : '');
                 },
 
                 async loadSlots() {
@@ -257,7 +324,7 @@
 
                     const name = (this.form.name || '').trim();
                     if (name.length < 2) {
-                        this.error = 'El nombre debe tener al menos 2 caracteres.';
+                        this.error = this.t('err_name_short');
                         this.submitting = false;
                         return;
                     }
@@ -282,12 +349,12 @@
                         if (data.error) {
                             this.error = data.error;
                         } else {
-                            this.success = data.message || 'Cita reservada correctamente. Revisa tu email.';
+                            this.success = data.message || this.t('msg_book_ok');
                             this.form = { name: '', email: '', telefono: '', date: '', time: '', acepta_legal: false };
                             this.availableSlots = [];
                         }
                     } catch (e) {
-                        this.error = 'Error al reservar. Intenta de nuevo.';
+                        this.error = this.t('err_book_generic');
                     } finally {
                         this.submitting = false;
                     }

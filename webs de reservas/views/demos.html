@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="fi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -92,15 +92,15 @@
           <form @submit.prevent="createDemo" class="grid gap-3 sm:grid-cols-2">
             <div class="sm:col-span-2">
               <label class="block text-sm mb-1" x-text="t('demos_biz_name')"></label>
-              <input class="input" x-model="form.nombre" placeholder="María López Psicología" required>
+              <input class="input" x-model="form.nombre" :placeholder="t('demos_name_ph')" required>
             </div>
             <div>
               <label class="block text-sm mb-1" x-text="t('email')"></label>
-              <input class="input" type="email" x-model="form.email" placeholder="maria@email.com">
+              <input class="input" type="email" x-model="form.email" :placeholder="t('demos_email_ph')">
             </div>
             <div>
               <label class="block text-sm mb-1"><span x-text="t('phone')"></span> (<span x-text="t('optional')"></span>)</label>
-              <input class="input" type="tel" x-model="form.telefono" placeholder="+34 600 000 000">
+              <input class="input" type="tel" x-model="form.telefono" :placeholder="t('demos_phone_ph')">
             </div>
             <div class="sm:col-span-2 flex flex-wrap gap-3 items-center">
               <button class="btn btn-primary" type="submit" :disabled="busy" x-text="t('demos_create')"></button>

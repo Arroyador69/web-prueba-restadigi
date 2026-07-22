@@ -112,7 +112,8 @@ router.get('/api/config', async (req, res) => {
       businessPhone: n.telefono || '',
       businessEmail: n.email || '',
       slug: n.slug || null,
-      tenantId: n.id
+      tenantId: n.id,
+      isDemo: !!(n.is_demo === 1 || n.is_demo === true || n.is_demo === '1')
     });
   } catch (error) {
     if (error.status === 404) return res.status(404).json({ error: error.message });

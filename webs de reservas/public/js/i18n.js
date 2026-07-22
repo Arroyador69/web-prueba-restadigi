@@ -44,6 +44,39 @@
       landing_cta: 'Reservar cita',
       landing_about: 'Sobre la consulta',
       landing_clinic: 'Consultorio',
+      // Demo examples (landing / legales / plantillas) — se traducen con el selector
+      demo_default_name: 'Consulta de prueba',
+      demo_hero_title: 'Bienvenido/a a {name}',
+      demo_hero_subtitle: 'Acompañamiento profesional. Reserva tu cita de prueba en un minuto desde el móvil.',
+      demo_about_title: 'Sobre la consulta',
+      demo_about_text: 'Espacio de escucha y acompañamiento. Esta es una demo personalizada: tus datos solo se ven en esta consulta y no se mezclan con otros profesionales.',
+      demo_privacy: 'POLÍTICA DE PRIVACIDAD (demo)\n\nResponsable: {name}{contact}.\n\nFinalidad: gestión de la cita de demostración y comunicaciones relativas al servicio.\nLegitimación: consentimiento del interesado.\nDerechos: acceso, rectificación, supresión ante el responsable.',
+      demo_consent: 'Consiento el tratamiento de mis datos (nombre, email, teléfono) para gestionar la cita de demostración en {name}.',
+      demo_email_subject: 'Recordatorio: cita el {{fecha}} a las {{hora}}',
+      demo_email_body: 'Hola {{nombre_paciente}},\n\nTe recordamos tu cita en {{nombre_negocio}} el {{fecha}} a las {{hora}}.\n\nSaludos.',
+      demo_legal_fallback: 'Al reservar aceptas el tratamiento de tus datos para gestionar la cita.',
+      landing_privacy_h: 'Política de privacidad',
+      landing_consent_h: 'Consentimiento',
+      err_name_short: 'El nombre debe tener al menos 2 caracteres.',
+      err_book_generic: 'Error al reservar. Intenta de nuevo.',
+      msg_book_ok: 'Cita reservada correctamente. Revisa tu email.',
+      page_title_book: '{name} · Reserva tu cita',
+      demos_name_ph: 'María López Psicología',
+      demos_email_ph: 'maria@email.com',
+      demos_phone_ph: '+34 600 000 000',
+      ph_client_name: 'Juan Pérez',
+      ph_nif: '12345678A',
+      ph_address: 'Calle Mayor, 123',
+      ph_cp: '29640',
+      ph_city: 'Fuengirola',
+      ph_province: 'Málaga',
+      ph_concept: 'Sesión de psicología',
+      ph_desc: 'Sesión individual 50 min',
+      ph_payment: 'Transferencia bancaria',
+      ph_privacy: 'Texto de la política de privacidad...',
+      ph_consent: 'Texto del consentimiento para el tratamiento de datos...',
+      type_delete_word: 'ELIMINAR',
+
       // Demos
       demos_eyebrow: 'Ventas · multi-tenant',
       demos_title: 'Demos por llamada',
@@ -336,6 +369,39 @@
       landing_cta: 'Book appointment',
       landing_about: 'About the practice',
       landing_clinic: 'Practice',
+      // Demo examples (landing / legal / templates)
+      demo_default_name: 'Trial practice',
+      demo_hero_title: 'Welcome to {name}',
+      demo_hero_subtitle: 'Professional support. Book your trial appointment in one minute from your phone.',
+      demo_about_title: 'About the practice',
+      demo_about_text: 'A space for listening and support. This is a personalised demo: your data is only visible in this practice and is not mixed with other professionals.',
+      demo_privacy: 'PRIVACY POLICY (demo)\n\nController: {name}{contact}.\n\nPurpose: managing the demo appointment and service-related communications.\nLegal basis: consent of the data subject.\nRights: access, rectification and erasure via the controller.',
+      demo_consent: 'I consent to the processing of my data (name, email, phone) to manage the demo appointment at {name}.',
+      demo_email_subject: 'Reminder: appointment on {{fecha}} at {{hora}}',
+      demo_email_body: 'Hi {{nombre_paciente}},\n\nThis is a reminder of your appointment at {{nombre_negocio}} on {{fecha}} at {{hora}}.\n\nBest regards.',
+      demo_legal_fallback: 'By booking you accept the processing of your data to manage the appointment.',
+      landing_privacy_h: 'Privacy policy',
+      landing_consent_h: 'Consent',
+      err_name_short: 'Name must be at least 2 characters.',
+      err_book_generic: 'Could not book. Please try again.',
+      msg_book_ok: 'Appointment booked. Please check your email.',
+      page_title_book: '{name} · Book your appointment',
+      demos_name_ph: 'Maria Lopez Psychology',
+      demos_email_ph: 'maria@email.com',
+      demos_phone_ph: '+358 40 000 0000',
+      ph_client_name: 'John Smith',
+      ph_nif: '12345678A',
+      ph_address: 'Main Street 123',
+      ph_cp: '00100',
+      ph_city: 'Helsinki',
+      ph_province: 'Uusimaa',
+      ph_concept: 'Psychology session',
+      ph_desc: 'Individual session 50 min',
+      ph_payment: 'Bank transfer',
+      ph_privacy: 'Privacy policy text...',
+      ph_consent: 'Consent text for data processing...',
+      type_delete_word: 'DELETE',
+
       demos_eyebrow: 'Sales · multi-tenant',
       demos_title: 'Call demos',
       demos_intro: 'Create an isolated space, send the landing, activate the user and copy all access links. Switch language with the selector.',
@@ -626,6 +692,39 @@
       landing_cta: 'Varaa aika',
       landing_about: 'Vastaanotosta',
       landing_clinic: 'Vastaanotto',
+      // Demo-esimerkit (landing / lait / mallit) — kääntyvät kielivalinnalla
+      demo_default_name: 'Kokeiluvastaanotto',
+      demo_hero_title: 'Tervetuloa: {name}',
+      demo_hero_subtitle: 'Ammatillista tukea. Varaa kokeiluaikasi minuutissa puhelimella.',
+      demo_about_title: 'Vastaanotosta',
+      demo_about_text: 'Kuuntelun ja tuen tila. Tämä on henkilökohtainen demo: tietosi näkyvät vain tässä vastaanotossa eivätkä sekoitu muihin ammattilaisiin.',
+      demo_privacy: 'TIETOSUOJAKÄYTÄNTÖ (demo)\n\nRekisterinpitäjä: {name}{contact}.\n\nTarkoitus: demonstraatioajan hallinta ja palveluun liittyvä viestintä.\nOikeusperuste: rekisteröidyn suostumus.\nOikeudet: tarkastus-, oikaisu- ja poistopyynnöt rekisterinpitäjälle.',
+      demo_consent: 'Suostun tietojeni (nimi, sähköposti, puhelin) käsittelyyn demonstraatioajan hallitsemiseksi vastaanotossa {name}.',
+      demo_email_subject: 'Muistutus: aika {{fecha}} klo {{hora}}',
+      demo_email_body: 'Hei {{nombre_paciente}},\n\nMuistutamme ajastasi vastaanotossa {{nombre_negocio}} {{fecha}} klo {{hora}}.\n\nTerveisin.',
+      demo_legal_fallback: 'Varaamalla hyväksyt tietojesi käsittelyn ajan hallitsemiseksi.',
+      landing_privacy_h: 'Tietosuojakäytäntö',
+      landing_consent_h: 'Suostumus',
+      err_name_short: 'Nimen on oltava vähintään 2 merkkiä.',
+      err_book_generic: 'Varaus epäonnistui. Yritä uudelleen.',
+      msg_book_ok: 'Aika varattu. Tarkista sähköpostisi.',
+      page_title_book: '{name} · Varaa aikasi',
+      demos_name_ph: 'Maija Virtanen Psykologia',
+      demos_email_ph: 'maija@email.com',
+      demos_phone_ph: '+358 40 000 0000',
+      ph_client_name: 'Matti Meikäläinen',
+      ph_nif: '123456-7A',
+      ph_address: 'Mannerheimintie 1',
+      ph_cp: '00100',
+      ph_city: 'Helsinki',
+      ph_province: 'Uusimaa',
+      ph_concept: 'Psykologin istunto',
+      ph_desc: 'Yksilöistunto 50 min',
+      ph_payment: 'Tilisiirto',
+      ph_privacy: 'Tietosuojakäytännön teksti...',
+      ph_consent: 'Suostumusteksti tietojen käsittelyyn...',
+      type_delete_word: 'POISTA',
+
       demos_eyebrow: 'Myynti · multi-tenant',
       demos_title: 'Demot puheluun',
       demos_intro: 'Luo eristetty tila, lähetä landing, aktivoi käyttäjä ja kopioi linkit. Vaihda kieltä valitsimesta.',
@@ -889,19 +988,29 @@
       var saved = localStorage.getItem(STORAGE_KEY);
       if (saved && SUPPORTED.indexOf(saved) !== -1) return saved;
     } catch (e) {}
-    var nav = (navigator.language || 'es').toLowerCase();
-    if (nav.indexOf('fi') === 0) return 'fi';
+    var nav = (navigator.language || 'fi').toLowerCase();
     if (nav.indexOf('en') === 0) return 'en';
-    return 'es';
+    if (nav.indexOf('es') === 0) return 'es';
+    return 'fi';
   }
 
   var current = detectLang();
 
   function t(key, fallback) {
-    var pack = DICT[current] || DICT.es;
+    var pack = DICT[current] || DICT.fi || DICT.es;
     if (pack[key] != null) return pack[key];
+    if (DICT.fi[key] != null) return DICT.fi[key];
     if (DICT.es[key] != null) return DICT.es[key];
     return fallback != null ? fallback : key;
+  }
+
+  function tf(key, vars) {
+    var s = t(key);
+    if (!vars) return s;
+    Object.keys(vars).forEach(function (k) {
+      s = String(s).split('{' + k + '}').join(vars[k] == null ? '' : String(vars[k]));
+    });
+    return s;
   }
 
   function setLang(lang) {
@@ -960,8 +1069,9 @@
       langHtml: langSelectorHtml(),
       t: function (key, fallback) {
         var lang = this.lang || current;
-        var pack = DICT[lang] || DICT.es;
+        var pack = DICT[lang] || DICT.fi || DICT.es;
         if (pack[key] != null) return pack[key];
+        if (DICT.fi[key] != null) return DICT.fi[key];
         if (DICT.es[key] != null) return DICT.es[key];
         return fallback != null ? fallback : key;
       },
@@ -977,11 +1087,19 @@
       },
       dayNames: function () {
         var lang = this.lang || current;
-        var pack = DICT[lang] || DICT.es;
+        var pack = DICT[lang] || DICT.fi || DICT.es;
         return [0, 1, 2, 3, 4, 5, 6].map(function (i) {
           var k = 'day_' + i;
-          return pack[k] || DICT.es[k] || k;
+          return pack[k] || DICT.fi[k] || DICT.es[k] || k;
         });
+      },
+      tf: function (key, vars) {
+        var s = this.t(key);
+        if (!vars) return s;
+        Object.keys(vars).forEach(function (k) {
+          s = String(s).split('{' + k + '}').join(vars[k] == null ? '' : String(vars[k]));
+        });
+        return s;
       }
     };
   }
@@ -996,6 +1114,7 @@
 
   global.I18n = {
     t: t,
+    tf: tf,
     setLang: setLang,
     getLang: getLang,
     applyDom: applyDom,

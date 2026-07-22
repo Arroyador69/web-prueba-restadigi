@@ -116,6 +116,9 @@
       demos_user_ready: 'Usuario creado. Copia el pack de acceso y envíaselo.',
       // Dashboard nav
       dash_panel: 'Panel de gestión',
+      demo_banner_title: 'Esto es una demostración',
+      demo_banner_body: 'Ejemplo de las funcionalidades mínimas que puedes tener. No es el resultado final de tu negocio: sirve para probar citas, clientes, landing, facturas, colores e idiomas. El producto real se adapta a tu marca y necesidades.',
+
       dash_logout: 'Cerrar sesión',
       tab_home: 'Inicio',
       tab_appointments: 'Citas',
@@ -506,6 +509,9 @@
       demos_copy_all: 'Copy everything to send them',
       demos_user_ready: 'User created. Copy the access pack and send it.',
       dash_panel: 'Management panel',
+      demo_banner_title: 'This is a demonstration',
+      demo_banner_body: 'An example of the minimum features you can have. It is not the final product for your business: it lets you try appointments, clients, landing page, invoices, brand colours and languages. The real product is tailored to your brand and needs.',
+
       dash_logout: 'Log out',
       tab_home: 'Home',
       tab_appointments: 'Appointments',
@@ -895,6 +901,9 @@
       demos_copy_all: 'Kopioi kaikki lähetettäväksi',
       demos_user_ready: 'Käyttäjä luotu. Kopioi paketti ja lähetä se.',
       dash_panel: 'Hallintapaneeli',
+      demo_banner_title: 'Tämä on demonstraatio',
+      demo_banner_body: 'Esimerkki vähimmäisominaisuuksista, joita voit saada. Tämä ei ole yrityksesi lopullinen tuote: voit kokeilla aikoja, asiakkaita, landing-sivua, laskuja, brändivärejä ja kieliä. Todellinen tuote räätälöidään brändisi ja tarpeidesi mukaan.',
+
       dash_logout: 'Kirjaudu ulos',
       tab_home: 'Etusivu',
       tab_appointments: 'Ajat',

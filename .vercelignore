@@ -1,38 +1,33 @@
-# Ignore Husky and development tools in Vercel deployment
+# No subir basura / otros proyectos a Vercel
 .husky/
-.husky/_
-.husky/commit-msg
-.husky/pre-commit
-.husky/pre-push
-
-# Ignore development files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Ignore test files
+.env*
 **/*.test.js
 **/*.test.ts
-**/*.test.tsx
 **/*.spec.js
-**/*.spec.ts
-**/*.spec.tsx
+**/*.md
 
-# Ignore documentation
-*.md
-docs/
+# CRÍTICO: no desplegar Flask ni Python (causaba el 404 de Werkzeug)
+/main.py
+/utils.py
+/requirements.txt
+**/__pycache__/
+**/*.pyc
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Otros proyectos / carpetas de la raíz (no la app de reservas)
+/Delfín Check‑in 🐬/
+/delfincheckin.com/
+/golden beach rentals/
+/NexoVoice/
+/scrap delfin check in/
+/backups/
+/src/
+/public/
+/worker.js
+/next.config.ts
+/railway.json
+/railway.toml
+/render.yaml
+/fly.toml
+/netlify.toml
+/docker-compose.yml
+/fnmt-root.crt

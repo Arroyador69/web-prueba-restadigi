@@ -40,7 +40,8 @@ Las tablas principales las crea la app: `negocio`, `users`, `pacientes`, `citas`
 | `RESEND_API_KEY` | `re_...` | Emails (recomendado) |
 | `EMAIL_FROM` | `Reservas <onboarding@resend.dev>` | Remitente |
 
-Root Directory del proyecto Vercel: **`webs de reservas`**.
+Root Directory del proyecto Vercel: **vacío / `.`** (usa el `vercel.json` de la raíz).
+No uses Root Directory = `webs de reservas` salvo que sepas lo que haces.
 
 ---
 

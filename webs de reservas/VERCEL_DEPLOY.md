@@ -26,9 +26,9 @@ Vercel es serverless: el disco no persiste. Usamos **PostgreSQL** (`DATABASE_URL
 ### 2. Proyecto en Vercel
 
 1. [vercel.com](https://vercel.com) → **Add New Project** → importa  
-   `Arroyador69/Sistema-de-reservas-de-citas-para-psicologos`
-2. **Root Directory**: `webs de reservas` (importante).
-3. Framework: Other. Build: `npm run build`. Install: `npm install --omit=optional`.
+   `Arroyador69/web-prueba-restadigi`
+2. **Root Directory**: déjalo vacío / `.` (la raíz). El `vercel.json` de la raíz monta la app.
+3. Framework: Other. Build: `npm run build`.
 4. Variables de entorno:
 
 ```

@@ -35,7 +35,7 @@
     </style>
 </head>
 <body class="bg-[#f8fafc] min-h-screen text-gray-800">
-    <div x-data="landingApp()" x-cloak x-init="init()" @app-lang-changed.window="lang = $event.detail.lang">
+    <div x-data="landingApp()" x-cloak x-init="init()" @app-lang-changed.window="onLangChanged($event)">
         <!-- Header -->
         <header class="bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] safe-area-padding">
             <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -138,10 +138,9 @@
                 </div>
 
                 <div class="mt-8 bg-slate-50 rounded-[var(--card-radius)] p-5 text-sm text-gray-600">
-                    <p class="font-medium text-gray-800 mb-2">Información</p>
+                    <p class="font-medium text-gray-800 mb-2" x-text="t('landing_book_title')"></p>
                     <ul class="list-disc list-inside space-y-1">
-                        <li>Recibirás un email de confirmación con los detalles de tu cita.</li>
-                        <li>Para modificar o cancelar, contacta con al menos 24 h de antelación.</li>
+                        <li x-text="t('landing_book_intro')"></li>
                     </ul>
                 </div>
             </section>
@@ -175,7 +174,6 @@
             const i = window.I18n.alpineHelpers();
             return {
                 ...i,
-                langHtml: window.I18n.langSelectorHtml(),
                 tenantSlug: '',
                 config: { businessName: '', businessPhone: '', businessEmail: '' },
                 landing: { hero_title: '', hero_subtitle: '', hero_image_url: '', about_title: '', about_text: '', about_image_url: '', cta_text: '', sections: [] },

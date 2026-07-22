@@ -416,16 +416,38 @@
     );
   }
 
+  /**
+   * Helpers para Alpine: t() lee this.lang para que al cambiar el selector
+   * se re-rendericen todos los x-text="t('...')".
+   */
   function alpineHelpers() {
     return {
       lang: current,
-      t: function (key, fallback) { return t(key, fallback); },
+      langHtml: langSelectorHtml(),
+      t: function (key, fallback) {
+        var lang = this.lang || current;
+        var pack = DICT[lang] || DICT.es;
+        if (pack[key] != null) return pack[key];
+        if (DICT.es[key] != null) return DICT.es[key];
+        return fallback != null ? fallback : key;
+      },
       setLang: function (lang) {
         setLang(lang);
         this.lang = lang;
+        this.langHtml = langSelectorHtml();
+      },
+      onLangChanged: function (e) {
+        var lang = (e && e.detail && e.detail.lang) || getLang();
+        this.lang = lang;
+        this.langHtml = langSelectorHtml();
       },
       dayNames: function () {
-        return [0, 1, 2, 3, 4, 5, 6].map(function (i) { return t('day_' + i); });
+        var lang = this.lang || current;
+        var pack = DICT[lang] || DICT.es;
+        return [0, 1, 2, 3, 4, 5, 6].map(function (i) {
+          var k = 'day_' + i;
+          return pack[k] || DICT.es[k] || k;
+        });
       }
     };
   }

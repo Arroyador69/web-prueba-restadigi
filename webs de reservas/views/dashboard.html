@@ -100,7 +100,7 @@
     </style>
 </head>
 <body class="bg-[#f8fafc] min-h-screen">
-    <div x-data="dashboard()" x-cloak x-init="init()" @app-lang-changed.window="lang = $event.detail.lang; langHtml = window.I18n.langSelectorHtml()">
+    <div x-data="dashboard()" x-cloak x-init="init()" @app-lang-changed.window="onLangChanged($event)">
         <!-- Header profesional -->
         <header class="bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sticky top-0 z-40 safe-area-padding">
             <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -949,7 +949,6 @@
             const i18n = window.I18n.alpineHelpers();
             return {
                 ...i18n,
-                langHtml: window.I18n.langSelectorHtml(),
                 activeTab: 'inicio',
                 stats: {},
                 citas: [],

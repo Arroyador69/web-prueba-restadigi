@@ -32,7 +32,7 @@ const fi = {
     logout: "Kirjaudu ulos",
     summary: "Yhteenveto",
     leads: "Myyntiliidit",
-    calls: "Soitukalenteri",
+    calls: "Soittokalenteri",
     mail: "Sähköposti",
     visitors: "Kävijät",
     conversations: "Keskustelut",
@@ -130,7 +130,7 @@ const fi = {
   },
   calls: {
     eyebrow: "Myynti",
-    title: "Soitukalenteri",
+    title: "Soittokalenteri",
     subtitle: "Suunnittele ja merkitse myyntisoittoja",
     upcoming: "Seuraavat soitot",
     emptyDay: "Ei soittoja tälle päivälle.",

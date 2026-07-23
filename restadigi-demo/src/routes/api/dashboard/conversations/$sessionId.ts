@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
 
-import { getDb, schema } from "@/db";
+import { dbReady, schema } from "@/db";
 import { requireAdmin, unauthorizedResponse } from "@/lib/auth";
 import { getDatabaseUrl } from "@/lib/database-url";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/api/dashboard/conversations/$sessionId")(
         }
 
         try {
-          const db = getDb();
+          const db = await dbReady();
           const messages = await db.query.chatMessages.findMany({
             where: eq(schema.chatMessages.sessionId, params.sessionId),
             orderBy: [schema.chatMessages.createdAt],

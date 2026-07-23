@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { desc } from "drizzle-orm";
 
-import { getDb, schema } from "@/db";
+import { dbReady, schema } from "@/db";
 import { requireAdmin, unauthorizedResponse } from "@/lib/auth";
 import { ensureSalesLeadsTable } from "@/lib/chat-service";
 import { getDatabaseUrl } from "@/lib/database-url";
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/dashboard/leads")({
 
         try {
           await ensureSalesLeadsTable();
-          const db = getDb();
+          const db = await dbReady();
           const leads = await db.query.salesLeads.findMany({
             orderBy: [desc(schema.salesLeads.createdAt)],
           });

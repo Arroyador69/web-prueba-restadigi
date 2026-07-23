@@ -18,4 +18,11 @@ export function getDb() {
   return db;
 }
 
+/** Ensures schema + demo seed, then returns drizzle client. */
+export async function dbReady() {
+  const { ensureDemoDbSafe } = await import("@/lib/ensure-demo-db");
+  await ensureDemoDbSafe();
+  return getDb();
+}
+
 export { schema };

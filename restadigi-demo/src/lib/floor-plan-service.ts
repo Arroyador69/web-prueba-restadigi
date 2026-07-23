@@ -35,6 +35,8 @@ export async function getFloorPlan(): Promise<FloorPlan> {
   }
 
   try {
+    const { ensureDemoDbSafe } = await import("@/lib/ensure-demo-db");
+    await ensureDemoDbSafe();
     await ensureFloorPlanTable();
     const db = getDb();
     const rows = await db.execute<{

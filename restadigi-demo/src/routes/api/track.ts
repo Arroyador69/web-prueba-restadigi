@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { getDb, schema } from "@/db";
+import { dbReady, schema } from "@/db";
 import { getDatabaseUrl } from "@/lib/database-url";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
@@ -35,7 +35,7 @@ export const Route = createFileRoute("/api/track")({
         }
 
         try {
-          const db = getDb();
+          const db = await dbReady();
           await db.insert(schema.pageViews).values({
             visitorSessionId: parsed.data.visitorSessionId,
             path: parsed.data.path,

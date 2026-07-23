@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { count, desc, gte, sql } from "drizzle-orm";
 
-import { getDb, schema } from "@/db";
+import { dbReady, schema } from "@/db";
 import { requireAdmin, unauthorizedResponse } from "@/lib/auth";
 import { ensureSalesLeadsTable } from "@/lib/chat-service";
 import { getDatabaseUrl } from "@/lib/database-url";
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/dashboard/stats")({
         }
 
         try {
-          const db = getDb();
+          const db = await dbReady();
           const since = new Date();
           since.setDate(since.getDate() - 30);
 

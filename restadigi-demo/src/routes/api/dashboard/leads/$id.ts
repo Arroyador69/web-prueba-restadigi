@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { getDb, schema } from "@/db";
+import { dbReady, schema } from "@/db";
 import { requireAdmin, unauthorizedResponse } from "@/lib/auth";
 import { getDatabaseUrl } from "@/lib/database-url";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -40,7 +40,7 @@ export const Route = createFileRoute("/api/dashboard/leads/$id")({
         }
 
         try {
-          const db = getDb();
+          const db = await dbReady();
           const [updated] = await db
             .update(schema.salesLeads)
             .set({

@@ -15,6 +15,8 @@ export type CallEventInput = {
 };
 
 export async function ensureSalesCallTables() {
+  const { ensureDemoDbSafe } = await import("@/lib/ensure-demo-db");
+  await ensureDemoDbSafe();
   const db = getDb();
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS sales_call_events (

@@ -42,6 +42,9 @@ const FLEXIBLE_BOOKING_PATCH: Partial<Omit<RestaurantSettings, "id" | "updatedAt
 let flexibleBookingEnsured = false;
 
 export async function getRestaurantSettings(): Promise<RestaurantSettings> {
+  const { ensureDemoDbSafe } = await import("@/lib/ensure-demo-db");
+  await ensureDemoDbSafe();
+
   if (!getDatabaseUrl()) {
     return { ...DEFAULT_SETTINGS, updatedAt: new Date() };
   }

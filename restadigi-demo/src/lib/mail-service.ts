@@ -35,6 +35,8 @@ function escapeHtml(value: string) {
 
 /** Creates Neon tables if missing (safe to call on every request). */
 export async function ensureMailTables() {
+  const { ensureDemoDbSafe } = await import("@/lib/ensure-demo-db");
+  await ensureDemoDbSafe();
   const db = getDb();
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS mail_attachments (

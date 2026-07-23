@@ -66,6 +66,9 @@ export async function saveChatMessage(sessionId: string, role: string, content: 
 }
 
 export async function createReservation(input: ReservationInput, settings?: RestaurantSettings) {
+  const { ensureDemoDbSafe } = await import("@/lib/ensure-demo-db");
+  await ensureDemoDbSafe();
+
   if (settings) {
     await validateReservationInput(input, settings);
   }

@@ -1,18 +1,196 @@
 -- =============================================================================
--- Restadigi PUBLIC DEMO — datos de ejemplo (solo los nuestros)
--- Neon SQL Editor: pegar y ejecutar UNA vez (o cuando quieras resetear ejemplos).
+-- Restadigi PUBLIC DEMO — Neon setup COMPLETO (1 sola ejecución)
+-- Archivo: restadigi-demo/scripts/seed-demo-note.sql
 --
--- Importante:
--- - Estos INSERT son los datos curados que deben verse en el dashboard.
--- - Con PUBLIC_DEMO=true la app NO guarda nada creado por visitantes
---   (reservas, chat, leads, track, cambios de settings, etc.).
--- - Si las tablas aún no existen, ejecuta antes: scripts/init-db.sql
---   (o deja que ensure-demo-db.ts cree schema+seed al primer request).
+-- Qué hace:
+--  1) Borra tablas viejas (clínica / Alpine / multi-tenant) que ya no usa la demo
+--  2) Crea las tablas Restadigi que faltaban (por eso falló restaurant_settings)
+--  3) Inserta SOLO nuestros datos de ejemplo
+--
+-- Pegar TODO en Neon SQL Editor → Run
 -- =============================================================================
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- Settings demo
+-- -----------------------------------------------------------------------------
+-- 1) LIMPIEZA: tablas del proyecto antiguo (no las usa la demo Restadigi)
+--    CASCADE por si hay FKs entre ellas.
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS appointments CASCADE;
+DROP TABLE IF EXISTS citas CASCADE;
+DROP TABLE IF EXISTS pacientes CASCADE;
+DROP TABLE IF EXISTS consentimientos CASCADE;
+DROP TABLE IF EXISTS facturas CASCADE;
+DROP TABLE IF EXISTS textos_legales CASCADE;
+DROP TABLE IF EXISTS blocked_slots CASCADE;
+DROP TABLE IF EXISTS opening_hours CASCADE;
+DROP TABLE IF EXISTS negocio CASCADE;
+DROP TABLE IF EXISTS business_config CASCADE;
+DROP TABLE IF EXISTS review_requests CASCADE;
+DROP TABLE IF EXISTS reputacion_jobs CASCADE;
+DROP TABLE IF EXISTS plantillas_email CASCADE;
+DROP TABLE IF EXISTS landing_events CASCADE;
+DROP TABLE IF EXISTS landing_images CASCADE;
+DROP TABLE IF EXISTS landing_page CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS session CASCADE;
+DROP TABLE IF EXISTS "session" CASCADE;
+
+-- -----------------------------------------------------------------------------
+-- 2) SCHEMA Restadigi (CREATE IF NOT EXISTS — seguro de re-ejecutar)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS page_views (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  visitor_session_id TEXT NOT NULL,
+  path TEXT NOT NULL,
+  referrer TEXT,
+  user_agent TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS chat_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  visitor_session_id TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+  role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS reservations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  chat_session_id UUID REFERENCES chat_sessions(id) ON DELETE SET NULL,
+  guest_name TEXT NOT NULL,
+  guest_email TEXT,
+  guest_phone TEXT,
+  party_size INTEGER NOT NULL,
+  reservation_date TEXT NOT NULL,
+  reservation_time TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  notes TEXT,
+  source TEXT NOT NULL DEFAULT 'chatbot',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS restaurant_settings (
+  id TEXT PRIMARY KEY DEFAULT 'default',
+  restaurant_name TEXT NOT NULL DEFAULT 'Demo Ravintola',
+  restaurant_address TEXT,
+  restaurant_phone TEXT,
+  restaurant_email TEXT,
+  cuisine_type TEXT,
+  restaurant_description TEXT,
+  chatbot_welcome_message TEXT NOT NULL DEFAULT 'Hei! Tervetuloa. Autan pöytävarauksessa.',
+  chatbot_instructions TEXT,
+  require_email BOOLEAN NOT NULL DEFAULT false,
+  require_phone BOOLEAN NOT NULL DEFAULT true,
+  min_party_size INTEGER NOT NULL DEFAULT 1,
+  max_party_size INTEGER NOT NULL DEFAULT 80,
+  open_time TEXT NOT NULL DEFAULT '12:00',
+  close_time TEXT NOT NULL DEFAULT '22:00',
+  lunch_enabled BOOLEAN NOT NULL DEFAULT true,
+  lunch_open_time TEXT NOT NULL DEFAULT '12:00',
+  lunch_close_time TEXT NOT NULL DEFAULT '22:00',
+  dinner_enabled BOOLEAN NOT NULL DEFAULT false,
+  dinner_open_time TEXT NOT NULL DEFAULT '17:00',
+  dinner_close_time TEXT NOT NULL DEFAULT '22:00',
+  slot_minutes INTEGER NOT NULL DEFAULT 30,
+  max_covers_per_slot INTEGER NOT NULL DEFAULT 80,
+  max_covers_per_evening INTEGER NOT NULL DEFAULT 200,
+  closed_weekdays TEXT NOT NULL DEFAULT '',
+  advance_booking_days INTEGER NOT NULL DEFAULT 90,
+  min_notice_hours INTEGER NOT NULL DEFAULT 0,
+  reservations_enabled BOOLEAN NOT NULL DEFAULT true,
+  accent_color TEXT NOT NULL DEFAULT '#c46a32',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS sales_leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  chat_session_id UUID REFERENCES chat_sessions(id) ON DELETE SET NULL,
+  name TEXT,
+  company TEXT,
+  phone TEXT NOT NULL,
+  email TEXT NOT NULL,
+  interest TEXT,
+  notes TEXT,
+  admin_notes TEXT,
+  status TEXT NOT NULL DEFAULT 'new',
+  source TEXT NOT NULL DEFAULT 'sales_chat',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS restaurant_floor_plans (
+  id TEXT PRIMARY KEY DEFAULT 'default',
+  name TEXT NOT NULL,
+  capacity INTEGER NOT NULL,
+  tables_json TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS mail_attachments (
+  slot TEXT PRIMARY KEY,
+  filename TEXT NOT NULL,
+  mime_type TEXT NOT NULL DEFAULT 'application/pdf',
+  content_base64 TEXT NOT NULL,
+  size_bytes INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS mail_templates (
+  id TEXT PRIMARY KEY DEFAULT 'default',
+  subject TEXT NOT NULL,
+  body_text TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS outbound_emails (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  to_email TEXT NOT NULL,
+  to_name TEXT,
+  subject TEXT NOT NULL,
+  tracking_token TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'sent',
+  error_message TEXT,
+  attachment_slots TEXT NOT NULL DEFAULT 'pdf1,pdf2',
+  open_count INTEGER NOT NULL DEFAULT 0,
+  opened_at TIMESTAMPTZ,
+  last_opened_at TIMESTAMPTZ,
+  sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS sales_call_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_name TEXT NOT NULL,
+  contact_person TEXT,
+  phone TEXT,
+  email TEXT,
+  scheduled_at TIMESTAMPTZ NOT NULL,
+  status TEXT NOT NULL DEFAULT 'planned',
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_page_views_created_at ON page_views(created_at);
+CREATE INDEX IF NOT EXISTS idx_page_views_path ON page_views(path);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_date ON reservations(reservation_date);
+CREATE INDEX IF NOT EXISTS idx_sales_leads_created_at ON sales_leads(created_at);
+CREATE INDEX IF NOT EXISTS idx_sales_leads_status ON sales_leads(status);
+CREATE INDEX IF NOT EXISTS idx_sales_call_events_scheduled_at ON sales_call_events(scheduled_at);
+
+-- -----------------------------------------------------------------------------
+-- 3) DATOS DE EJEMPLO (nuestros). Re-ejecutable: limpia ejemplos previos.
+-- -----------------------------------------------------------------------------
+
 INSERT INTO restaurant_settings (
   id, restaurant_name, restaurant_address, restaurant_phone, restaurant_email,
   cuisine_type, restaurant_description, chatbot_welcome_message,
@@ -44,7 +222,6 @@ ON CONFLICT (id) DO UPDATE SET
   accent_color = EXCLUDED.accent_color,
   reservations_enabled = EXCLUDED.reservations_enabled;
 
--- Floor plan (tables_json es TEXT)
 INSERT INTO restaurant_floor_plans (id, name, capacity, tables_json)
 VALUES (
   'default',
@@ -57,8 +234,6 @@ ON CONFLICT (id) DO UPDATE SET
   capacity = EXCLUDED.capacity,
   tables_json = EXCLUDED.tables_json;
 
--- Limpiar SOLO filas de ejemplo anteriores (marcadas / visitors demo-*)
--- No borra datos reales de producción porque en PUBLIC_DEMO no se escriben.
 DELETE FROM chat_messages WHERE session_id IN (
   SELECT id FROM chat_sessions WHERE visitor_session_id LIKE 'demo-visitor-%'
 );
@@ -75,7 +250,6 @@ DELETE FROM sales_call_events WHERE notes ILIKE '%demo%' OR client_name IN (
 );
 DELETE FROM outbound_emails WHERE tracking_token LIKE 'demo-token-%';
 
--- Page views de ejemplo
 INSERT INTO page_views (visitor_session_id, path, referrer, user_agent, created_at)
 SELECT
   'demo-visitor-' || ((g % 8) + 1),
@@ -85,7 +259,6 @@ SELECT
   NOW() - ((g % 12) || ' days')::interval - ((10 + (g % 8)) || ' hours')::interval
 FROM generate_series(0, 23) AS g;
 
--- Chat sessions
 WITH s AS (
   INSERT INTO chat_sessions (visitor_session_id, created_at, updated_at)
   VALUES
@@ -109,7 +282,6 @@ JOIN (
 ) AS m(visitor_session_id, role, content, created_at)
   ON s.visitor_session_id = m.visitor_session_id;
 
--- Reservations de ejemplo (fechas relativas a hoy)
 INSERT INTO reservations (
   guest_name, guest_email, guest_phone, party_size,
   reservation_date, reservation_time, status, notes, source, created_at
@@ -130,7 +302,6 @@ INSERT INTO reservations (
    to_char(CURRENT_DATE + 5, 'YYYY-MM-DD'), '19:30', 'pending', 'Tourist group · demo', 'chatbot',
    NOW() - INTERVAL '10 hours');
 
--- Leads
 INSERT INTO sales_leads (
   name, company, phone, email, interest, notes, status, source, created_at, updated_at
 ) VALUES
@@ -147,7 +318,6 @@ INSERT INTO sales_leads (
    'Reservas online', NULL, 'new', 'sales_chat',
    NOW() - INTERVAL '12 hours', NOW() - INTERVAL '12 hours');
 
--- Llamadas
 INSERT INTO sales_call_events (client_name, contact_person, phone, email, scheduled_at, status, notes)
 VALUES
   ('Helsinki Bistro Oy', 'Ville Heikkinen', '+358404444444', 'ville@helsinkibistro.fi',
@@ -159,7 +329,6 @@ VALUES
   ('Tapas Norte', 'María López', '+34600999888', 'maria@tapasnorte.es',
    NOW() + INTERVAL '3 days' + INTERVAL '16 hours', 'planned', 'ES-asiakas · demo');
 
--- Mail template + outbound demo
 INSERT INTO mail_templates (id, subject, body_text)
 VALUES (
   'default',
@@ -176,3 +345,6 @@ VALUES
    NOW() - INTERVAL '3 days' - INTERVAL '9 hours'),
   ('laura@cafeaura.fi', 'Laura', 'Demo: tarjousmateriaali', 'demo-token-2', 'sent', 0,
    NOW() - INTERVAL '1 day' - INTERVAL '17 hours');
+
+-- Listo. Tras Run deberías ver tablas Restadigi + ejemplos.
+-- CONSERVAR: page_views, chat_*, reservations, restaurant_*, sales_*, mail_*, outbound_emails

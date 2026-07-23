@@ -2610,6 +2610,9 @@ a.dashboard-app__stat-card:hover {
     position: sticky;
     top: 3.4rem;
     z-index: 20;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .dashboard-app__sidebar--mobile-sticky {
@@ -2617,9 +2620,44 @@ a.dashboard-app__stat-card:hover {
     margin-right: -0.15rem;
   }
 
+  .dashboard-app__nav-fade {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .dashboard-app__nav-fade::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 1.75rem;
+    background: linear-gradient(
+      to right,
+      transparent,
+      color-mix(in srgb, white 88%, #f7f1ea) 85%
+    );
+    z-index: 1;
+  }
+
   .dashboard-app__nav-scroll {
-    scroll-snap-type: x mandatory;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+  }
+
+  .dashboard-app__nav-item {
+    flex: 0 0 auto;
   }
 
   .dashboard-app__banner {

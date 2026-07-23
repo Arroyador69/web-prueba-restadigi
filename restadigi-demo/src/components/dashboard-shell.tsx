@@ -112,39 +112,44 @@ export function DashboardShell({
       </header>
 
       <div className="mx-auto grid max-w-[1400px] gap-3 px-3 py-3 pb-[5.5rem] sm:gap-6 sm:px-6 sm:py-6 sm:pb-6 lg:grid-cols-[248px_1fr] lg:gap-8 lg:px-8 lg:py-8">
-        <aside className="dashboard-app__sidebar dashboard-app__sidebar--mobile-sticky lg:sticky lg:top-[5.25rem] lg:self-start">
-          <nav className="dashboard-app__nav-scroll flex flex-row gap-1 overflow-x-auto overscroll-x-contain p-1.5 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-col lg:gap-1 lg:overflow-visible lg:p-3 [&::-webkit-scrollbar]:hidden">
-            {nav.map((item) => {
-              const active =
-                "exact" in item && item.exact
-                  ? pathname === item.to
-                  : pathname.startsWith(item.to);
-              const Icon = item.icon;
-              const label = labels[item.labelKey];
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={cn(
-                    "dashboard-app__nav-item flex shrink-0 snap-start items-center gap-2 rounded-xl px-2.5 py-2 text-sm font-medium transition-all sm:gap-2.5 sm:px-3 sm:py-2.5 lg:w-full",
-                    active
-                      ? "dashboard-app__nav-item--active"
-                      : "text-[#5c534c] hover:bg-[#f3eee8] hover:text-[#2a2018]",
-                  )}
-                >
-                  <span
+        <aside className="dashboard-app__sidebar dashboard-app__sidebar--mobile-sticky min-w-0 max-w-full lg:sticky lg:top-[5.25rem] lg:self-start">
+          <div className="dashboard-app__nav-fade relative min-w-0 max-w-full lg:contents">
+            <nav
+              className="dashboard-app__nav-scroll flex min-w-0 max-w-full flex-row gap-1 overflow-x-auto overscroll-x-contain p-1.5 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-col lg:gap-1 lg:overflow-visible lg:p-3 [&::-webkit-scrollbar]:hidden"
+              aria-label="Dashboard"
+            >
+              {nav.map((item) => {
+                const active =
+                  "exact" in item && item.exact
+                    ? pathname === item.to
+                    : pathname.startsWith(item.to);
+                const Icon = item.icon;
+                const label = labels[item.labelKey];
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
                     className={cn(
-                      "flex size-8 shrink-0 items-center justify-center rounded-lg",
-                      active ? "bg-white/15 text-white" : "bg-[#f3eee8] text-[#432f24]",
+                      "dashboard-app__nav-item flex w-max shrink-0 snap-start items-center gap-2 whitespace-nowrap rounded-xl px-2.5 py-2 text-sm font-medium transition-all sm:gap-2.5 sm:px-3 sm:py-2.5 lg:w-full",
+                      active
+                        ? "dashboard-app__nav-item--active"
+                        : "text-[#5c534c] hover:bg-[#f3eee8] hover:text-[#2a2018]",
                     )}
                   >
-                    <Icon className="size-4" />
-                  </span>
-                  <span className="max-w-[7.5rem] truncate lg:max-w-none">{label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+                    <span
+                      className={cn(
+                        "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                        active ? "bg-white/15 text-white" : "bg-[#f3eee8] text-[#432f24]",
+                      )}
+                    >
+                      <Icon className="size-4" />
+                    </span>
+                    <span className="whitespace-nowrap">{label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
         </aside>
 
         <main className="dashboard-app__main min-w-0">{children}</main>

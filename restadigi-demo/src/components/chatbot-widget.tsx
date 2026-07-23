@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useLocale, useMessages } from "@/i18n";
 import type { ChatMessage } from "@/lib/chatbot-prompt";
+import {
+  accentChipText,
+  accentHintBackground,
+  accentPanelBackground,
+  accentSoftBorder,
+  readDemoTheme,
+  subscribeDemoTheme,
+} from "@/lib/demo-theme";
 import type { PublicRestaurantSettings } from "@/lib/restaurant-settings-types";
 import {
   getChatSessionId,
@@ -19,23 +27,22 @@ type ChatMode = "sales" | "reservation";
 
 type ChatbotPanelProps = {
   mode: ChatMode;
-  /** floating = bottom-right FAB; inline = button for hero (chat panel still floats) */
   placement: "floating" | "inline";
   className?: string;
-  /** Public demo: booking-oriented labels */
   demoContext?: boolean;
 };
 
-const BROWN = "#432f24";
-const ORANGE = "#c46a32";
+const FALLBACK_ACCENT = "#c46a32";
+const SALES_ACCENT = "#c46a32";
 
-function useChatbot(mode: ChatMode) {
+function useChatbot(mode: ChatMode, demoContext: boolean) {
   const t = useMessages();
   const { locale } = useLocale();
   const copy = mode === "sales" ? t.widget.sales : t.widget.booking;
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [siteSettings, setSiteSettings] = useState<PublicRestaurantSettings | null>(null);
+  const [liveAccent, setLiveAccent] = useState<string | null>(() => readDemoTheme()?.accentColor ?? null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(() => getChatSessionId(mode));
   const [loading, setLoading] = useState(false);
@@ -43,30 +50,44 @@ function useChatbot(mode: ChatMode) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Demo booking uses brand brown chrome like Resta-AI; orange for accents/user bubbles
-  const chromeColor = BROWN;
   const accentColor =
-    mode === "reservation" ? (siteSettings?.accentColor ?? ORANGE) : ORANGE;
+    mode === "reservation"
+      ? liveAccent || siteSettings?.accentColor || FALLBACK_ACCENT
+      : SALES_ACCENT;
 
-  const welcomeText =
-    mode === "reservation" && locale === "fi" && siteSettings?.chatbotWelcomeMessage
-      ? siteSettings.chatbotWelcomeMessage
-      : copy.welcome;
-
+  // Demo: always follow language selector (never force Finnish DB welcome)
+  const welcomeText = copy.welcome;
   const headerTitle = copy.title;
 
   useEffect(() => {
+    return subscribeDemoTheme((theme) => {
+      if (theme.accentColor) setLiveAccent(theme.accentColor);
+    });
+  }, []);
+
+  useEffect(() => {
     if (mode !== "reservation") return;
-    void fetch("/api/restaurant/settings")
-      .then(async (res) => {
-        if (!res.ok) return null;
-        return res.json() as Promise<{ settings: PublicRestaurantSettings }>;
-      })
-      .then((data) => {
-        if (data?.settings) setSiteSettings(data.settings);
-      })
-      .catch(() => undefined);
-  }, [mode]);
+
+    function loadSettings() {
+      void fetch("/api/restaurant/settings")
+        .then(async (res) => {
+          if (!res.ok) return null;
+          return res.json() as Promise<{ settings: PublicRestaurantSettings }>;
+        })
+        .then((data) => {
+          if (data?.settings) {
+            setSiteSettings(data.settings);
+            if (!readDemoTheme()?.accentColor && data.settings.accentColor) {
+              setLiveAccent(data.settings.accentColor);
+            }
+          }
+        })
+        .catch(() => undefined);
+    }
+
+    loadSettings();
+    if (open) loadSettings();
+  }, [mode, open]);
 
   function resetConversation() {
     setMessages([{ role: "assistant", content: welcomeText }]);
@@ -155,10 +176,10 @@ function useChatbot(mode: ChatMode) {
     error,
     scrollRef,
     inputRef,
-    chromeColor,
     accentColor,
     headerTitle,
     welcomeText,
+    demoContext,
     sendMessage,
     handleKeyDown,
     resetConversation,
@@ -168,11 +189,9 @@ function useChatbot(mode: ChatMode) {
 function ChatDialog({
   panel,
   panelClassName,
-  demoContext = false,
 }: {
   panel: ReturnType<typeof useChatbot>;
   panelClassName?: string;
-  demoContext?: boolean;
 }) {
   const {
     copy,
@@ -188,6 +207,7 @@ function ChatDialog({
     accentColor,
     headerTitle,
     welcomeText,
+    demoContext,
     sendMessage,
     handleKeyDown,
     resetConversation,
@@ -203,14 +223,19 @@ function ChatDialog({
     copy.quickReplies.length > 0;
 
   const subtitle = demoContext ? copy.demoSubtitle : headerTitle;
+  const chipColor = accentChipText(accentColor);
 
   return (
     <div
       className={cn(
-        "flex w-[min(100vw-2.5rem,22.5rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#2a2018] text-white shadow-2xl",
+        "flex w-[min(100vw-2.5rem,22.5rem)] flex-col overflow-hidden rounded-2xl text-white shadow-2xl",
         "animate-in fade-in slide-in-from-bottom-4 duration-200",
         panelClassName,
       )}
+      style={{
+        background: accentPanelBackground(accentColor),
+        border: `1px solid ${accentSoftBorder(accentColor)}`,
+      }}
       role="dialog"
       aria-label={copy.dialogAria}
     >
@@ -219,10 +244,14 @@ function ChatDialog({
           <img
             src={restadigiIcon}
             alt="Restadigi"
-            className="size-9 shrink-0 rounded-full border border-white/20 bg-[#432f24] object-cover shadow-sm"
+            className="size-9 shrink-0 rounded-full border border-white/20 object-cover shadow-sm"
+            style={{ backgroundColor: accentColor }}
           />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold tracking-[0.14em]" style={{ color: ORANGE }}>
+            <p
+              className="truncate text-sm font-semibold tracking-[0.14em]"
+              style={{ color: accentColor }}
+            >
               {copy.eyebrow}
             </p>
             <p className="truncate text-xs text-white/55">{subtitle}</p>
@@ -249,7 +278,13 @@ function ChatDialog({
       </div>
 
       {demoContext && copy.demoHint ? (
-        <p className="mx-3 mb-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-[11px] leading-snug text-amber-100/90">
+        <p
+          className="mx-3 mb-1 rounded-lg px-3 py-1.5 text-[11px] leading-snug text-white/85"
+          style={{
+            background: accentHintBackground(accentColor),
+            border: `1px solid ${accentSoftBorder(accentColor)}`,
+          }}
+        >
           {copy.demoHint}
         </p>
       ) : null}
@@ -264,7 +299,8 @@ function ChatDialog({
               <img
                 src={restadigiIcon}
                 alt=""
-                className="mb-0.5 size-8 shrink-0 rounded-full border border-white/15 bg-[#432f24] object-cover"
+                className="mb-0.5 size-8 shrink-0 rounded-full border border-white/15 object-cover"
+                style={{ backgroundColor: accentColor }}
               />
               <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-bl-md bg-white px-3.5 py-2.5 text-sm leading-relaxed text-[#1a1512] shadow-sm">
                 {msg.content}
@@ -285,7 +321,8 @@ function ChatDialog({
             <img
               src={restadigiIcon}
               alt=""
-              className="size-8 shrink-0 rounded-full border border-white/15 bg-[#432f24] object-cover"
+              className="size-8 shrink-0 rounded-full border border-white/15 object-cover"
+              style={{ backgroundColor: accentColor }}
             />
             <div className="rounded-2xl bg-white/90 px-3.5 py-2.5 text-sm text-[#5c534c]">
               {copy.typing}
@@ -301,7 +338,12 @@ function ChatDialog({
                 type="button"
                 disabled={loading}
                 onClick={() => void sendMessage(item.message)}
-                className="rounded-full border border-[rgba(196,106,50,0.55)] bg-[#1a1512]/70 px-3 py-1.5 text-xs font-medium text-[color:#e8a05a] transition hover:border-[rgba(196,106,50,0.9)] hover:bg-[#432f24]"
+                className="rounded-full px-3 py-1.5 text-xs font-medium transition hover:brightness-110"
+                style={{
+                  color: chipColor,
+                  border: `1px solid ${accentSoftBorder(accentColor)}`,
+                  background: "rgba(0,0,0,0.35)",
+                }}
               >
                 {item.label}
               </button>
@@ -316,7 +358,13 @@ function ChatDialog({
         </p>
       )}
 
-      <div className="border-t border-white/10 bg-[#1a1512]/50 p-3">
+      <div
+        className="p-3"
+        style={{
+          borderTop: `1px solid ${accentSoftBorder(accentColor)}`,
+          background: "rgba(0,0,0,0.28)",
+        }}
+      >
         <div className="flex items-end gap-2 rounded-2xl bg-white p-1.5 shadow-inner">
           <Textarea
             ref={inputRef}
@@ -334,7 +382,7 @@ function ChatDialog({
             onClick={() => void sendMessage()}
             disabled={loading || !input.trim()}
             className="mb-0.5 size-9 shrink-0 rounded-full text-white hover:opacity-90"
-            style={{ backgroundColor: ORANGE }}
+            style={{ backgroundColor: accentColor }}
             aria-label={copy.sendAria}
           >
             <Send className="size-4" />
@@ -347,9 +395,8 @@ function ChatDialog({
 }
 
 function ChatbotPanel({ mode, placement, className, demoContext = false }: ChatbotPanelProps) {
-  const panel = useChatbot(mode);
-  const { copy, open, setOpen, chromeColor } = panel;
-  const Icon = Headphones;
+  const panel = useChatbot(mode, demoContext);
+  const { copy, open, setOpen, accentColor } = panel;
   const openLabel = demoContext ? copy.demoOpenLabel : copy.openLabel;
 
   useEffect(() => {
@@ -376,7 +423,7 @@ function ChatbotPanel({ mode, placement, className, demoContext = false }: Chatb
               aria-hidden
             />
             <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2">
-              <ChatDialog panel={panel} demoContext={demoContext} />
+              <ChatDialog panel={panel} />
             </div>
           </>
         )}
@@ -385,7 +432,7 @@ function ChatbotPanel({ mode, placement, className, demoContext = false }: Chatb
           size="lg"
           onClick={() => setOpen((v) => !v)}
           className="h-14 rounded-full px-6 text-white shadow-lg hover:opacity-90"
-          style={{ backgroundColor: chromeColor }}
+          style={{ backgroundColor: accentColor }}
           aria-expanded={open}
           aria-label={open ? copy.closeAria : copy.openAria}
         >
@@ -407,18 +454,18 @@ function ChatbotPanel({ mode, placement, className, demoContext = false }: Chatb
       )}
 
       <div className={cn("fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3", className)}>
-        <ChatDialog panel={panel} demoContext={demoContext} />
+        <ChatDialog panel={panel} />
 
         <Button
           type="button"
           size="lg"
           onClick={() => setOpen((v) => !v)}
           className="h-14 rounded-full px-5 text-white shadow-lg hover:opacity-90"
-          style={{ backgroundColor: chromeColor }}
+          style={{ backgroundColor: accentColor }}
           aria-expanded={open}
           aria-label={open ? copy.closeAria : copy.openAria}
         >
-          <Icon className="size-5" />
+          <Headphones className="size-5" />
           <span className="hidden sm:inline">{open ? copy.closeLabel : openLabel}</span>
         </Button>
       </div>
@@ -426,7 +473,6 @@ function ChatbotPanel({ mode, placement, className, demoContext = false }: Chatb
   );
 }
 
-/** Restadigi sales / customer-service bot — every page, bottom right */
 export const OPEN_SALES_CHAT_EVENT = "restadigi:open-sales-chat";
 
 export function openSalesChatbot() {
@@ -436,7 +482,6 @@ export function openSalesChatbot() {
 
 export function ChatbotWidget() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // Demo pública: mismo Resta-AI (modo reserva) en landing y dashboard
   if (pathname === "/" || pathname.startsWith("/dashboard")) {
     if (pathname === "/dashboard/login") return null;
     return <ChatbotPanel mode="reservation" placement="floating" demoContext />;
@@ -444,7 +489,6 @@ export function ChatbotWidget() {
   return <ChatbotPanel mode="sales" placement="floating" />;
 }
 
-/** Table booking demo bot — only on pöytävarauspalvelu hero */
 export function BookingChatbotButton({ className }: { className?: string }) {
   return <ChatbotPanel mode="reservation" placement="inline" className={className} demoContext />;
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLocale } from "@/i18n";
+import { readDemoTheme, subscribeDemoTheme } from "@/lib/demo-theme";
 import type { PublicRestaurantSettings } from "@/lib/restaurant-settings-types";
 
 export const Route = createFileRoute("/")({
@@ -93,6 +94,7 @@ function DemoLandingPage() {
   const { locale, setLocale } = useLocale();
   const copy = COPY[locale] || COPY.fi;
   const [settings, setSettings] = useState<PublicRestaurantSettings | null>(null);
+  const [liveAccent, setLiveAccent] = useState<string | null>(() => readDemoTheme()?.accentColor ?? null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -105,16 +107,27 @@ function DemoLandingPage() {
     partySize: "2",
   });
 
-  const accent = settings?.accentColor || "#c46a32";
+  const accent = liveAccent || settings?.accentColor || "#c46a32";
   const name = settings?.restaurantName || copy.heroTitle;
-  const phone = settings?.restaurantPhone || "";
-  const description = settings?.restaurantDescription || copy.heroSub;
+  const phone = "";
+  const description = copy.heroSub;
+
+  useEffect(() => {
+    return subscribeDemoTheme((theme) => {
+      if (theme.accentColor) setLiveAccent(theme.accentColor);
+    });
+  }, []);
 
   useEffect(() => {
     void fetch("/api/restaurant/settings")
       .then(async (r) => (r.ok ? r.json() : null))
       .then((data: { settings?: PublicRestaurantSettings } | null) => {
-        if (data?.settings) setSettings(data.settings);
+        if (data?.settings) {
+          setSettings(data.settings);
+          if (!readDemoTheme()?.accentColor && data.settings.accentColor) {
+            setLiveAccent(data.settings.accentColor);
+          }
+        }
       })
       .catch(() => undefined);
   }, []);

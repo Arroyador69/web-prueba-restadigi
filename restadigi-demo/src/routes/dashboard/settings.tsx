@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { fillDashboardUi, localeDateTag, useDashboardUi, useLocale } from "@/i18n";
+import { writeDemoTheme } from "@/lib/demo-theme";
 import {
   formatClosedWeekdays,
   parseClosedWeekdays,
@@ -59,13 +60,33 @@ function DashboardSettingsPage() {
         if (!res.ok) throw new Error(data.error ?? t.settings.loadFailed);
         const { id: _id, updatedAt: _updatedAt, ...rest } = data.settings!;
         setForm(rest);
+        writeDemoTheme({
+          accentColor: rest.accentColor,
+          restaurantName: rest.restaurantName,
+        });
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, [t.settings.loadFailed]);
 
   function updateField<K extends keyof SettingsForm>(key: K, value: SettingsForm[K]) {
-    setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+    setForm((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, [key]: value };
+      if (key === "accentColor" && typeof value === "string") {
+        writeDemoTheme({
+          accentColor: value,
+          restaurantName: next.restaurantName,
+        });
+      }
+      if (key === "restaurantName" && typeof value === "string") {
+        writeDemoTheme({
+          accentColor: next.accentColor,
+          restaurantName: value,
+        });
+      }
+      return next;
+    });
     setMessage(null);
     setError(null);
   }
@@ -114,10 +135,18 @@ function DashboardSettingsPage() {
       const data = (await res.json()) as { settings?: RestaurantSettings; error?: string };
       if (!res.ok) throw new Error(data.error ?? t.settings.saveFailed);
 
+      if (!res.ok) throw new Error(data.error ?? t.settings.saveFailed);
+
+      // Demo: apply theme even if API echoes settings without DB write
+      writeDemoTheme({
+        accentColor: (data.settings?.accentColor ?? payload.accentColor) as string,
+        restaurantName: (data.settings?.restaurantName ?? payload.restaurantName) as string,
+      });
+
       if (data.settings) {
         const { id: _id, updatedAt, ...rest } = data.settings;
         setForm(rest);
-        const savedAt = new Date(updatedAt).toLocaleString(localeDateTag(locale));
+        const savedAt = new Date(updatedAt ?? Date.now()).toLocaleString(localeDateTag(locale));
         showFeedback("success", fillDashboardUi(t.settings.savedBody, { date: savedAt }));
       } else {
         showFeedback("success", t.settings.savedBody);

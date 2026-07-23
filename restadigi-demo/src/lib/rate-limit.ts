@@ -54,6 +54,7 @@ export const RATE_LIMITS = {
   public: { limit: 60, windowMs: 60_000 },
   auth: { limit: 60, windowMs: 60_000 },
   dashboard: { limit: 120, windowMs: 60_000 },
+  book: { limit: 20, windowMs: 60_000 },
 } as const;
 
 export type RateLimitBucket = keyof typeof RATE_LIMITS;

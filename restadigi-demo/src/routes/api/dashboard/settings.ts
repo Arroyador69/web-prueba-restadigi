@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireAdmin, unauthorizedResponse } from "@/lib/auth";
 import { getDatabaseUrl } from "@/lib/database-url";
+import { blockVisitorPersistence, demoNotPersisted } from "@/lib/demo-write-guard";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { getRestaurantSettings, upsertRestaurantSettings } from "@/lib/settings-service";
 
@@ -105,6 +106,24 @@ export const Route = createFileRoute("/api/dashboard/settings")({
         }
 
         try {
+          if (blockVisitorPersistence()) {
+            return Response.json(
+              demoNotPersisted({
+                settings: {
+                  id: "default",
+                  ...parsed.data,
+                  restaurantAddress: parsed.data.restaurantAddress ?? null,
+                  restaurantPhone: parsed.data.restaurantPhone ?? null,
+                  restaurantEmail: parsed.data.restaurantEmail ?? null,
+                  cuisineType: parsed.data.cuisineType ?? null,
+                  restaurantDescription: parsed.data.restaurantDescription ?? null,
+                  chatbotInstructions: parsed.data.chatbotInstructions ?? null,
+                  updatedAt: new Date().toISOString(),
+                },
+              }),
+            );
+          }
+
           const settings = await upsertRestaurantSettings({
             ...parsed.data,
             restaurantAddress: parsed.data.restaurantAddress ?? null,

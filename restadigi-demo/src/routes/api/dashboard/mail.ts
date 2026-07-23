@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { isPublicDemo, requireAdmin, unauthorizedResponse } from "@/lib/auth";
 import { getDatabaseUrl } from "@/lib/database-url";
+import { blockVisitorPersistence, demoNotPersisted } from "@/lib/demo-write-guard";
 import {
   getMailStats,
   getMailTemplate,
@@ -53,6 +54,16 @@ export const Route = createFileRoute("/api/dashboard/mail")({
 
         try {
           const body = (await request.json()) as { subject?: string; body?: string };
+          if (blockVisitorPersistence()) {
+            return Response.json(
+              demoNotPersisted({
+                template: {
+                  subject: body.subject ?? "",
+                  body: body.body ?? "",
+                },
+              }),
+            );
+          }
           const template = await saveMailTemplate({
             subject: body.subject ?? "",
             body: body.body ?? "",

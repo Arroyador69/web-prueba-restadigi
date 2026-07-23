@@ -29,9 +29,9 @@ const COPY = {
       "Kokeile pöytävarausta lomakkeella tai chatilla. Hallitse värejä ja asetuksia dashboardissa — ilman käyttäjää.",
     aboutTitle: "Tästä demosta",
     aboutText:
-      "Tämä on Restadigin julkinen esittely. Tiedot ovat esimerkkejä. Älä syötä oikeita henkilötietoja. Voit nollata / muokata asetuksia paneelissa.",
+      "Tämä on Restadigin julkinen esittely. Dashboardissa näkyvät vain meidän esimerkkidatamme. Kaikki mitä kirjoitat (varaukset, chat, asetukset) toimii demona mutta ei tallennu tietokantaan. Älä syötä oikeita henkilötietoja.",
     bookTitle: "Varaa pöytä",
-    bookIntro: "Täytä lomake tai käytä chattia oikeassa alakulmassa.",
+    bookIntro: "Täytä lomake tai käytä chattia oikeassa alakulmassa. Demo ei tallenna vierailijan tietoja.",
     name: "Nimi",
     email: "Sähköposti",
     phone: "Puhelin",
@@ -40,7 +40,7 @@ const COPY = {
     party: "Henkilömäärä",
     submit: "Vahvista varaus",
     sending: "Lähetetään…",
-    ok: "Varaus tallennettu demoon. Näet sen dashboardissa.",
+    ok: "Demo OK — varausta ei tallennettu. Dashboardissa näet vain esimerkkivaraukset.",
     lang: "Kieli",
   },
   en: {
@@ -51,9 +51,9 @@ const COPY = {
       "Try booking with the form or chat. Edit colours and settings in the dashboard — no account needed.",
     aboutTitle: "About this demo",
     aboutText:
-      "This is Restadigi’s public showcase. Data is sample only. Don’t enter real personal data. You can change settings in the panel.",
+      "This is Restadigi’s public showcase. The dashboard only shows our curated sample data. Anything you type (bookings, chat, settings) works as a demo but is never saved to the database. Don’t enter real personal data.",
     bookTitle: "Book a table",
-    bookIntro: "Fill the form or use the chat in the bottom-right corner.",
+    bookIntro: "Fill the form or use the chat in the bottom-right corner. Visitor data is not stored.",
     name: "Name",
     email: "Email",
     phone: "Phone",
@@ -62,7 +62,7 @@ const COPY = {
     party: "Guests",
     submit: "Confirm booking",
     sending: "Sending…",
-    ok: "Booking saved in the demo. You’ll see it in the dashboard.",
+    ok: "Demo OK — booking was not saved. The dashboard only shows sample reservations.",
     lang: "Language",
   },
   es: {
@@ -73,9 +73,9 @@ const COPY = {
       "Prueba la reserva con el formulario o el chat. Edita colores y ajustes en el panel — sin cuenta.",
     aboutTitle: "Sobre esta demo",
     aboutText:
-      "Es la muestra pública de Restadigi. Los datos son de ejemplo. No introduzcas datos personales reales. Puedes cambiar ajustes en el panel.",
+      "Es la muestra pública de Restadigi. En el panel solo verás nuestros datos de ejemplo. Todo lo que escribas (reservas, chat, ajustes) funciona como demo pero no se guarda en la base de datos. No introduzcas datos personales reales.",
     bookTitle: "Reservar mesa",
-    bookIntro: "Rellena el formulario o usa el chat de la esquina inferior derecha.",
+    bookIntro: "Rellena el formulario o usa el chat de la esquina inferior derecha. Los datos de visitantes no se guardan.",
     name: "Nombre",
     email: "Email",
     phone: "Teléfono",
@@ -84,7 +84,7 @@ const COPY = {
     party: "Comensales",
     submit: "Confirmar reserva",
     sending: "Enviando…",
-    ok: "Reserva guardada en la demo. La verás en el panel.",
+    ok: "Demo OK — la reserva no se ha guardado. En el panel solo verás las de ejemplo.",
     lang: "Idioma",
   },
 } as const;

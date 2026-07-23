@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireAdmin, unauthorizedResponse } from "@/lib/auth";
 import { getDatabaseUrl } from "@/lib/database-url";
+import { blockVisitorPersistence, demoNotPersisted } from "@/lib/demo-write-guard";
 import { DEMO_FLOOR_PLAN, type FloorPlan, type TableSeats } from "@/lib/floor-plan";
 import { floorPlanStats, getFloorPlan, upsertFloorPlan } from "@/lib/floor-plan-service";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -66,6 +67,11 @@ export const Route = createFileRoute("/api/dashboard/floor-plan")({
           "reset" in body &&
           (body as { reset?: boolean }).reset === true
         ) {
+          if (blockVisitorPersistence()) {
+            return Response.json(
+              demoNotPersisted({ plan: DEMO_FLOOR_PLAN, stats: floorPlanStats(DEMO_FLOOR_PLAN) }),
+            );
+          }
           const plan = await upsertFloorPlan(DEMO_FLOOR_PLAN);
           return Response.json({ plan, stats: floorPlanStats(plan) });
         }
@@ -82,6 +88,9 @@ export const Route = createFileRoute("/api/dashboard/floor-plan")({
         }
 
         try {
+          if (blockVisitorPersistence()) {
+            return Response.json(demoNotPersisted({ plan, stats: floorPlanStats(plan) }));
+          }
           const saved = await upsertFloorPlan(plan);
           return Response.json({ plan: saved, stats: floorPlanStats(saved) });
         } catch (error) {

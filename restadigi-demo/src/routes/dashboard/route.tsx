@@ -53,16 +53,16 @@ function DashboardLayout() {
     locale === "es"
       ? {
           title: "Demo pública Restadigi — sin login",
-          body: "Panel de muestra. No hay datos reales de clientes. Puedes probar reservas, colores, mapa de mesas y ajustes. El correo real está desactivado.",
+          body: "Panel de muestra con datos de ejemplo nuestros. Todo lo que crees o edites aquí funciona en pantalla pero no se guarda en la base de datos. El correo real está desactivado.",
         }
       : locale === "en"
         ? {
             title: "Restadigi public demo — no login",
-            body: "Sample panel. No real customer data. Try reservations, colours, floor plan and settings. Real email sending is disabled.",
+            body: "Sample panel with our curated demo data. Anything you create or edit works on screen but is never saved to the database. Real email sending is disabled.",
           }
         : {
             title: "Restadigi julkinen demo — ei kirjautumista",
-            body: "Esimerkkipaneeli. Ei oikeita asiakastietoja. Voit kokeilla varauksia, värejä, pöytäkarttaa ja asetuksia. Oikea sähköposti on pois käytöstä.",
+            body: "Esimerkkipaneeli meidän demodatalla. Kaikki mitä luot tai muokkaat toimii näytöllä, mutta ei tallennu tietokantaan. Oikea sähköposti on pois käytöstä.",
           };
 
   return (

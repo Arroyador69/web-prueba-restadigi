@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { createReservation } from "@/lib/chat-service";
+import { blockVisitorPersistence, demoNotPersisted, ephemeralId } from "@/lib/demo-write-guard";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { getRestaurantSettings } from "@/lib/settings-service";
 
@@ -35,6 +36,26 @@ export const Route = createFileRoute("/api/restaurant/book")({
           }
 
           const data = parsed.data;
+
+          // Demo pública: simula éxito sin guardar en Neon
+          if (blockVisitorPersistence()) {
+            return Response.json(
+              demoNotPersisted({
+                reservation: {
+                  id: ephemeralId(),
+                  guestName: data.guestName,
+                  guestEmail: data.guestEmail || null,
+                  guestPhone: data.guestPhone,
+                  partySize: data.partySize,
+                  reservationDate: data.reservationDate,
+                  reservationTime: data.reservationTime,
+                  status: "pending",
+                  source: "landing",
+                },
+              }),
+            );
+          }
+
           const reservation = await createReservation(
             {
               guestName: data.guestName,
@@ -43,7 +64,7 @@ export const Route = createFileRoute("/api/restaurant/book")({
               partySize: data.partySize,
               date: data.reservationDate,
               time: data.reservationTime,
-              notes: data.notes || "Landing form (public demo)",
+              notes: data.notes || "Landing form",
             },
             settings,
           );

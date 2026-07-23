@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { requireAdmin, unauthorizedResponse } from "@/lib/auth";
 import { getDatabaseUrl } from "@/lib/database-url";
+import { blockVisitorPersistence, demoNotPersisted } from "@/lib/demo-write-guard";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import {
   completeCallAndScheduleNext,
@@ -32,6 +33,14 @@ export const Route = createFileRoute("/api/dashboard/calls/$id")({
             status?: CallStatus;
             completeAndNextAt?: string | null;
           };
+
+          if (blockVisitorPersistence()) {
+            return Response.json(
+              demoNotPersisted({
+                call: { id: params.id, ...body, status: body.status ?? "scheduled" },
+              }),
+            );
+          }
 
           if (body.completeAndNextAt !== undefined || body.status === "done") {
             const result = await completeCallAndScheduleNext(
@@ -69,6 +78,9 @@ export const Route = createFileRoute("/api/dashboard/calls/$id")({
         }
 
         try {
+          if (blockVisitorPersistence()) {
+            return Response.json(demoNotPersisted({ deleted: params.id }));
+          }
           await deleteCallEvent(params.id);
           return Response.json({ ok: true });
         } catch (error) {

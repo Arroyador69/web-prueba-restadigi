@@ -39,6 +39,11 @@ type ReservationInput = {
 };
 
 export async function ensureChatSession(sessionId: string | undefined, visitorSessionId?: string) {
+  const { blockVisitorPersistence, ephemeralId } = await import("@/lib/demo-write-guard");
+  if (blockVisitorPersistence()) {
+    return sessionId || ephemeralId();
+  }
+
   const db = getDb();
 
   if (sessionId) {
@@ -57,6 +62,9 @@ export async function ensureChatSession(sessionId: string | undefined, visitorSe
 }
 
 export async function saveChatMessage(sessionId: string, role: string, content: string) {
+  const { blockVisitorPersistence } = await import("@/lib/demo-write-guard");
+  if (blockVisitorPersistence()) return;
+
   const db = getDb();
   await db.insert(schema.chatMessages).values({ sessionId, role, content });
   await db
@@ -80,6 +88,24 @@ export async function createReservation(input: ReservationInput, settings?: Rest
       : null;
   const notesParts = [durationLabel, input.notes?.trim()].filter(Boolean);
   const notes = notesParts.length > 0 ? notesParts.join(" · ") : null;
+
+  const { blockVisitorPersistence, ephemeralId } = await import("@/lib/demo-write-guard");
+  if (blockVisitorPersistence()) {
+    return {
+      id: ephemeralId(),
+      chatSessionId: input.chatSessionId ?? null,
+      guestName: input.guestName,
+      guestEmail: input.guestEmail ?? null,
+      guestPhone: input.guestPhone ?? null,
+      partySize: input.partySize,
+      reservationDate: input.date,
+      reservationTime: input.time,
+      notes,
+      source: "chatbot",
+      status: "pending",
+      createdAt: new Date(),
+    };
+  }
 
   const db = getDb();
   const [reservation] = await db
@@ -146,6 +172,25 @@ type SalesLeadInput = {
 };
 
 export async function createSalesLead(input: SalesLeadInput) {
+  const { blockVisitorPersistence, ephemeralId } = await import("@/lib/demo-write-guard");
+  if (blockVisitorPersistence()) {
+    return {
+      id: ephemeralId(),
+      chatSessionId: input.chatSessionId ?? null,
+      name: input.name ?? null,
+      company: input.company ?? null,
+      phone: input.phone,
+      email: input.email,
+      interest: input.interest ?? null,
+      notes: input.notes ?? null,
+      adminNotes: null,
+      status: "new",
+      source: "sales_chat",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }
+
   await ensureSalesLeadsTable();
   const db = getDb();
   const [lead] = await db

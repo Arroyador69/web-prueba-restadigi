@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { requireAdmin, unauthorizedResponse } from "@/lib/auth";
 import { getDatabaseUrl } from "@/lib/database-url";
+import { blockVisitorPersistence, demoNotPersisted, ephemeralId } from "@/lib/demo-write-guard";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import {
   createCallEvent,
@@ -67,6 +68,23 @@ export const Route = createFileRoute("/api/dashboard/calls")({
             return Response.json(
               { error: "Asiakas ja soittoaika ovat pakollisia" },
               { status: 400 },
+            );
+          }
+
+          if (blockVisitorPersistence()) {
+            return Response.json(
+              demoNotPersisted({
+                call: {
+                  id: ephemeralId(),
+                  clientName: body.clientName.trim(),
+                  contactPerson: body.contactPerson ?? null,
+                  phone: body.phone ?? null,
+                  email: body.email ?? null,
+                  scheduledAt: body.scheduledAt,
+                  notes: body.notes ?? null,
+                  status: body.status ?? "scheduled",
+                },
+              }),
             );
           }
 

@@ -432,7 +432,7 @@ async function seedIfEmpty() {
     VALUES
       ('Helsinki Bistro Oy', 'Ville Heikkinen', '+358404444444', 'ville@helsinkibistro.fi', ${daysAgo(-1, 10).toISOString()}, 'planned', 'Demo-esittely'),
       ('Café Aura', 'Laura Mäkinen', '+358405555555', 'laura@cafeaura.fi', ${daysAgo(0, 15).toISOString()}, 'planned', 'Seurantapuhelu'),
-      ('Nordic Kitchen', 'Joonas Laine', '+358406666666', 'joonas@nordickitchen.fi', ${daysAgo(2, 11).toISOString()}, 'completed', 'Kiinnostunut paketista'),
+      ('Nordic Kitchen', 'Joonas Laine', '+358406666666', 'joonas@nordickitchen.fi', ${daysAgo(2, 11).toISOString()}, 'done', 'Kiinnostunut paketista'),
       ('Tapas Norte', 'María López', '+34600999888', 'maria@tapasnorte.es', ${daysAgo(-3, 16).toISOString()}, 'planned', 'ES-asiakas · demo')
   `;
 

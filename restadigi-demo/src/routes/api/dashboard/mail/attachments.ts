@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { requireAdmin, unauthorizedResponse } from "@/lib/auth";
 import { getDatabaseUrl } from "@/lib/database-url";
+import { blockVisitorPersistence, demoNotPersisted, ephemeralId } from "@/lib/demo-write-guard";
 import {
   deleteMailAttachment,
   listMailAttachments,
@@ -57,6 +58,19 @@ export const Route = createFileRoute("/api/dashboard/mail/attachments")({
             return Response.json({ error: "PDF on liian suuri (max 8 Mt)" }, { status: 400 });
           }
 
+          if (blockVisitorPersistence()) {
+            return Response.json(
+              demoNotPersisted({
+                attachment: {
+                  id: ephemeralId(),
+                  slot: slotRaw,
+                  filename: file.name || `${slotRaw}.pdf`,
+                  contentType: "application/pdf",
+                },
+              }),
+            );
+          }
+
           const buffer = Buffer.from(await file.arrayBuffer());
           const attachment = await upsertMailAttachment(
             slotRaw as MailSlot,
@@ -86,6 +100,10 @@ export const Route = createFileRoute("/api/dashboard/mail/attachments")({
           const slotRaw = url.searchParams.get("slot") ?? "";
           if (!MAIL_SLOTS.includes(slotRaw as MailSlot)) {
             return Response.json({ error: "Virheellinen PDF-paikka" }, { status: 400 });
+          }
+
+          if (blockVisitorPersistence()) {
+            return Response.json(demoNotPersisted({ deleted: slotRaw }));
           }
 
           await deleteMailAttachment(slotRaw as MailSlot);

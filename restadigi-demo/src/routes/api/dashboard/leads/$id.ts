@@ -5,6 +5,7 @@ import { z } from "zod";
 import { dbReady, schema } from "@/db";
 import { requireAdmin, unauthorizedResponse } from "@/lib/auth";
 import { getDatabaseUrl } from "@/lib/database-url";
+import { blockVisitorPersistence, demoNotPersisted } from "@/lib/demo-write-guard";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 const patchSchema = z.object({
@@ -40,6 +41,18 @@ export const Route = createFileRoute("/api/dashboard/leads/$id")({
         }
 
         try {
+          if (blockVisitorPersistence()) {
+            return Response.json(
+              demoNotPersisted({
+                lead: {
+                  id: params.id,
+                  status: parsed.data.status,
+                  adminNotes: parsed.data.adminNotes,
+                },
+              }),
+            );
+          }
+
           const db = await dbReady();
           const [updated] = await db
             .update(schema.salesLeads)

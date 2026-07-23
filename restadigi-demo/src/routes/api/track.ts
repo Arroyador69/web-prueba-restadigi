@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { dbReady, schema } from "@/db";
 import { getDatabaseUrl } from "@/lib/database-url";
+import { blockVisitorPersistence, demoNotPersisted } from "@/lib/demo-write-guard";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 const trackSchema = z.object({
@@ -17,6 +18,10 @@ export const Route = createFileRoute("/api/track")({
       POST: async ({ request }) => {
         const limited = enforceRateLimit(request, "track");
         if (limited) return limited;
+
+        if (blockVisitorPersistence()) {
+          return Response.json(demoNotPersisted({ skipped: true }));
+        }
 
         if (!getDatabaseUrl()) {
           return Response.json({ ok: true, skipped: true });

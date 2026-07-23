@@ -474,12 +474,15 @@ export type Messages = {
       welcome: string;
       placeholder: string;
       sendAria: string;
+      resetAria: string;
       typing: string;
       sendFailed: string;
       genericError: string;
+      quickReplies: Array<{ label: string; message: string }>;
       demoEyebrow: string;
       demoOpenLabel: string;
       demoHint: string;
+      demoSubtitle: string;
     };
     booking: {
       openLabel: string;
@@ -492,12 +495,15 @@ export type Messages = {
       welcome: string;
       placeholder: string;
       sendAria: string;
+      resetAria: string;
       typing: string;
       sendFailed: string;
       genericError: string;
+      quickReplies: Array<{ label: string; message: string }>;
       demoEyebrow: string;
       demoOpenLabel: string;
       demoHint: string;
+      demoSubtitle: string;
     };
   };
 };

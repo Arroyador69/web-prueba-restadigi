@@ -2,8 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "npm install --prefix restadigi-demo",
-  "buildCommand": "npm run build --prefix restadigi-demo",
-  "outputDirectory": "restadigi-demo/.vercel/output",
+  "buildCommand": "npm run build --prefix restadigi-demo && rm -rf .vercel/output && mkdir -p .vercel && cp -R restadigi-demo/.vercel/output .vercel/output",
   "redirects": [
     { "source": "/verkkosivut", "destination": "/", "permanent": false },
     { "source": "/poytavaraupalvelu", "destination": "/", "permanent": false },

@@ -8,10 +8,12 @@
 
 # CRÍTICO: no desplegar Flask ni Python (causaba el 404 de Werkzeug)
 /main.py
+/main.py.disabled
 /utils.py
 /requirements.txt
 **/__pycache__/
 **/*.pyc
+/api/
 
 # Otros proyectos / carpetas de la raíz (no la app de reservas)
 /Delfín Check‑in 🐬/

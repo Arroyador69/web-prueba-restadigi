@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { fillDashboardUi, localeDateTag, useDashboardUi, useLocale } from "@/i18n";
 import {
   formatClosedWeekdays,
   parseClosedWeekdays,
   type RestaurantSettings,
-  WEEKDAY_OPTIONS,
 } from "@/lib/restaurant-settings-types";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +43,8 @@ function normalizeForm(form: SettingsForm): SettingsForm {
 }
 
 function DashboardSettingsPage() {
+  const t = useDashboardUi();
+  const { locale } = useLocale();
   const [form, setForm] = useState<SettingsForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -54,13 +56,13 @@ function DashboardSettingsPage() {
     void fetch("/api/dashboard/settings", { credentials: "include" })
       .then(async (res) => {
         const data = (await res.json()) as { settings?: RestaurantSettings; error?: string };
-        if (!res.ok) throw new Error(data.error ?? "Asetusten lataus epäonnistui");
+        if (!res.ok) throw new Error(data.error ?? t.settings.loadFailed);
         const { id: _id, updatedAt: _updatedAt, ...rest } = data.settings!;
         setForm(rest);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t.settings.loadFailed]);
 
   function updateField<K extends keyof SettingsForm>(key: K, value: SettingsForm[K]) {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
@@ -82,11 +84,11 @@ function DashboardSettingsPage() {
     if (type === "success") {
       setMessage(text);
       setError(null);
-      toast.success("Tallennettu tietokantaan", { description: text, duration: 6000 });
+      toast.success(t.settings.savedTitle, { description: text, duration: 6000 });
     } else {
       setError(text);
       setMessage(null);
-      toast.error("Tallennus epäonnistui", { description: text, duration: 8000 });
+      toast.error(t.settings.saveFailed, { description: text, duration: 8000 });
     }
 
     requestAnimationFrame(() => {
@@ -110,21 +112,18 @@ function DashboardSettingsPage() {
         body: JSON.stringify(payload),
       });
       const data = (await res.json()) as { settings?: RestaurantSettings; error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Tallennus epäonnistui");
+      if (!res.ok) throw new Error(data.error ?? t.settings.saveFailed);
 
       if (data.settings) {
         const { id: _id, updatedAt, ...rest } = data.settings;
         setForm(rest);
-        const savedAt = new Date(updatedAt).toLocaleString("fi-FI");
-        showFeedback(
-          "success",
-          `Ravintolan asetukset on tallennettu tietokantaan. Päivitetty: ${savedAt}. Chatbot käyttää uusia tietoja heti.`,
-        );
+        const savedAt = new Date(updatedAt).toLocaleString(localeDateTag(locale));
+        showFeedback("success", fillDashboardUi(t.settings.savedBody, { date: savedAt }));
       } else {
-        showFeedback("success", "Asetukset tallennettu tietokantaan.");
+        showFeedback("success", t.settings.savedBody);
       }
     } catch (err) {
-      const text = err instanceof Error ? err.message : "Tallennus epäonnistui";
+      const text = err instanceof Error ? err.message : t.settings.saveFailed;
       showFeedback("error", text);
     } finally {
       setSaving(false);
@@ -132,7 +131,7 @@ function DashboardSettingsPage() {
   }
 
   if (loading) {
-    return <p className="text-muted-foreground">Ladataan asetuksia…</p>;
+    return <p className="text-muted-foreground">{t.common.loading}</p>;
   }
 
   if (error && !form) {
@@ -146,18 +145,15 @@ function DashboardSettingsPage() {
   return (
     <div className="space-y-8 pb-4">
       <div>
-        <h2 className="text-2xl font-medium">Ravintolan asetukset</h2>
-        <p className="text-sm text-muted-foreground">
-          Määritä ravintolan tiedot, kapasiteetti ja varaussäännöt. Chatbot käyttää näitä suoraan
-          varauskeskusteluissa.
-        </p>
+        <h2 className="text-2xl font-medium">{t.settings.title}</h2>
+        <p className="text-sm text-muted-foreground">{t.settings.subtitle}</p>
       </div>
 
       <section className="space-y-4 rounded-sm border border-border bg-card p-6">
-        <h3 className="font-medium">Ravintolan identiteetti</h3>
+        <h3 className="font-medium">{t.settings.identity}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="restaurantName">Ravintolan nimi</Label>
+            <Label htmlFor="restaurantName">{t.settings.restaurantName}</Label>
             <Input
               id="restaurantName"
               value={form.restaurantName}
@@ -165,16 +161,16 @@ function DashboardSettingsPage() {
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="restaurantAddress">Osoite</Label>
+            <Label htmlFor="restaurantAddress">{t.settings.address}</Label>
             <Input
               id="restaurantAddress"
-              placeholder="Katu, postinumero, kaupunki"
+              placeholder={t.settings.address}
               value={form.restaurantAddress ?? ""}
               onChange={(e) => updateField("restaurantAddress", e.target.value || null)}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="restaurantPhone">Ravintolan puhelin</Label>
+            <Label htmlFor="restaurantPhone">{t.settings.phone}</Label>
             <Input
               id="restaurantPhone"
               placeholder="+358 40 123 4567"
@@ -183,7 +179,7 @@ function DashboardSettingsPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="restaurantEmail">Ravintolan sähköposti</Label>
+            <Label htmlFor="restaurantEmail">{t.settings.email}</Label>
             <Input
               id="restaurantEmail"
               type="email"
@@ -193,16 +189,16 @@ function DashboardSettingsPage() {
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="cuisineType">Keittiö / tyyli</Label>
+            <Label htmlFor="cuisineType">{t.settings.cuisine}</Label>
             <Input
               id="cuisineType"
-              placeholder="Esim. Suomalainen, italialainen, kasvispainotteinen"
+              placeholder={t.settings.cuisine}
               value={form.cuisineType ?? ""}
               onChange={(e) => updateField("cuisineType", e.target.value || null)}
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="restaurantDescription">Lyhyt kuvaus (chatbotin konteksti)</Label>
+            <Label htmlFor="restaurantDescription">{t.settings.description}</Label>
             <Textarea
               id="restaurantDescription"
               rows={3}
@@ -214,10 +210,10 @@ function DashboardSettingsPage() {
       </section>
 
       <section className="space-y-4 rounded-sm border border-border bg-card p-6">
-        <h3 className="font-medium">Chatbot ja teema</h3>
+        <h3 className="font-medium">{t.settings.chatbotTheme}</h3>
         <div className="grid gap-4">
           <div className="space-y-2">
-            <Label htmlFor="chatbotWelcomeMessage">Tervehdysviesti</Label>
+            <Label htmlFor="chatbotWelcomeMessage">{t.settings.welcome}</Label>
             <Textarea
               id="chatbotWelcomeMessage"
               rows={3}
@@ -226,17 +222,17 @@ function DashboardSettingsPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="chatbotInstructions">Lisäohjeet chatbotille</Label>
+            <Label htmlFor="chatbotInstructions">{t.settings.instructions}</Label>
             <Textarea
               id="chatbotInstructions"
               rows={3}
-              placeholder="Esim. lasten tuolit, gluteeniton menu, terassi…"
+              placeholder={t.settings.instructions}
               value={form.chatbotInstructions ?? ""}
               onChange={(e) => updateField("chatbotInstructions", e.target.value || null)}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="accentColor">Chatbotin väri</Label>
+            <Label htmlFor="accentColor">{t.settings.accentColor}</Label>
             <div className="flex items-center gap-3">
               <Input
                 id="accentColor"
@@ -258,10 +254,8 @@ function DashboardSettingsPage() {
       <section className="space-y-4 rounded-sm border border-border bg-card p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h3 className="font-medium">Varauspalvelu</h3>
-            <p className="text-sm text-muted-foreground">
-              Kun pois päältä, chatbot ohjaa soittamaan ravintolaan.
-            </p>
+            <h3 className="font-medium">{t.settings.bookingService}</h3>
+            <p className="text-sm text-muted-foreground">{t.settings.bookingOffHint}</p>
           </div>
           <Switch
             checked={form.reservationsEnabled}
@@ -272,7 +266,7 @@ function DashboardSettingsPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-sm border border-border p-4">
             <div className="mb-3 flex items-center justify-between">
-              <Label>Lounas</Label>
+              <Label>{t.settings.lunch}</Label>
               <Switch
                 checked={form.lunchEnabled}
                 onCheckedChange={(v) => updateField("lunchEnabled", v)}
@@ -280,7 +274,7 @@ function DashboardSettingsPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Alkaa</Label>
+                <Label className="text-xs text-muted-foreground">{t.settings.open}</Label>
                 <Input
                   type="time"
                   value={form.lunchOpenTime}
@@ -289,7 +283,7 @@ function DashboardSettingsPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Päättyy</Label>
+                <Label className="text-xs text-muted-foreground">{t.settings.close}</Label>
                 <Input
                   type="time"
                   value={form.lunchCloseTime}
@@ -302,7 +296,7 @@ function DashboardSettingsPage() {
 
           <div className="rounded-sm border border-border p-4">
             <div className="mb-3 flex items-center justify-between">
-              <Label>Illallinen</Label>
+              <Label>{t.settings.dinner}</Label>
               <Switch
                 checked={form.dinnerEnabled}
                 onCheckedChange={(v) => updateField("dinnerEnabled", v)}
@@ -310,7 +304,7 @@ function DashboardSettingsPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Alkaa</Label>
+                <Label className="text-xs text-muted-foreground">{t.settings.open}</Label>
                 <Input
                   type="time"
                   value={form.dinnerOpenTime}
@@ -319,7 +313,7 @@ function DashboardSettingsPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Päättyy</Label>
+                <Label className="text-xs text-muted-foreground">{t.settings.close}</Label>
                 <Input
                   type="time"
                   value={form.dinnerCloseTime}
@@ -332,9 +326,9 @@ function DashboardSettingsPage() {
         </div>
 
         <div className="space-y-2">
-          <Label>Suljettu viikonpäivinä</Label>
+          <Label>{t.settings.closedWeekdays}</Label>
           <div className="flex flex-wrap gap-2">
-            {WEEKDAY_OPTIONS.map((day) => {
+            {t.settings.weekdays.map((day) => {
               const active = closedDays.includes(Number(day.value));
               return (
                 <button
@@ -357,10 +351,10 @@ function DashboardSettingsPage() {
       </section>
 
       <section className="space-y-4 rounded-sm border border-border bg-card p-6">
-        <h3 className="font-medium">Kapasiteetti ja säännöt</h3>
+        <h3 className="font-medium">{t.settings.capacityRules}</h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-2">
-            <Label htmlFor="minPartySize">Min. henkilömäärä / pöytä</Label>
+            <Label htmlFor="minPartySize">{t.settings.minParty}</Label>
             <Input
               id="minPartySize"
               type="number"
@@ -370,7 +364,7 @@ function DashboardSettingsPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="maxPartySize">Max. henkilömäärä / pöytä</Label>
+            <Label htmlFor="maxPartySize">{t.settings.maxParty}</Label>
             <Input
               id="maxPartySize"
               type="number"
@@ -380,7 +374,7 @@ function DashboardSettingsPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="maxCoversPerSlot">Max. hlö / aika</Label>
+            <Label htmlFor="maxCoversPerSlot">{t.settings.maxCoversSlot}</Label>
             <Input
               id="maxCoversPerSlot"
               type="number"
@@ -390,7 +384,7 @@ function DashboardSettingsPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="maxCoversPerEvening">Max. hlö / illallinen</Label>
+            <Label htmlFor="maxCoversPerEvening">{t.settings.maxCoversEvening}</Label>
             <Input
               id="maxCoversPerEvening"
               type="number"
@@ -400,7 +394,7 @@ function DashboardSettingsPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="slotMinutes">Varausaika (min)</Label>
+            <Label htmlFor="slotMinutes">{t.settings.slotMinutes}</Label>
             <Input
               id="slotMinutes"
               type="number"
@@ -411,7 +405,7 @@ function DashboardSettingsPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="advanceBookingDays">Varaus etukäteen (pv)</Label>
+            <Label htmlFor="advanceBookingDays">{t.settings.advanceDays}</Label>
             <Input
               id="advanceBookingDays"
               type="number"
@@ -421,7 +415,7 @@ function DashboardSettingsPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="minNoticeHours">Min. ennakkoilmoitus (h)</Label>
+            <Label htmlFor="minNoticeHours">{t.settings.noticeHours}</Label>
             <Input
               id="minNoticeHours"
               type="number"
@@ -434,25 +428,22 @@ function DashboardSettingsPage() {
       </section>
 
       <section className="space-y-4 rounded-sm border border-border bg-card p-6">
-        <h3 className="font-medium">Yhteystiedot varauksessa</h3>
-        <p className="text-sm text-muted-foreground">
-          Chatbot pyytää nämä ennen varauksen vahvistamista. Suositus: sähköposti ja puhelin
-          molemmat pakollisina.
-        </p>
+        <h3 className="font-medium">{t.settings.contactRequirements}</h3>
+        <p className="text-sm text-muted-foreground">{t.settings.contactHint}</p>
         <div className="flex flex-wrap gap-6">
           <div className="flex items-center gap-3">
             <Switch
               checked={form.requireEmail}
               onCheckedChange={(v) => updateField("requireEmail", v)}
             />
-            <Label>Sähköposti pakollinen</Label>
+            <Label>{t.settings.requireEmail}</Label>
           </div>
           <div className="flex items-center gap-3">
             <Switch
               checked={form.requirePhone}
               onCheckedChange={(v) => updateField("requirePhone", v)}
             />
-            <Label>Puhelin pakollinen</Label>
+            <Label>{t.settings.requirePhone}</Label>
           </div>
         </div>
       </section>
@@ -464,7 +455,7 @@ function DashboardSettingsPage() {
         {message && (
           <Alert className="border-emerald-500/50 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100">
             <CheckCircle2 className="size-4 text-emerald-600" />
-            <AlertTitle>Tallennettu onnistuneesti</AlertTitle>
+            <AlertTitle>{t.settings.savedTitle}</AlertTitle>
             <AlertDescription>{message}</AlertDescription>
           </Alert>
         )}
@@ -472,7 +463,7 @@ function DashboardSettingsPage() {
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="size-4" />
-            <AlertTitle>Tallennus epäonnistui</AlertTitle>
+            <AlertTitle>{t.settings.saveFailed}</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -484,7 +475,7 @@ function DashboardSettingsPage() {
           onClick={() => void save()}
           disabled={saving}
         >
-          {saving ? "Tallennetaan tietokantaan…" : "Tallenna asetukset"}
+          {saving ? t.settings.saving : t.settings.save}
         </Button>
       </div>
     </div>

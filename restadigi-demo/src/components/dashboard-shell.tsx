@@ -14,7 +14,7 @@ import {
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useLocale } from "@/i18n";
+import { LocaleFlag, useDashboardUi, useLocale, type Locale } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -29,51 +29,6 @@ const nav = [
   { to: "/dashboard/settings", labelKey: "settings", icon: Settings },
 ] as const;
 
-const LABELS = {
-  fi: {
-    summary: "Yhteenveto",
-    leads: "Myyntiliidit",
-    calls: "Soitukalenteri",
-    mail: "Sähköposti",
-    visitors: "Kävijät",
-    conversations: "Keskustelut",
-    reservations: "Varaukset",
-    floor: "Pöytäkartta",
-    settings: "Asetukset",
-    logout: "Kirjaudu ulos",
-    demo: "Julkinen demo",
-    landing: "Landing",
-  },
-  en: {
-    summary: "Overview",
-    leads: "Sales leads",
-    calls: "Call calendar",
-    mail: "Email",
-    visitors: "Visitors",
-    conversations: "Conversations",
-    reservations: "Reservations",
-    floor: "Floor plan",
-    settings: "Settings",
-    logout: "Log out",
-    demo: "Public demo",
-    landing: "Landing",
-  },
-  es: {
-    summary: "Resumen",
-    leads: "Leads",
-    calls: "Calendario llamadas",
-    mail: "Email",
-    visitors: "Visitas",
-    conversations: "Conversaciones",
-    reservations: "Reservas",
-    floor: "Mapa de mesas",
-    settings: "Ajustes",
-    logout: "Cerrar sesión",
-    demo: "Demo pública",
-    landing: "Landing",
-  },
-} as const;
-
 export function DashboardShell({
   children,
   publicDemo = false,
@@ -82,8 +37,9 @@ export function DashboardShell({
   publicDemo?: boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { locale } = useLocale();
-  const labels = LABELS[locale] || LABELS.fi;
+  const { locale, setLocale } = useLocale();
+  const t = useDashboardUi();
+  const labels = t.shell;
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
@@ -93,14 +49,30 @@ export function DashboardShell({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-6 py-4">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              {publicDemo ? labels.demo : "Admin"}
+              {publicDemo ? labels.demo : labels.admin}
             </p>
-            <h1 className="text-lg font-medium">Restadigi Dashboard</h1>
+            <h1 className="text-lg font-medium">{labels.title}</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <label className="flex items-center gap-2 rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
+              <LocaleFlag locale={locale} className="size-4 rounded-[2px] ring-1 ring-border/60" />
+              <span className="sr-only sm:not-sr-only sm:text-muted-foreground">
+                {t.common.language}
+              </span>
+              <select
+                className="bg-transparent text-sm font-medium outline-none"
+                value={locale}
+                aria-label={t.common.language}
+                onChange={(e) => setLocale(e.target.value as Locale)}
+              >
+                <option value="fi">FI</option>
+                <option value="en">EN</option>
+                <option value="es">ES</option>
+              </select>
+            </label>
             <Button variant="outline" size="sm" asChild>
               <Link to="/">{labels.landing}</Link>
             </Button>

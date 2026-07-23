@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
+import { fillDashboardUi, localeDateTag, useDashboardUi, useLocale } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/conversations")({
@@ -20,6 +21,8 @@ type SessionItem = {
 type Message = { id: string; role: string; content: string; createdAt: string };
 
 function DashboardConversationsPage() {
+  const t = useDashboardUi();
+  const { locale } = useLocale();
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -28,29 +31,29 @@ function DashboardConversationsPage() {
   useEffect(() => {
     void fetch("/api/dashboard/conversations", { credentials: "include" })
       .then(async (res) => {
-        if (!res.ok) throw new Error("Lataus epäonnistui");
+        if (!res.ok) throw new Error(t.conversations.loadFailed);
         return res.json() as Promise<{ sessions: SessionItem[] }>;
       })
       .then((data) => setSessions(data.sessions))
       .catch((err: Error) => setError(err.message));
-  }, []);
+  }, [t.conversations.loadFailed]);
 
   useEffect(() => {
     if (!selectedId) return;
     void fetch(`/api/dashboard/conversations/${selectedId}`, { credentials: "include" })
       .then(async (res) => {
-        if (!res.ok) throw new Error("Viestien lataus epäonnistui");
+        if (!res.ok) throw new Error(t.conversations.messagesFailed);
         return res.json() as Promise<{ messages: Message[] }>;
       })
       .then((data) => setMessages(data.messages))
       .catch((err: Error) => setError(err.message));
-  }, [selectedId]);
+  }, [selectedId, t.conversations.messagesFailed]);
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-medium">Chat-keskustelut</h2>
-        <p className="text-sm text-muted-foreground">Kaikki chatbot-keskustelut ja varaukset</p>
+        <h2 className="text-2xl font-medium">{t.conversations.title}</h2>
+        <p className="text-sm text-muted-foreground">{t.conversations.subtitle}</p>
       </div>
 
       {error && <p className="text-destructive">{error}</p>}
@@ -71,28 +74,30 @@ function DashboardConversationsPage() {
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">
-                  {new Date(session.updatedAt).toLocaleString("fi-FI")}
+                  {new Date(session.updatedAt).toLocaleString(localeDateTag(locale))}
                 </p>
                 {session.hasReservation && (
                   <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent">
-                    Varaus
+                    {t.conversations.badgeReservation}
                   </span>
                 )}
                 {session.lastMessage?.includes("MYYNTILIIDI") && (
                   <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">
-                    Liidi
+                    {t.conversations.badgeLead}
                   </span>
                 )}
               </div>
-              <p className="mt-2 line-clamp-2 text-sm">{session.lastMessage ?? "—"}</p>
-              <p className="mt-2 text-xs text-muted-foreground">{session.messageCount} viestiä</p>
+              <p className="mt-2 line-clamp-2 text-sm">{session.lastMessage ?? t.common.dash}</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {fillDashboardUi(t.conversations.messageCount, { n: session.messageCount })}
+              </p>
             </button>
           ))}
         </div>
 
         <div className="rounded-sm border border-border bg-card p-5">
           {!selectedId ? (
-            <p className="text-sm text-muted-foreground">Valitse keskustelu vasemmalta.</p>
+            <p className="text-sm text-muted-foreground">{t.conversations.selectPrompt}</p>
           ) : (
             <div className="space-y-3">
               {messages.map((msg) => (
@@ -108,7 +113,7 @@ function DashboardConversationsPage() {
                   )}
                 >
                   <p className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {msg.role === "system" ? "Myyntiliidi" : msg.role}
+                    {msg.role === "system" ? t.conversations.roleLead : msg.role}
                   </p>
                   {msg.content}
                 </div>

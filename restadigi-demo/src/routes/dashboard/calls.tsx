@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { fillDashboardUi, localeDateTag, useDashboardUi, useLocale } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/calls")({
@@ -25,8 +26,6 @@ type CallEvent = {
   createdAt: string;
   updatedAt: string;
 };
-
-const WEEKDAYS = ["Ma", "Ti", "Ke", "To", "Pe", "La", "Su"];
 
 function toLocalInputValue(iso: string) {
   const d = new Date(iso);
@@ -78,6 +77,9 @@ function emptyForm(scheduledAt?: string) {
 }
 
 function DashboardCallsPage() {
+  const t = useDashboardUi();
+  const { locale } = useLocale();
+  const dateLocale = localeDateTag(locale);
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -102,15 +104,15 @@ function DashboardCallsPage() {
         upcoming?: CallEvent[];
         error?: string;
       };
-      if (!res.ok) throw new Error(data.error ?? "Lataus epäonnistui");
+      if (!res.ok) throw new Error(data.error ?? t.calls.title);
       setCalls(data.calls ?? []);
       setUpcoming(data.upcoming ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Virhe");
+      setError(err instanceof Error ? err.message : t.calls.title);
     } finally {
       setLoading(false);
     }
-  }, [year, month]);
+  }, [year, month, t.calls.title]);
 
   useEffect(() => {
     setLoading(true);
@@ -175,13 +177,13 @@ function DashboardCallsPage() {
         body: JSON.stringify(form),
       });
       const data = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Tallennus epäonnistui");
-      toast.success("Soitto lisätty kalenteriin");
+      if (!res.ok) throw new Error(data.error ?? t.calls.toastAdded);
+      toast.success(t.calls.toastAdded);
       setSelectedId(null);
       setForm(emptyForm(`${selectedDay}T10:00`));
       await load();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Virhe");
+      toast.error(err instanceof Error ? err.message : t.calls.title);
     } finally {
       setSaving(false);
     }
@@ -198,11 +200,11 @@ function DashboardCallsPage() {
         body: JSON.stringify(form),
       });
       const data = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Päivitys epäonnistui");
-      toast.success("Tallennettu");
+      if (!res.ok) throw new Error(data.error ?? t.calls.toastSaved);
+      toast.success(t.calls.toastSaved);
       await load();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Virhe");
+      toast.error(err instanceof Error ? err.message : t.calls.title);
     } finally {
       setSaving(false);
     }
@@ -223,13 +225,13 @@ function DashboardCallsPage() {
         }),
       });
       const data = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Merkintä epäonnistui");
-      toast.success(nextCallAt ? "Soitto tehty · seuraava lisätty" : "Soitto merkitty tehdyksi");
+      if (!res.ok) throw new Error(data.error ?? t.calls.toastDone);
+      toast.success(t.calls.toastDone);
       setSelectedId(null);
       setNextCallAt("");
       await load();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Virhe");
+      toast.error(err instanceof Error ? err.message : t.calls.title);
     } finally {
       setSaving(false);
     }
@@ -237,7 +239,7 @@ function DashboardCallsPage() {
 
   async function handleDelete() {
     if (!selected) return;
-    if (!confirm("Poistetaanko tämä soitto?")) return;
+    if (!confirm(t.calls.confirmDelete)) return;
     setSaving(true);
     try {
       const res = await fetch(`/api/dashboard/calls/${selected.id}`, {
@@ -245,34 +247,30 @@ function DashboardCallsPage() {
         credentials: "include",
       });
       const data = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Poisto epäonnistui");
-      toast.success("Poistettu");
+      if (!res.ok) throw new Error(data.error ?? t.calls.toastDeleted);
+      toast.success(t.calls.toastDeleted);
       setSelectedId(null);
       await load();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Virhe");
+      toast.error(err instanceof Error ? err.message : t.calls.title);
     } finally {
       setSaving(false);
     }
   }
 
-  const monthLabel = startOfMonth(year, month).toLocaleDateString("fi-FI", {
+  const monthLabel = startOfMonth(year, month).toLocaleDateString(dateLocale, {
     month: "long",
     year: "numeric",
   });
 
   if (loading && calls.length === 0) {
-    return <p className="text-muted-foreground">Ladataan…</p>;
+    return <p className="text-muted-foreground">{t.common.loading}</p>;
   }
 
   if (error) {
     return (
       <div className="rounded-sm border border-destructive/30 bg-destructive/5 p-4 text-sm">
         {error}
-        <p className="mt-2 text-muted-foreground">
-          Aja Neonissa <code className="text-xs">scripts/migrate-sales-calls.sql</code> jos taulu
-          puuttuu.
-        </p>
       </div>
     );
   }
@@ -280,12 +278,11 @@ function DashboardCallsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Myynti</p>
-        <h2 className="mt-1 text-2xl font-medium">Soitukalenteri</h2>
-        <p className="mt-2 max-w-2xl text-sm text-foreground/70">
-          Yksinkertainen kalenteri asiakaspuheluille: lisää soitto, kirjoita muistiinpanot ja aseta
-          seuraava soittoaika. Ei raskasta CRM:ää — vain se mitä tarvitset päivässä.
+        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          {t.calls.eyebrow}
         </p>
+        <h2 className="mt-1 text-2xl font-medium">{t.calls.title}</h2>
+        <p className="mt-2 max-w-2xl text-sm text-foreground/70">{t.calls.subtitle}</p>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.9fr]">
@@ -301,7 +298,7 @@ function DashboardCallsPage() {
           </div>
 
           <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
-            {WEEKDAYS.map((d) => (
+            {t.calls.weekdays.map((d) => (
               <div key={d} className="py-1 font-medium">
                 {d}
               </div>
@@ -339,12 +336,12 @@ function DashboardCallsPage() {
                   <div className="mt-1 space-y-0.5">
                     {planned > 0 ? (
                       <span className="block truncate rounded-sm bg-accent/15 px-1 text-[10px] text-accent">
-                        {planned} soitto
+                        {fillDashboardUi(t.calls.dayPlanned, { n: planned })}
                       </span>
                     ) : null}
                     {done > 0 ? (
                       <span className="block truncate rounded-sm bg-muted px-1 text-[10px] text-muted-foreground">
-                        {done} tehty
+                        {fillDashboardUi(t.calls.dayDone, { n: done })}
                       </span>
                     ) : null}
                   </div>
@@ -359,7 +356,7 @@ function DashboardCallsPage() {
             <div className="flex items-center gap-2">
               <Phone className="size-4 text-accent" />
               <h3 className="font-medium">
-                {new Date(selectedDay).toLocaleDateString("fi-FI", {
+                {new Date(selectedDay).toLocaleDateString(dateLocale, {
                   weekday: "long",
                   day: "numeric",
                   month: "long",
@@ -367,7 +364,7 @@ function DashboardCallsPage() {
               </h3>
             </div>
             {dayCalls.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Ei soittoja tälle päivälle.</p>
+              <p className="text-sm text-muted-foreground">{t.calls.emptyDay}</p>
             ) : (
               <ul className="space-y-2">
                 {dayCalls.map((call) => (
@@ -385,7 +382,7 @@ function DashboardCallsPage() {
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium">{call.clientName}</span>
                         <span className="text-xs tabular-nums text-muted-foreground">
-                          {new Date(call.scheduledAt).toLocaleTimeString("fi-FI", {
+                          {new Date(call.scheduledAt).toLocaleTimeString(dateLocale, {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
@@ -393,9 +390,9 @@ function DashboardCallsPage() {
                       </div>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {call.status === "planned"
-                          ? "Suunniteltu"
+                          ? t.calls.planned
                           : call.status === "done"
-                            ? "Tehty"
+                            ? t.calls.done
                             : call.status}
                         {call.notes ? ` · ${call.notes.slice(0, 60)}` : ""}
                       </p>
@@ -407,9 +404,9 @@ function DashboardCallsPage() {
           </div>
 
           <div className="rounded-sm border border-border bg-card p-4 space-y-3">
-            <h3 className="font-medium text-sm">Seuraavat soitot</h3>
+            <h3 className="font-medium text-sm">{t.calls.upcoming}</h3>
             {upcoming.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Ei tulevia soittoja.</p>
+              <p className="text-sm text-muted-foreground">{t.calls.emptyUpcoming}</p>
             ) : (
               <ul className="space-y-2">
                 {upcoming.slice(0, 6).map((call) => (
@@ -427,7 +424,7 @@ function DashboardCallsPage() {
                     >
                       <span className="font-medium">{call.clientName}</span>
                       <span className="ml-2 text-xs text-muted-foreground">
-                        {new Date(call.scheduledAt).toLocaleString("fi-FI", {
+                        {new Date(call.scheduledAt).toLocaleString(dateLocale, {
                           day: "numeric",
                           month: "short",
                           hour: "2-digit",
@@ -446,9 +443,7 @@ function DashboardCallsPage() {
       <section className="rounded-sm border border-border bg-card p-5 sm:p-6">
         <div className="mb-4 flex items-center gap-2">
           <CalendarPlus className="size-4 text-accent" />
-          <h3 className="font-medium">
-            {selected ? "Muokkaa soittoa / muistiinpanoja" : "Lisää soitto kalenteriin"}
-          </h3>
+          <h3 className="font-medium">{selected ? t.calls.editTitle : t.calls.createTitle}</h3>
         </div>
 
         <form
@@ -464,26 +459,26 @@ function DashboardCallsPage() {
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="clientName">Asiakas / yritys</Label>
+              <Label htmlFor="clientName">{t.calls.clientName}</Label>
               <Input
                 id="clientName"
                 required
                 value={form.clientName}
                 onChange={(e) => setForm((f) => ({ ...f, clientName: e.target.value }))}
-                placeholder="Ravintola Example Oy"
+                placeholder={t.calls.clientName}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="contactPerson">Yhteyshenkilö</Label>
+              <Label htmlFor="contactPerson">{t.calls.contactPerson}</Label>
               <Input
                 id="contactPerson"
                 value={form.contactPerson}
                 onChange={(e) => setForm((f) => ({ ...f, contactPerson: e.target.value }))}
-                placeholder="Matti Meikäläinen"
+                placeholder={t.calls.contactPerson}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Puhelin</Label>
+              <Label htmlFor="phone">{t.calls.phone}</Label>
               <Input
                 id="phone"
                 value={form.phone}
@@ -492,7 +487,7 @@ function DashboardCallsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="scheduledAt">Soittoaika</Label>
+              <Label htmlFor="scheduledAt">{t.calls.scheduledAt}</Label>
               <Input
                 id="scheduledAt"
                 type="datetime-local"
@@ -504,28 +499,26 @@ function DashboardCallsPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Muistiinpanot (mitä puhuttiin / mitä tehdä)</Label>
+            <Label htmlFor="notes">{t.calls.notes}</Label>
             <Textarea
               id="notes"
               rows={5}
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              placeholder={"• Tarve: verkkosivut + pöytävaraus\n• Budjetti:\n• Seuraava askel:"}
+              placeholder={t.calls.notes}
             />
           </div>
 
           {selected && selected.status === "planned" ? (
             <div className="space-y-2 rounded-sm border border-dashed border-border p-3">
-              <Label htmlFor="nextCallAt">Merkitse tehdyksi + seuraava soitto (valinnainen)</Label>
+              <Label htmlFor="nextCallAt">{t.calls.nextCall}</Label>
               <Input
                 id="nextCallAt"
                 type="datetime-local"
                 value={nextCallAt}
                 onChange={(e) => setNextCallAt(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">
-                Jos täytät ajan, nykyinen soitto merkitään tehdyksi ja uusi ilmestyy kalenteriin.
-              </p>
+              <p className="text-xs text-muted-foreground">{t.calls.nextCallHint}</p>
             </div>
           ) : null}
 
@@ -533,7 +526,7 @@ function DashboardCallsPage() {
             {selected ? (
               <>
                 <Button type="submit" disabled={saving}>
-                  Tallenna muutokset
+                  {t.calls.save}
                 </Button>
                 {selected.status === "planned" ? (
                   <Button
@@ -543,7 +536,7 @@ function DashboardCallsPage() {
                     onClick={() => void handleComplete()}
                   >
                     <Check className="size-4" />
-                    Merkitse tehdyksi
+                    {t.calls.markDone}
                   </Button>
                 ) : null}
                 <Button
@@ -553,7 +546,7 @@ function DashboardCallsPage() {
                   onClick={() => void handleDelete()}
                 >
                   <Trash2 className="size-4" />
-                  Poista
+                  {t.common.delete}
                 </Button>
                 <Button
                   type="button"
@@ -564,13 +557,13 @@ function DashboardCallsPage() {
                     setNextCallAt("");
                   }}
                 >
-                  Peruuta
+                  {t.common.cancel}
                 </Button>
               </>
             ) : (
               <Button type="submit" disabled={saving}>
                 <CalendarPlus className="size-4" />
-                {saving ? "Tallennetaan…" : "Lisää kalenteriin"}
+                {saving ? t.common.saving : t.calls.add}
               </Button>
             )}
           </div>

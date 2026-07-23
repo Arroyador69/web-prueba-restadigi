@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { fillDashboardUi, localeDateTag, useDashboardUi, useLocale } from "@/i18n";
 import { formatLocalDateKey, parseLocalDateKey } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 
@@ -24,12 +25,6 @@ type Reservation = {
   createdAt: string;
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "Odottaa",
-  confirmed: "Vahvistettu",
-  cancelled: "Peruttu",
-};
-
 function ReservationCard({
   reservation,
   updatingId,
@@ -39,6 +34,13 @@ function ReservationCard({
   updatingId: string | null;
   onUpdateStatus: (id: string, status: "pending" | "confirmed" | "cancelled") => void;
 }) {
+  const t = useDashboardUi();
+  const statusLabels: Record<string, string> = {
+    pending: t.reservations.pending,
+    confirmed: t.reservations.confirmed,
+    cancelled: t.reservations.cancelled,
+  };
+
   return (
     <div className="rounded-sm border border-border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -53,15 +55,19 @@ function ReservationCard({
                 : "bg-muted text-muted-foreground",
           )}
         >
-          {STATUS_LABELS[reservation.status] ?? reservation.status}
+          {statusLabels[reservation.status] ?? reservation.status}
         </span>
       </div>
       <p className="mt-2 text-sm text-foreground/80">
-        {reservation.reservationDate} · {reservation.reservationTime} · {reservation.partySize} hlö
+        {fillDashboardUi(t.reservations.partyLine, {
+          date: reservation.reservationDate,
+          time: reservation.reservationTime,
+          n: reservation.partySize,
+        })}
       </p>
       {reservation.guestEmail && (
         <p className="mt-1 text-sm">
-          <span className="text-muted-foreground">Sähköposti: </span>
+          <span className="text-muted-foreground">{t.reservations.email} </span>
           <a
             href={`mailto:${reservation.guestEmail}`}
             className="text-accent underline-offset-2 hover:underline"
@@ -71,7 +77,9 @@ function ReservationCard({
         </p>
       )}
       {reservation.guestPhone && (
-        <p className="mt-1 text-sm text-muted-foreground">Puhelin: {reservation.guestPhone}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t.reservations.phone} {reservation.guestPhone}
+        </p>
       )}
       {reservation.notes && (
         <p className="mt-2 text-sm italic text-foreground/70">{reservation.notes}</p>
@@ -84,7 +92,7 @@ function ReservationCard({
             disabled={updatingId === reservation.id}
             onClick={() => onUpdateStatus(reservation.id, "confirmed")}
           >
-            Vahvista
+            {t.reservations.confirm}
           </Button>
         )}
         {reservation.status !== "cancelled" && (
@@ -94,7 +102,7 @@ function ReservationCard({
             disabled={updatingId === reservation.id}
             onClick={() => onUpdateStatus(reservation.id, "cancelled")}
           >
-            Peruuta
+            {t.reservations.cancel}
           </Button>
         )}
       </div>
@@ -103,6 +111,8 @@ function ReservationCard({
 }
 
 function DashboardReservationsPage() {
+  const t = useDashboardUi();
+  const { locale } = useLocale();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(() =>
     parseLocalDateKey(formatLocalDateKey(new Date())),
@@ -114,11 +124,11 @@ function DashboardReservationsPage() {
 
   const loadReservations = useCallback(async () => {
     const res = await fetch("/api/dashboard/reservations", { credentials: "include" });
-    if (!res.ok) throw new Error("Varausten lataus epäonnistui");
+    if (!res.ok) throw new Error(t.reservations.loadFailed);
     const data = (await res.json()) as { reservations: Reservation[] };
     setReservations(data.reservations);
     return data.reservations;
-  }, []);
+  }, [t.reservations.loadFailed]);
 
   useEffect(() => {
     void loadReservations()
@@ -169,11 +179,11 @@ function DashboardReservationsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      if (!res.ok) throw new Error("Tilan päivitys epäonnistui");
+      if (!res.ok) throw new Error(t.reservations.statusFailed);
       const data = (await res.json()) as { reservation: Reservation };
       setReservations((prev) => prev.map((r) => (r.id === id ? data.reservation : r)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Päivitys epäonnistui");
+      setError(err instanceof Error ? err.message : t.reservations.updateFailed);
     } finally {
       setUpdatingId(null);
     }
@@ -201,10 +211,8 @@ function DashboardReservationsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-medium">Pöytävaraukset</h2>
-          <p className="text-sm text-muted-foreground">
-            Varaukset chatbotista — sähköposti ja tila näkyvät täällä
-          </p>
+          <h2 className="text-2xl font-medium">{t.reservations.title}</h2>
+          <p className="text-sm text-muted-foreground">{t.reservations.subtitle}</p>
         </div>
         <Button
           variant="outline"
@@ -216,23 +224,22 @@ function DashboardReservationsPage() {
               .finally(() => setLoading(false));
           }}
         >
-          Päivitä
+          {t.common.refresh}
         </Button>
       </div>
 
       {error && <p className="text-destructive">{error}</p>}
 
       {loading ? (
-        <p className="text-muted-foreground">Ladataan varauksia…</p>
+        <p className="text-muted-foreground">{t.reservations.loading}</p>
       ) : activeReservations.length === 0 ? (
         <p className="rounded-sm border border-border bg-card p-6 text-sm text-muted-foreground">
-          Ei vielä varauksia. Tee testivaraus chatbotista sivuston alareunasta.
+          {t.reservations.empty}
         </p>
       ) : (
         <>
           <p className="text-sm text-muted-foreground">
-            Yhteensä {activeReservations.length} aktiivista varausta. Päivät, joilla on varauksia,
-            on korostettu kalenterissa.
+            {fillDashboardUi(t.reservations.summary, { n: activeReservations.length })}
           </p>
 
           <div className="grid gap-6 lg:grid-cols-[auto_1fr]">
@@ -250,7 +257,7 @@ function DashboardReservationsPage() {
 
             <div className="space-y-4">
               <h3 className="font-medium">
-                {selectedDate.toLocaleDateString("fi-FI", {
+                {selectedDate.toLocaleDateString(localeDateTag(locale), {
                   weekday: "long",
                   day: "numeric",
                   month: "long",
@@ -259,10 +266,7 @@ function DashboardReservationsPage() {
               </h3>
 
               {dayReservations.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Ei varauksia tälle päivälle. Valitse korostettu päivä kalenterista tai katso
-                  kaikki varaukset alta.
-                </p>
+                <p className="text-sm text-muted-foreground">{t.reservations.emptyDay}</p>
               ) : (
                 dayReservations.map((reservation) => (
                   <ReservationCard
@@ -277,7 +281,7 @@ function DashboardReservationsPage() {
           </div>
 
           <section className="space-y-3">
-            <h3 className="font-medium">Kaikki varaukset</h3>
+            <h3 className="font-medium">{t.reservations.allTitle}</h3>
             <div className="space-y-3">
               {activeReservations
                 .sort((a, b) => {
@@ -295,7 +299,9 @@ function DashboardReservationsPage() {
                         setSelectedDate(parseLocalDateKey(reservation.reservationDate))
                       }
                     >
-                      Näytä {reservation.reservationDate} kalenterissa →
+                      {fillDashboardUi(t.reservations.showInCalendar, {
+                        date: reservation.reservationDate,
+                      })}
                     </Button>
                     <ReservationCard
                       reservation={reservation}

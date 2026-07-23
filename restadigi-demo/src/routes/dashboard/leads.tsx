@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { fillDashboardUi, localeDateTag, useDashboardUi, useLocale } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/leads")({
@@ -27,19 +28,9 @@ type Lead = {
   updatedAt: string;
 };
 
-const STATUS_OPTIONS = [
-  { value: "new", label: "Uusi" },
-  { value: "contacted", label: "Yhteyttä otettu" },
-  { value: "qualified", label: "Kartoitettu" },
-  { value: "won", label: "Voitettu" },
-  { value: "lost", label: "Hävitty" },
-] as const;
+const STATUS_VALUES = ["new", "contacted", "qualified", "won", "lost"] as const;
 
-type LeadStatus = (typeof STATUS_OPTIONS)[number]["value"];
-
-const STATUS_LABELS: Record<string, string> = Object.fromEntries(
-  STATUS_OPTIONS.map((s) => [s.value, s.label]),
-);
+type LeadStatus = (typeof STATUS_VALUES)[number];
 
 function statusClass(status: string) {
   switch (status) {
@@ -55,17 +46,22 @@ function statusClass(status: string) {
   }
 }
 
-function exportCsv(leads: Lead[]) {
+function exportCsv(
+  leads: Lead[],
+  t: ReturnType<typeof useDashboardUi>,
+  dateLocale: string,
+  statusLabels: Record<string, string>,
+) {
   const header = [
-    "Nimi",
-    "Yritys",
-    "Puhelin",
-    "Sähköposti",
-    "Kiinnostus",
-    "Muistiinpanot",
-    "Admin-muistiinpanot",
-    "Tila",
-    "Luotu",
+    t.leads.csvName,
+    t.leads.csvCompany,
+    t.leads.csvPhone,
+    t.leads.csvEmail,
+    t.leads.csvInterest,
+    t.leads.csvNotes,
+    t.leads.csvAdmin,
+    t.leads.csvStatus,
+    t.leads.csvCreated,
   ];
   const rows = leads.map((lead) =>
     [
@@ -76,8 +72,8 @@ function exportCsv(leads: Lead[]) {
       lead.interest ?? "",
       lead.notes ?? "",
       lead.adminNotes ?? "",
-      STATUS_LABELS[lead.status] ?? lead.status,
-      new Date(lead.createdAt).toLocaleString("fi-FI"),
+      statusLabels[lead.status] ?? lead.status,
+      new Date(lead.createdAt).toLocaleString(dateLocale),
     ]
       .map((cell) => `"${String(cell).replaceAll('"', '""')}"`)
       .join(","),
@@ -88,12 +84,14 @@ function exportCsv(leads: Lead[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `restadigi-liidit-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `restadigi-leads-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
 function DashboardLeadsPage() {
+  const t = useDashboardUi();
+  const { locale } = useLocale();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | LeadStatus>("all");
@@ -101,14 +99,24 @@ function DashboardLeadsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [adminNotesDraft, setAdminNotesDraft] = useState("");
+  const statusOptions = [
+    { value: "new", label: t.leads.statusNew },
+    { value: "contacted", label: t.leads.statusContacted },
+    { value: "qualified", label: t.leads.statusQualified },
+    { value: "won", label: t.leads.statusWon },
+    { value: "lost", label: t.leads.statusLost },
+  ] as const;
+  const statusLabels: Record<string, string> = Object.fromEntries(
+    statusOptions.map((status) => [status.value, status.label]),
+  );
 
   const loadLeads = useCallback(async () => {
     const res = await fetch("/api/dashboard/leads", { credentials: "include" });
-    if (!res.ok) throw new Error("Liidien lataus epäonnistui");
+    if (!res.ok) throw new Error(t.leads.loadFailed);
     const data = (await res.json()) as { leads: Lead[] };
     setLeads(data.leads);
     return data.leads;
-  }, []);
+  }, [t.leads.loadFailed]);
 
   useEffect(() => {
     void loadLeads()
@@ -135,8 +143,8 @@ function DashboardLeadsPage() {
 
   const counts = useMemo(() => {
     const base: Record<string, number> = { all: leads.length };
-    for (const opt of STATUS_OPTIONS) {
-      base[opt.value] = leads.filter((l) => l.status === opt.value).length;
+    for (const status of STATUS_VALUES) {
+      base[status] = leads.filter((lead) => lead.status === status).length;
     }
     return base;
   }, [leads]);
@@ -154,40 +162,40 @@ function DashboardLeadsPage() {
         body: JSON.stringify(patch),
       });
       const data = (await res.json()) as { lead?: Lead; error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Päivitys epäonnistui");
+      if (!res.ok) throw new Error(data.error ?? t.leads.updateFailed);
       if (data.lead) {
         setLeads((prev) => prev.map((l) => (l.id === id ? data.lead! : l)));
-        toast.success("Liidi päivitetty");
+        toast.success(t.leads.updatedToast);
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Päivitys epäonnistui");
+      toast.error(err instanceof Error ? err.message : t.leads.updateFailed);
     } finally {
       setSaving(false);
     }
   }
 
   if (loading) {
-    return <p className="text-muted-foreground">Ladataan…</p>;
+    return <p className="text-muted-foreground">{t.common.loading}</p>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-medium">Myyntiliidit</h2>
-          <p className="text-sm text-muted-foreground">
-            Asiakaspalvelubotin keräämät yhteystiedot — soita, lähetä sähköposti ja merkitse tila.
-          </p>
+          <h2 className="text-2xl font-medium">{t.leads.title}</h2>
+          <p className="text-sm text-muted-foreground">{t.leads.subtitle}</p>
         </div>
         <Button
           type="button"
           variant="outline"
           size="sm"
           disabled={leads.length === 0}
-          onClick={() => exportCsv(filter === "all" ? leads : filtered)}
+          onClick={() =>
+            exportCsv(filter === "all" ? leads : filtered, t, localeDateTag(locale), statusLabels)
+          }
         >
           <Download className="size-4" />
-          Vie CSV
+          {t.leads.exportCsv}
         </Button>
       </div>
 
@@ -204,9 +212,9 @@ function DashboardLeadsPage() {
               : "bg-secondary text-foreground/70 hover:text-foreground",
           )}
         >
-          Kaikki ({counts.all})
+          {t.leads.filterAll} ({counts.all})
         </button>
-        {STATUS_OPTIONS.map((opt) => (
+        {statusOptions.map((opt) => (
           <button
             key={opt.value}
             type="button"
@@ -225,8 +233,7 @@ function DashboardLeadsPage() {
 
       {filtered.length === 0 ? (
         <div className="rounded-sm border border-border bg-card p-8 text-sm text-muted-foreground">
-          Ei vielä myyntiliidejä. Kun kävijä jättää puhelinnumeron ja sähköpostin
-          Asiakaspalvelu-botille, ne näkyvät täällä.
+          {t.leads.empty}
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
@@ -251,7 +258,7 @@ function DashboardLeadsPage() {
                       statusClass(lead.status),
                     )}
                   >
-                    {STATUS_LABELS[lead.status] ?? lead.status}
+                    {statusLabels[lead.status] ?? lead.status}
                   </span>
                 </div>
                 {lead.company && lead.name && (
@@ -260,7 +267,7 @@ function DashboardLeadsPage() {
                 <p className="mt-2 text-sm text-foreground/80 truncate">{lead.phone}</p>
                 <p className="text-sm text-foreground/70 truncate">{lead.email}</p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {new Date(lead.createdAt).toLocaleString("fi-FI")}
+                  {new Date(lead.createdAt).toLocaleString(localeDateTag(locale))}
                 </p>
               </button>
             ))}
@@ -270,13 +277,15 @@ function DashboardLeadsPage() {
             <div className="rounded-sm border border-border bg-card p-6 space-y-6">
               <div>
                 <h3 className="text-xl font-medium">
-                  {selected.name || selected.company || "Nimetön liidi"}
+                  {selected.name || selected.company || t.leads.unnamed}
                 </h3>
                 {selected.company && selected.name && (
                   <p className="text-sm text-muted-foreground">{selected.company}</p>
                 )}
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Luotu {new Date(selected.createdAt).toLocaleString("fi-FI")}
+                  {fillDashboardUi(t.leads.created, {
+                    date: new Date(selected.createdAt).toLocaleString(localeDateTag(locale)),
+                  })}
                 </p>
               </div>
 
@@ -290,7 +299,7 @@ function DashboardLeadsPage() {
                 </a>
                 <a
                   href={`mailto:${selected.email}?subject=${encodeURIComponent(
-                    `Restadigi — ${selected.interest || "yhteydenotto"}`,
+                    `Restadigi ${t.common.dash} ${selected.interest || t.leads.title}`,
                   )}`}
                   className="inline-flex items-center gap-2 rounded-sm border border-border px-4 py-3 text-sm hover:bg-secondary/60"
                 >
@@ -302,7 +311,7 @@ function DashboardLeadsPage() {
               {selected.interest && (
                 <div>
                   <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-1">
-                    Kiinnostus
+                    {t.leads.interest}
                   </p>
                   <p className="text-sm">{selected.interest}</p>
                 </div>
@@ -311,7 +320,7 @@ function DashboardLeadsPage() {
               {selected.notes && (
                 <div>
                   <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-1">
-                    Kävijän lisätiedot
+                    {t.leads.visitorNotes}
                   </p>
                   <p className="text-sm text-foreground/80 whitespace-pre-wrap">{selected.notes}</p>
                 </div>
@@ -319,10 +328,10 @@ function DashboardLeadsPage() {
 
               <div>
                 <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-2">
-                  Tila
+                  {t.leads.status}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {STATUS_OPTIONS.map((opt) => (
+                  {statusOptions.map((opt) => (
                     <Button
                       key={opt.value}
                       type="button"
@@ -339,13 +348,13 @@ function DashboardLeadsPage() {
 
               <div>
                 <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-2">
-                  Omat muistiinpanot
+                  {t.leads.adminNotes}
                 </p>
                 <Textarea
                   value={adminNotesDraft}
                   onChange={(e) => setAdminNotesDraft(e.target.value)}
                   rows={4}
-                  placeholder="Esim. soitettu 17.7., lähettää tarjouksen verkkosivuista…"
+                  placeholder={t.leads.adminNotesPh}
                   className="border-border bg-background"
                 />
                 <Button
@@ -359,20 +368,20 @@ function DashboardLeadsPage() {
                     })
                   }
                 >
-                  Tallenna muistiinpanot
+                  {t.leads.saveNotes}
                 </Button>
               </div>
 
               {selected.chatSessionId && (
                 <p className="text-sm text-muted-foreground">
-                  Keskustelu:{" "}
+                  {t.common.dash}{" "}
                   <Link
                     to="/dashboard/conversations"
                     className="text-accent underline-offset-2 hover:underline"
                   >
-                    avaa chat-keskustelut
+                    {t.leads.openChat}
                   </Link>{" "}
-                  (istunto {selected.chatSessionId.slice(0, 8)}…)
+                  {t.leads.sessionPrefix} {selected.chatSessionId.slice(0, 8)}…)
                 </p>
               )}
             </div>

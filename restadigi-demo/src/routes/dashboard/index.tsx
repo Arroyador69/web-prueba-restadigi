@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+import { useDashboardUi } from "@/i18n";
+
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardHomePage,
 });
@@ -17,6 +19,7 @@ type Stats = {
 };
 
 function DashboardHomePage() {
+  const t = useDashboardUi();
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,38 +27,38 @@ function DashboardHomePage() {
     void fetch("/api/dashboard/stats", { credentials: "include" })
       .then(async (res) => {
         const data = (await res.json()) as Stats & { error?: string };
-        if (!res.ok) throw new Error(data.error ?? "Tilastojen lataus epäonnistui");
+        if (!res.ok) throw new Error(data.error ?? t.home.loadFailed);
         return data;
       })
       .then(setStats)
       .catch((err: Error) => setError(err.message));
-  }, []);
+  }, [t.home.loadFailed]);
 
   if (error) {
     return <p className="text-destructive">{error}</p>;
   }
 
   if (!stats) {
-    return <p className="text-muted-foreground">Ladataan…</p>;
+    return <p className="text-muted-foreground">{t.common.loading}</p>;
   }
 
   const cards = [
-    { label: "Sivulataukset (30 pv)", value: stats.pageViews },
-    { label: "Uniikit kävijät", value: stats.uniqueVisitors },
+    { label: t.home.pageViews, value: stats.pageViews },
+    { label: t.home.uniqueVisitors, value: stats.uniqueVisitors },
     {
-      label: "Myyntiliidit",
+      label: t.home.salesLeads,
       value: stats.salesLeads,
       to: "/dashboard/leads" as const,
     },
-    { label: "Chat-keskustelut", value: stats.chatSessions },
-    { label: "Varaukset", value: stats.reservations },
+    { label: t.home.chatSessions, value: stats.chatSessions },
+    { label: t.home.reservations, value: stats.reservations },
   ];
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-medium">Yhteenveto</h2>
-        <p className="text-sm text-muted-foreground">Viimeiset 30 päivää</p>
+        <h2 className="text-2xl font-medium">{t.home.title}</h2>
+        <p className="text-sm text-muted-foreground">{t.home.subtitle}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -89,7 +92,7 @@ function DashboardHomePage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-sm border border-border bg-card p-5">
-          <h3 className="mb-4 font-medium">Kävijät päivittäin</h3>
+          <h3 className="mb-4 font-medium">{t.home.chartDaily}</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.viewsByDay}>
@@ -104,10 +107,10 @@ function DashboardHomePage() {
         </div>
 
         <div className="rounded-sm border border-border bg-card p-5">
-          <h3 className="mb-4 font-medium">Suosituimmat sivut</h3>
+          <h3 className="mb-4 font-medium">{t.home.topPages}</h3>
           <ul className="space-y-3">
             {stats.topPages.length === 0 ? (
-              <li className="text-sm text-muted-foreground">Ei vielä dataa.</li>
+              <li className="text-sm text-muted-foreground">{t.home.noData}</li>
             ) : (
               stats.topPages.map((page) => (
                 <li key={page.path} className="flex items-center justify-between text-sm">

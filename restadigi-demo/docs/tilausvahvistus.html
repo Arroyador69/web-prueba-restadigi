@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="utf-8" />
+<title>Restadigi – Tilausvahvistus</title>
+<style>
+@page { size: A4 portrait; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 210mm; min-height: 297mm;
+  font-family: "Segoe UI", Calibri, Arial, sans-serif;
+  color: #2a2018; background: #e8e4de;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.toolbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; gap: 10px; align-items: center; justify-content: center;
+  padding: 10px 14px; background: #432f24; color: #fff;
+  font-size: 13px;
+}
+.toolbar button {
+  border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  font-weight: 700; background: #c45c26; color: #fff;
+}
+.toolbar button.secondary { background: #fff; color: #432f24; }
+.toolbar span { opacity: 0.85; margin-left: 8px; }
+.page {
+  width: 210mm; min-height: 297mm; margin: 16px auto; padding: 8mm 10mm 7mm;
+  background: #fff; position: relative;
+  display: flex; flex-direction: column; gap: 0;
+}
+.header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 14px; padding-bottom: 6px; border-bottom: 3px solid #432f24; margin-bottom: 6px;
+}
+.logo { height: 46px; width: auto; display: block; }
+.brand-sub {
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #7a6a5c; font-weight: 700; margin-top: 2px;
+}
+.header-right { text-align: right; font-size: 10.5px; line-height: 1.4; color: #5a4a3e; }
+.header-right strong { display: block; color: #432f24; font-size: 12px; margin-bottom: 1px; }
+.doc-title {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin: 4px 0 6px; gap: 12px;
+}
+.doc-title h1 {
+  font-size: 18px; font-weight: 800; color: #432f24; letter-spacing: 0.04em;
+}
+.meta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.field {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.field label {
+  font-size: 8.5px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: #7a6a5c;
+}
+.field input, .field select, .field textarea {
+  width: 100%; border: 0; border-bottom: 1.5px solid #cfc4b8;
+  background: transparent; padding: 2px 0 3px;
+  font: inherit; font-size: 11px; color: #2a2018; outline: none;
+}
+.field input[type="number"] { -moz-appearance: textfield; }
+.field input[type="number"]::-webkit-outer-spin-button,
+.field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-bottom-color: #c45c26;
+}
+.field.w-sm { width: 88px; }
+.field.w-md { width: 140px; }
+.field.w-lg { flex: 1; min-width: 160px; }
+.section {
+  margin-top: 6px; padding-top: 5px; border-top: 1px solid #e0d6cb;
+}
+.section h2 {
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.12em;
+  text-transform: uppercase; color: #432f24; margin-bottom: 4px;
+}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 12px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px 10px; }
+.products {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px;
+}
+.prod-group {
+  border: 1.5px solid #e0d6cb; border-radius: 7px; padding: 5px 7px 4px;
+  background: #fbf8f4;
+}
+.prod-group h3 {
+  font-size: 10px; font-weight: 800; color: #432f24; margin-bottom: 4px;
+}
+.prod {
+  display: grid; grid-template-columns: 14px 1fr auto; gap: 5px; align-items: start;
+  padding: 1.5px 0; font-size: 10px; line-height: 1.22;
+}
+.prod input[type="checkbox"] {
+  width: 13px; height: 13px; margin-top: 1px; accent-color: #c45c26;
+}
+.prod .name { color: #2a2018; }
+.prod .price { color: #c45c26; font-weight: 700; white-space: nowrap; font-size: 10px; }
+.terms-box, .billing-box {
+  border: 1.5px solid #e0d6cb; border-radius: 7px; padding: 6px 8px;
+  background: #fbf8f4; font-size: 9.5px; line-height: 1.35; color: #3a2f27;
+}
+.terms-box strong, .billing-box strong { color: #432f24; }
+.terms-choices { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 6px 0 4px; }
+.terms-choices label {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; cursor: pointer;
+}
+.terms-choices input { accent-color: #c45c26; }
+.billing-box {
+  border-color: #432f24; background: linear-gradient(165deg, #fff7f0 0%, #fbf8f4 70%);
+}
+.billing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; margin-top: 4px; }
+.sign {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 6px;
+}
+.sign-box { padding-top: 2px; }
+.sign-box .who { font-size: 9.5px; font-weight: 800; color: #432f24; margin-bottom: 8px; }
+.sign-line {
+  border-top: 1.5px solid #432f24; padding-top: 3px;
+  font-size: 8.5px; color: #7a6a5c; margin-top: 14px;
+}
+.footer {
+  margin-top: auto; padding-top: 5px; border-top: 1.5px solid #d4c9bc;
+  display: flex; justify-content: space-between; font-size: 8.5px; color: #5a4a3e;
+}
+.total-box {
+  margin-top: 7px; border: 2px solid #432f24; border-radius: 8px;
+  padding: 7px 10px; background: #fff7f0;
+}
+.total-box h3 {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: #432f24; margin-bottom: 5px;
+}
+.total-rows { display: grid; gap: 2px; font-size: 11px; }
+.total-rows .row { display: flex; justify-content: space-between; gap: 12px; }
+.total-rows .row.grand {
+  margin-top: 4px; padding-top: 4px; border-top: 1.5px solid #d4c9bc;
+  font-size: 14px; font-weight: 800; color: #432f24;
+}
+.total-rows .row.grand .amt { color: #c45c26; }
+.total-hint { font-size: 8.5px; color: #7a6a5c; margin-top: 4px; }
+@media print {
+  html, body { background: #fff; width: 210mm; height: 297mm; }
+  .toolbar { display: none !important; }
+  .page {
+    margin: 0; width: 210mm; height: 297mm; min-height: 297mm;
+    overflow: hidden; page-break-after: avoid;
+  }
+  .field input, .field select, .field textarea {
+    border-bottom-color: #b8aea3;
+  }
+}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button type="button" onclick="window.print()">Tulosta / Tallenna PDF</button>
+  <button type="button" class="secondary" onclick="clearForm()">Tyhjennä</button>
+  <span><strong>Tämä on täytettävä lomake.</strong> Täytä kentät täällä → sitten Tulosta / Tallenna PDF. Älä avaa PDF:ää täyttöön.</span>
+</div>
+
+<div class="page">
+  <header class="header">
+    <div>
+      <img class="logo" src="../src/assets/restadigi-logo.png" alt="Restadigi" />
+      <div class="brand-sub">Tilausvahvistus</div>
+    </div>
+    <div class="header-right">
+      <strong>www.restadigi.fi</strong>
+      info@restadigi.fi<br />
+      +358 403 738 332
+    </div>
+  </header>
+
+  <div class="doc-title">
+    <h1>TILAUSVAHVISTUS</h1>
+    <div class="meta-row">
+      <div class="field w-md">
+        <label for="orderNo">Tilausnumero</label>
+        <input id="orderNo" name="orderNo" type="text" placeholder="RD-____" />
+      </div>
+      <div class="field w-md">
+        <label for="orderDate">Päivämäärä</label>
+        <input id="orderDate" name="orderDate" type="date" />
+      </div>
+    </div>
+  </div>
+
+  <div class="terms-box" style="margin-bottom:6px;border-color:#c45c26">
+    <p><strong>Kauppa on solmittu puhelimitse.</strong> Tämä tilausvahvistus vahvistaa puhelinmyynnissä sovitun tilauksen kirjallisesti.</p>
+    <div class="grid-2" style="margin-top:5px">
+      <div class="field w-lg"><label for="callDate">Puhelun / kaupan päivämäärä</label><input id="callDate" name="callDate" type="date" /></div>
+      <div class="field w-lg"><label for="sellerName">Myyjä (Restadigi)</label><input id="sellerName" name="sellerName" type="text" placeholder="Myyjän nimi" /></div>
+    </div>
+  </div>
+
+  <section class="section" style="border-top:0;padding-top:0;margin-top:0">
+    <h2>Ostaja / yritys</h2>
+    <div class="grid-2">
+      <div class="field w-lg"><label for="company">Yrityksen nimi</label><input id="company" name="company" type="text" /></div>
+      <div class="field w-lg"><label for="businessId">Y-tunnus</label><input id="businessId" name="businessId" type="text" placeholder="1234567-8" /></div>
+      <div class="field w-lg"><label for="address">Osoite</label><input id="address" name="address" type="text" /></div>
+      <div class="field w-lg"><label for="postal">Postinumero ja -toimipaikka</label><input id="postal" name="postal" type="text" placeholder="00100 Helsinki" /></div>
+      <div class="field w-lg"><label for="einvoice">Verkkolaskuosoite (jos on)</label><input id="einvoice" name="einvoice" type="text" placeholder="OVT / verkkolaskuosoite" /></div>
+      <div class="field w-lg"><label for="einvoiceOp">Verkkolaskuoperaattori</label><input id="einvoiceOp" name="einvoiceOp" type="text" /></div>
+      <div class="field w-lg"><label for="email">Sähköposti</label><input id="email" name="email" type="email" /></div>
+      <div class="field w-lg"><label for="contact">Yhteyshenkilön nimi</label><input id="contact" name="contact" type="text" /></div>
+      <div class="field w-lg"><label for="phone">Puhelin</label><input id="phone" name="phone" type="tel" /></div>
+      <div class="field w-lg"><label for="domain">Sivuston / domainin osoite (jos tiedossa)</label><input id="domain" name="domain" type="text" placeholder="www.yritys.fi" /></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Tilatut tuotteet ja paketit</h2>
+    <p class="note" style="margin:0 0 6px">Valitse myydyt paketit. Hinnat ilman arvonlisäveroa. Hosting lasketaan 12 kk ajalta.</p>
+    <div class="products">
+      <div class="prod-group">
+        <h3>Verkkosivupaketit</h3>
+        <label class="prod"><input type="checkbox" name="p" value="web-start" data-price="399" /><span class="name">Start</span><span class="price">399 € + alv</span></label>
+        <label class="prod"><input type="checkbox" name="p" value="web-plus" data-price="549" /><span class="name">Plus</span><span class="price">549 € + alv</span></label>
+        <label class="prod"><input type="checkbox" name="p" value="web-kulta" data-price="759" /><span class="name">Kulta (sis. AI 1 v)</span><span class="price">759 € + alv</span></label>
+        <label class="prod"><input type="checkbox" name="p" value="web-timantti" data-price="929" /><span class="name">Timantti (sis. AI + varaus 1 v)</span><span class="price">929 € + alv</span></label>
+      </div>
+      <div class="prod-group">
+        <h3>Hosting &amp; ylläpito (12 kk)</h3>
+        <label class="prod"><input type="checkbox" name="p" value="host-basic" data-price="142.80" /><span class="name">Basic (11,90 €/kk × 12)</span><span class="price">142,80 € + alv</span></label>
+        <label class="prod"><input type="checkbox" name="p" value="host-pro" data-price="359.88" /><span class="name">Pro Business (29,99 €/kk × 12)</span><span class="price">359,88 € + alv</span></label>
+      </div>
+      <div class="prod-group">
+        <h3>Digipalvelut</h3>
+        <label class="prod"><input type="checkbox" name="p" value="google" data-price="99" /><span class="name">Google-optimointi</span><span class="price">99 €/v + alv</span></label>
+        <label class="prod"><input type="checkbox" name="p" value="ai-opt" data-price="99" /><span class="name">AI-optimointi</span><span class="price">99 €/v + alv</span></label>
+        <label class="prod"><input type="checkbox" name="p" value="chatbot" data-price="199" /><span class="name">AI-asiakaspalvelu (chatbot)</span><span class="price">199 €/v + alv</span></label>
+        <label class="prod"><input type="checkbox" name="p" value="booking" data-price="299" /><span class="name">Pöytävarauspalvelu</span><span class="price">299 €/v + alv</span></label>
+        <label class="prod"><input type="checkbox" name="p" value="sports" data-price="299" /><span class="name">Huippu-urheilun näkyvyys</span><span class="price">299 €/v + alv</span></label>
+      </div>
+      <div class="prod-group">
+        <h3>Graafinen suunnittelu</h3>
+        <label class="prod"><input type="checkbox" name="p" value="brand" data-price="199" /><span class="name">Yritysilme (logo + käyntikortit)</span><span class="price">199 € + alv</span></label>
+        <label class="prod"><input type="checkbox" name="p" value="ads" data-price="149" /><span class="name">Mainos- / markkinointimateriaalit</span><span class="price">149 € + alv</span></label>
+        <label class="prod"><input type="checkbox" name="p" value="logo" data-price="149" /><span class="name">Logon suunnittelu</span><span class="price">149 € + alv</span></label>
+        <label class="prod"><input type="checkbox" name="p" value="cards" data-price="99" /><span class="name">Käyntikorttien suunnittelu</span><span class="price">99 € + alv</span></label>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:6px">
+      <div class="field w-lg"><label for="otherProducts">Muut tuotteet / tarkenne</label><input id="otherProducts" name="otherProducts" type="text" placeholder="Esim. AI Concierge…" /></div>
+      <div class="field w-lg"><label for="otherAmount">Muun tuotteen hinta (€ ilman alv)</label><input id="otherAmount" name="otherAmount" type="number" min="0" step="0.01" placeholder="0,00" /></div>
+    </div>
+    <div class="total-box">
+      <h3>Laskun loppusumma</h3>
+      <div class="total-rows">
+        <div class="row"><span>Tuotteet yhteensä (netto)</span><span id="sumNet">0,00 €</span></div>
+        <div class="row"><span>Alv 25,5 %</span><span id="sumVat">0,00 €</span></div>
+        <div class="row grand"><span>Maksettava yhteensä</span><span class="amt" id="sumGross">0,00 €</span></div>
+      </div>
+      <p class="total-hint">Summa päivittyy automaattisesti valituista tuotteista. Voit korjata muuta hintaa kentässä yllä.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Maksuehdot</h2>
+    <div class="terms-box">
+      <div class="terms-choices">
+        <label><input type="radio" name="payment" value="14" checked /> 14 pv netto</label>
+        <label><input type="radio" name="payment" value="7" /> 7 pv netto</label>
+        <label><input type="radio" name="payment" value="advance50" /> Ennakko 50 % / loppu toimituksessa</label>
+        <label><input type="radio" name="payment" value="advance100" /> Ennakkomaksu 100 %</label>
+        <label><input type="radio" name="payment" value="other" /> Muu:</label>
+        <div class="field w-md" style="margin:0"><input id="paymentOther" name="paymentOther" type="text" placeholder="Maksuehto" /></div>
+      </div>
+      <p>Hinnat ovat nettohintoja + alv. Tilausvahvistus on sitova, kun molemmat osapuolet ovat sen hyväksyneet.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Laskutustiedot (toimittaja)</h2>
+    <div class="billing-box">
+      <p><strong>Restadigi Finland</strong> · Erkkiläntie 47, 04740 Mäntsälä · info@restadigi.fi · www.restadigi.fi</p>
+      <p style="margin-top:4px"><strong>Laskutus:</strong> Restadigi Finland -palvelun laskutuksesta Suomessa vastaa <strong>Laskuttamo</strong>.</p>
+      <div class="billing-grid">
+        <div>Laskuttamo · asiakaspalvelu@laskuttamo.com</div>
+        <div>Puhelin 02 0730 6710 · ma–pe 8:00–16:00</div>
+        <div>Verkkolaskutus / laskutusohjeet: laskuttamo.com</div>
+        <div>Lasku toimitetaan ostajan ilmoittamaan osoitteeseen tai verkkolaskuna.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="border-top:0;padding-top:2px">
+    <div class="sign">
+      <div class="sign-box">
+        <div class="who">Ostaja – hyväksyntä puhelimitse solmitulle tilaukselle</div>
+        <div class="field"><label for="buyerSignName">Nimenselvennys</label><input id="buyerSignName" type="text" /></div>
+        <div class="sign-line">Päiväys ja allekirjoitus</div>
+      </div>
+      <div class="sign-box">
+        <div class="who">Restadigi – hyväksyntä</div>
+        <div class="field"><label for="sellerSignName">Nimenselvennys</label><input id="sellerSignName" type="text" /></div>
+        <div class="sign-line">Päiväys ja allekirjoitus</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>Restadigi Finland · Tilausvahvistus</span>
+    <span>www.restadigi.fi</span>
+  </footer>
+</div>
+
+<script>
+  const VAT = 0.255;
+  const dateEl = document.getElementById("orderDate");
+  const callEl = document.getElementById("callDate");
+  const today = new Date().toISOString().slice(0, 10);
+  if (dateEl && !dateEl.value) dateEl.value = today;
+  if (callEl && !callEl.value) callEl.value = today;
+
+  function formatEur(n) {
+    return n.toLocaleString("fi-FI", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+  }
+
+  function calcTotal() {
+    let net = 0;
+    document.querySelectorAll('input[name="p"][data-price]:checked').forEach((el) => {
+      net += parseFloat(el.dataset.price) || 0;
+    });
+    const other = parseFloat(document.getElementById("otherAmount")?.value);
+    if (!Number.isNaN(other) && other > 0) net += other;
+    const vat = Math.round(net * VAT * 100) / 100;
+    const gross = Math.round((net + vat) * 100) / 100;
+    document.getElementById("sumNet").textContent = formatEur(net);
+    document.getElementById("sumVat").textContent = formatEur(vat);
+    document.getElementById("sumGross").textContent = formatEur(gross);
+  }
+
+  document.querySelectorAll('input[name="p"]').forEach((el) => el.addEventListener("change", calcTotal));
+  document.getElementById("otherAmount")?.addEventListener("input", calcTotal);
+  calcTotal();
+
+  function clearForm() {
+    document.querySelectorAll("input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number], textarea").forEach((el) => {
+      if (el.id === "orderDate" || el.id === "callDate") el.value = new Date().toISOString().slice(0, 10);
+      else el.value = "";
+    });
+    document.querySelectorAll("input[type=checkbox]").forEach((el) => { el.checked = false; });
+    const def = document.querySelector('input[name=payment][value="14"]');
+    if (def) def.checked = true;
+    calcTotal();
+  }
+</script>
+</body>
+</html>

@@ -173,3 +173,6 @@ $RECYCLE.BIN/
 # Linux
 *~
 .nfs*
+restadigi-demo/node_modules/
+restadigi-demo/.vercel/
+restadigi-demo/.output/

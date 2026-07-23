@@ -1,21 +1,19 @@
 {
-  "version": 2,
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "npm install --omit=optional",
-  "buildCommand": "npm run build",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api" }
-  ],
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 30,
-      "includeFiles": "webs de reservas/**"
-    }
-  },
-  "crons": [
-    {
-      "path": "/api/cron/reminders",
-      "schedule": "0 7 * * *"
-    }
+  "installCommand": "npm install --prefix restadigi-demo",
+  "buildCommand": "npm run build --prefix restadigi-demo",
+  "outputDirectory": "restadigi-demo/.vercel/output",
+  "redirects": [
+    { "source": "/verkkosivut", "destination": "/", "permanent": false },
+    { "source": "/poytavaraupalvelu", "destination": "/", "permanent": false },
+    { "source": "/ai-asiakaspalvelu", "destination": "/", "permanent": false },
+    { "source": "/nakyvyys-ja-suunnittelu", "destination": "/", "permanent": false },
+    { "source": "/hinnasto", "destination": "/", "permanent": false },
+    { "source": "/meista", "destination": "/", "permanent": false },
+    { "source": "/yhteys", "destination": "/", "permanent": false },
+    { "source": "/yllapito", "destination": "/", "permanent": false },
+    { "source": "/login", "destination": "/dashboard", "permanent": false },
+    { "source": "/demos", "destination": "/dashboard", "permanent": false }
   ]
 }

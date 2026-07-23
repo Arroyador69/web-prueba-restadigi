@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": ".vercel/output",
+  "redirects": [
+    {
+      "source": "/kotisivut-yrityksille",
+      "destination": "/verkkosivut",
+      "permanent": true
+    },
+    {
+      "source": "/diginakyvyys",
+      "destination": "/nakyvyys-ja-suunnittelu",
+      "permanent": true
+    },
+    {
+      "source": "/chatbot",
+      "destination": "/ai-asiakaspalvelu",
+      "permanent": true
+    },
+    {
+      "source": "/potyvarauspalvelu",
+      "destination": "/poytavaraupalvelu",
+      "permanent": true
+    }
+  ]
+}

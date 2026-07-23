@@ -1,34 +1,33 @@
-# Demo pública Restadigi (sin login)
+# Demo pública Restadigi (dashboard oficial + landing)
 
-Con `PUBLIC_DEMO=true` en Vercel:
+El deploy de Vercel usa **`restadigi-demo/`** (dashboard real de Restadigi).
 
-| URL | Qué es |
-|-----|--------|
-| `/` | Landing de muestra + chatbot de reserva de mesa |
-| `/dashboard` | Panel completo **sin usuario ni contraseña** |
-| `/demos` | Sigue existiendo (equipo interno), no es la home |
+| URL | Qué |
+|-----|-----|
+| `/` | Landing demo (formulario + chat reserva mesa) |
+| `/dashboard` | Panel oficial **sin login** |
 
-## Qué hacer en Vercel
+## Variables Vercel (Production)
 
-1. Environment Variables → Production:
-   - `PUBLIC_DEMO=true`
-   - `DATABASE_URL` (Neon)
-   - `SESSION_SECRET`
-   - `APP_URL=https://web-prueba-restadigi.vercel.app`
-   - Opcional: `OPENAI_API_KEY` para el chat con GPT (si no, usa flujo guiado)
-2. Quitar o ignorar `MULTI_TENANT_HOME=demos` (con PUBLIC_DEMO la home es la landing).
-3. Redeploy.
+Obligatorias:
+- `PUBLIC_DEMO=true`
+- `DATABASE_URL` (Neon)
+- `SESSION_SECRET` (≥16 caracteres)
 
-## Comportamiento
+Opcional (próxima iteración):
+- `OPENAI_API_KEY` — chatbot con GPT
+- `OPENAI_MODEL=gpt-4o-mini`
 
-- Sin login / sin crear demos por cliente.
-- Banner claro de **demostración pública**.
-- Colores, landing, citas, clientes, etc. editables y guardados en Neon.
-- Botón **Restablecer demo** limpia datos de muestra.
-- Correos y SMS reales **desactivados** en este modo.
-- Idiomas: ES / EN / FI.
+## Base de datos
 
-## Enlaces a enviar al cliente
+El schema de Restadigi es distinto al antiguo Alpine. Tras el primer deploy:
 
-- Landing: `https://web-prueba-restadigi.vercel.app/`
-- Panel: `https://web-prueba-restadigi.vercel.app/dashboard`
+```bash
+cd restadigi-demo && DATABASE_URL="..." npm run db:init
+```
+
+O ejecuta el SQL de `restadigi-demo/scripts/init-db.sql` en Neon.
+
+## Nota
+
+La app Express antigua (`webs de reservas/`) ya **no** se despliega. El dashboard Alpine se eliminó.

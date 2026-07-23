@@ -477,6 +477,9 @@ export type Messages = {
       typing: string;
       sendFailed: string;
       genericError: string;
+      demoEyebrow: string;
+      demoOpenLabel: string;
+      demoHint: string;
     };
     booking: {
       openLabel: string;
@@ -492,6 +495,9 @@ export type Messages = {
       typing: string;
       sendFailed: string;
       genericError: string;
+      demoEyebrow: string;
+      demoOpenLabel: string;
+      demoHint: string;
     };
   };
 };

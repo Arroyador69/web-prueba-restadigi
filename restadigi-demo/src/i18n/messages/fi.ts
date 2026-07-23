@@ -891,6 +891,9 @@ export const fi: Messages = {
       typing: "Kirjoittaa…",
       sendFailed: "Viestin lähetys epäonnistui.",
       genericError: "Tapahtui virhe.",
+      demoEyebrow: "Demo",
+      demoOpenLabel: "Asiakaspalvelu",
+      demoHint: "",
     },
     booking: {
       openLabel: "Varaa pöytä",
@@ -901,12 +904,16 @@ export const fi: Messages = {
       eyebrow: "Pöytävaraus",
       title: "Varaa pöytä",
       welcome:
-        "Hei! Autan pöytävarauksessa. Kerro nimesi, henkilömäärä, päivä, kellonaika (12–22) ja puhelinnumero. Sähköposti on vapaaehtoinen. Normaali pöytäaika on 2 tuntia — 3 tuntia onnistuu pyynnöstä.",
+        "Hei! Tämä on Restadigin demobotti pöytävarauksiin. Kerro nimesi, henkilömäärä, päivä, kellonaika (12–22) ja puhelinnumero — näytän miten botti hoitaa asiakasta. (Demo: tietoja ei tallenneta.)",
       placeholder: "Kirjoita viestisi…",
       sendAria: "Lähetä viesti",
       typing: "Kirjoittaa…",
       sendFailed: "Viestin lähetys epäonnistui.",
       genericError: "Tapahtui virhe.",
+      demoEyebrow: "Demo · pöytävarausbotti",
+      demoOpenLabel: "Kokeile bottia",
+      demoHint:
+        "Kokeile varausta chatissa kuten asiakas tekisi. Botti osaa kysyä tiedot ja vahvistaa varauksen — demossa mitään ei tallenneta tietokantaan.",
     },
   },
 };

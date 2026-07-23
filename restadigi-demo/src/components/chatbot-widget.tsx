@@ -21,6 +21,8 @@ type ChatbotPanelProps = {
   /** floating = bottom-right FAB; inline = button for hero (chat panel still floats) */
   placement: "floating" | "inline";
   className?: string;
+  /** Public demo copy (badge + “try booking” hint) */
+  demoContext?: boolean;
 };
 
 const SALES_ACCENT = "#432f24";
@@ -153,10 +155,13 @@ function ChatDialog({
   mode,
   panel,
   panelClassName,
+  demoContext = false,
 }: {
   mode: ChatMode;
   panel: ReturnType<typeof useChatbot>;
   panelClassName?: string;
+  /** Public demo: badge + hint under header */
+  demoContext?: boolean;
 }) {
   const {
     copy,
@@ -192,7 +197,9 @@ function ChatDialog({
         style={{ backgroundColor: accentColor }}
       >
         <div>
-          <p className="text-xs uppercase tracking-[0.15em] text-white/70">{copy.eyebrow}</p>
+          <p className="text-xs uppercase tracking-[0.15em] text-white/70">
+            {demoContext && mode === "reservation" ? copy.demoEyebrow : copy.eyebrow}
+          </p>
           <p className="text-sm font-medium">{headerTitle}</p>
         </div>
         <button
@@ -204,6 +211,12 @@ function ChatDialog({
           <X className="size-4" />
         </button>
       </div>
+
+      {demoContext && mode === "reservation" ? (
+        <p className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-[11px] leading-snug text-amber-950">
+          {copy.demoHint}
+        </p>
+      ) : null}
 
       <div ref={scrollRef} className="flex max-h-80 flex-col gap-3 overflow-y-auto p-4">
         {messages.map((msg, i) => (
@@ -262,7 +275,7 @@ function ChatDialog({
   );
 }
 
-function ChatbotPanel({ mode, placement, className }: ChatbotPanelProps) {
+function ChatbotPanel({ mode, placement, className, demoContext = false }: ChatbotPanelProps) {
   const panel = useChatbot(mode);
   const { copy, open, setOpen, accentColor } = panel;
   const Icon = mode === "sales" ? Headphones : MessageCircle;
@@ -291,7 +304,7 @@ function ChatbotPanel({ mode, placement, className }: ChatbotPanelProps) {
               aria-hidden
             />
             <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2">
-              <ChatDialog mode={mode} panel={panel} />
+              <ChatDialog mode={mode} panel={panel} demoContext={demoContext} />
             </div>
           </>
         )}
@@ -305,7 +318,7 @@ function ChatbotPanel({ mode, placement, className }: ChatbotPanelProps) {
           aria-label={open ? copy.closeAria : copy.openAria}
         >
           <MessageCircle className="size-5" />
-          <span>{open ? copy.closeLabel : copy.openLabel}</span>
+          <span>{open ? copy.closeLabel : demoContext ? copy.demoOpenLabel : copy.openLabel}</span>
         </Button>
       </div>
     );
@@ -322,7 +335,7 @@ function ChatbotPanel({ mode, placement, className }: ChatbotPanelProps) {
       )}
 
       <div className={cn("fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3", className)}>
-        <ChatDialog mode={mode} panel={panel} />
+        <ChatDialog mode={mode} panel={panel} demoContext={demoContext} />
 
         <Button
           type="button"
@@ -334,7 +347,9 @@ function ChatbotPanel({ mode, placement, className }: ChatbotPanelProps) {
           aria-label={open ? copy.closeAria : copy.openAria}
         >
           <Icon className="size-5" />
-          <span className="hidden sm:inline">{open ? copy.closeLabel : copy.openLabel}</span>
+          <span className="hidden sm:inline">
+            {open ? copy.closeLabel : demoContext ? copy.demoOpenLabel : copy.openLabel}
+          </span>
         </Button>
       </div>
     </>
@@ -351,10 +366,10 @@ export function openSalesChatbot() {
 
 export function ChatbotWidget() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  if (pathname.startsWith("/dashboard")) return null;
-  // Demo pública: en la home el bot es de reserva de mesa
-  if (pathname === "/") {
-    return <ChatbotPanel mode="reservation" placement="floating" />;
+  // Demo pública: mismo bot de reserva en landing y en el dashboard (para probarlo)
+  if (pathname === "/" || pathname.startsWith("/dashboard")) {
+    if (pathname === "/dashboard/login") return null;
+    return <ChatbotPanel mode="reservation" placement="floating" demoContext />;
   }
   return <ChatbotPanel mode="sales" placement="floating" />;
 }

@@ -898,6 +898,9 @@ export const es: Messages = {
       typing: "Escribiendo…",
       sendFailed: "No se pudo enviar el mensaje.",
       genericError: "Se produjo un error.",
+      demoEyebrow: "Demo",
+      demoOpenLabel: "Atención al cliente",
+      demoHint: "",
     },
     booking: {
       openLabel: "Reservar mesa",
@@ -908,12 +911,16 @@ export const es: Messages = {
       eyebrow: "Reservas",
       title: "Reservar mesa",
       welcome:
-        "¡Hola! Puedo ayudarte a reservar mesa. Indica nombre, personas, fecha, hora (12:00–22:00) y teléfono. El correo es opcional. La duración normal es 2 horas — 3 horas bajo petición.",
+        "¡Hola! Este es el bot demo de Restadigi para reservas. Indica nombre, personas, fecha, hora (12:00–22:00) y teléfono — verás cómo atiende al cliente. (Demo: no se guarda nada.)",
       placeholder: "Escribe tu mensaje…",
       sendAria: "Enviar mensaje",
       typing: "Escribiendo…",
       sendFailed: "No se pudo enviar el mensaje.",
       genericError: "Se produjo un error.",
+      demoEyebrow: "Demo · bot de reservas",
+      demoOpenLabel: "Probar el bot",
+      demoHint:
+        "Prueba una reserva por chat como haría un cliente. El bot pide los datos y confirma — en esta demo no se guarda nada en la base de datos.",
     },
   },
 };

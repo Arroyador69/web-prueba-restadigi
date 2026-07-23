@@ -891,6 +891,9 @@ export const en: Messages = {
       typing: "Typing…",
       sendFailed: "Failed to send message.",
       genericError: "Something went wrong.",
+      demoEyebrow: "Demo",
+      demoOpenLabel: "Customer service",
+      demoHint: "",
     },
     booking: {
       openLabel: "Book a table",
@@ -901,12 +904,16 @@ export const en: Messages = {
       eyebrow: "Reservations",
       title: "Book a table",
       welcome:
-        "Hi! I can help you book a table. Share your name, party size, date, time (12:00–22:00) and phone number. Email is optional. Standard seating is 2 hours — 3 hours is available on request.",
+        "Hi! This is Restadigi’s demo booking bot. Share your name, party size, date, time (12:00–22:00) and phone — see how well it can help a guest book a table. (Demo: nothing is saved.)",
       placeholder: "Type your message…",
       sendAria: "Send message",
       typing: "Typing…",
       sendFailed: "Failed to send message.",
       genericError: "Something went wrong.",
+      demoEyebrow: "Demo · booking bot",
+      demoOpenLabel: "Try the bot",
+      demoHint:
+        "Try a booking in chat like a real guest would. The bot asks for the details and confirms — in this demo nothing is saved to the database.",
     },
   },
 };

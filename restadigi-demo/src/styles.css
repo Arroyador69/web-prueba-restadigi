@@ -2448,3 +2448,165 @@
     }
   }
 }
+
+/* =============================================================================
+   Dashboard demo — Restadigi brand polish (frontend only)
+   ============================================================================= */
+
+.dashboard-app {
+  --dash-brown: #432f24;
+  --dash-copper: #c46a32;
+  --dash-ink: #2a2018;
+  --dash-muted: #5c534c;
+  --dash-soft: #8a7f74;
+  --dash-line: #e8dfd4;
+  --dash-paper: #fbf8f4;
+  --dash-cream: #f3eee8;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, color-mix(in srgb, var(--dash-copper) 16%, transparent), transparent 60%),
+    radial-gradient(900px 420px at 100% 0%, color-mix(in srgb, var(--dash-brown) 10%, transparent), transparent 55%),
+    linear-gradient(180deg, #f7f3ee 0%, #f3eee8 45%, #efe8e0 100%);
+  color: var(--dash-ink);
+  font-family: var(--font-sans);
+}
+
+.dashboard-app__header {
+  background: linear-gradient(160deg, #3a342f 0%, #2a2018 45%, #1a1512 100%);
+  border-bottom: 1px solid color-mix(in srgb, var(--dash-copper) 35%, transparent);
+  box-shadow: 0 12px 40px rgba(26, 21, 18, 0.28);
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-app__lang {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dashboard-app__sidebar {
+  border-radius: 1.25rem;
+  border: 1px solid var(--dash-line);
+  background: color-mix(in srgb, white 88%, var(--dash-cream));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 18px 40px rgba(42, 32, 24, 0.06);
+}
+
+.dashboard-app__nav-item--active {
+  background: linear-gradient(145deg, #4a4038, var(--dash-brown));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(67, 47, 36, 0.28);
+}
+
+.dashboard-app__main {
+  animation: dashboard-fade-in 0.35s ease;
+}
+
+.dashboard-app__banner {
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--dash-copper) 28%, var(--dash-line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--dash-copper) 10%, white), white 55%),
+    var(--dash-paper);
+  padding: 1.15rem 1.25rem;
+  box-shadow: 0 10px 28px rgba(42, 32, 24, 0.05);
+}
+
+.dashboard-app__page-head {
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid transparent;
+  background-image: linear-gradient(90deg, var(--dash-copper), transparent 42%);
+  background-size: 100% 2px;
+  background-position: left bottom;
+  background-repeat: no-repeat;
+  padding-bottom: 0.85rem;
+}
+
+.dashboard-app__stat-card,
+.dashboard-app__panel {
+  border-radius: 1.15rem;
+  border: 1px solid var(--dash-line);
+  background: color-mix(in srgb, white 92%, var(--dash-cream));
+  padding: 1.25rem;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 14px 32px rgba(42, 32, 24, 0.05);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+a.dashboard-app__stat-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--dash-copper) 45%, var(--dash-line));
+  box-shadow: 0 18px 36px rgba(42, 32, 24, 0.09);
+}
+
+/* Lift common page cards inside dashboard without touching each page deeply */
+.dashboard-app__main > .space-y-6 > .rounded-sm.border,
+.dashboard-app__main > .space-y-8 > .rounded-sm.border,
+.dashboard-app__main .space-y-4.rounded-sm.border,
+.dashboard-app__main .space-y-6.rounded-sm.border,
+.dashboard-app__main section.rounded-sm.border,
+.dashboard-app__main div.rounded-sm.border.bg-card,
+.dashboard-app__main .rounded-sm.border.border-border.bg-card {
+  border-radius: 1.1rem;
+  border-color: var(--dash-line);
+  background: color-mix(in srgb, white 92%, var(--dash-cream));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.75) inset,
+    0 12px 28px rgba(42, 32, 24, 0.045);
+}
+
+.dashboard-app__main h2.text-2xl {
+  font-family: var(--font-serif);
+  font-size: 1.85rem;
+  letter-spacing: -0.02em;
+  color: var(--dash-ink);
+}
+
+.dashboard-app__main h2 + p.text-sm,
+.dashboard-app__main h2.text-2xl + .text-sm {
+  color: var(--dash-muted);
+}
+
+.dashboard-app__main table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.dashboard-app__main thead {
+  background: var(--dash-cream);
+}
+
+.dashboard-app__main th {
+  color: var(--dash-soft);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboard-app__main .overflow-x-auto.rounded-sm.border {
+  border-radius: 1.1rem;
+  border-color: var(--dash-line);
+  background: white;
+  box-shadow: 0 12px 28px rgba(42, 32, 24, 0.045);
+}
+
+@keyframes dashboard-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1023px) {
+  .dashboard-app__sidebar {
+    position: relative;
+  }
+}

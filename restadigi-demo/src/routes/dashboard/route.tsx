@@ -43,8 +43,10 @@ function DashboardLayout() {
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        {t.layout.loading}
+      <div className="dashboard-app flex min-h-screen items-center justify-center text-[#5c534c]">
+        <div className="rounded-2xl border border-[#e8dfd4] bg-white/80 px-6 py-4 shadow-sm backdrop-blur">
+          {t.layout.loading}
+        </div>
       </div>
     );
   }
@@ -52,14 +54,24 @@ function DashboardLayout() {
   return (
     <DashboardShell publicDemo={publicDemo}>
       {publicDemo ? (
-        <div className="mb-6 rounded-sm border border-amber-300 bg-amber-50 px-4 py-3 text-amber-950">
-          <p className="text-sm font-semibold">{t.layout.demoTitle}</p>
-          <p className="mt-1 text-xs leading-relaxed text-amber-900/90">{t.layout.demoBody}</p>
-          <p className="mt-2 text-xs">
-            <Link to="/" className="font-semibold underline">
+        <div className="dashboard-app__banner mb-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c46a32]">
+                Restadigi
+              </p>
+              <p className="mt-1 font-serif text-lg text-[#2a2018]">{t.layout.demoTitle}</p>
+              <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[#5c534c]">
+                {t.layout.demoBody}
+              </p>
+            </div>
+            <Link
+              to="/"
+              className="shrink-0 rounded-full border border-[#432f24]/15 bg-white px-3.5 py-1.5 text-xs font-semibold text-[#432f24] shadow-sm transition hover:border-[#c46a32]/40 hover:text-[#c46a32]"
+            >
               {t.layout.viewLanding}
             </Link>
-          </p>
+          </div>
         </div>
       ) : null}
       <Outlet />

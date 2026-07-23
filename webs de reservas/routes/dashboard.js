@@ -26,6 +26,7 @@ const facturasService = require('../lib/facturas');
 const { sendTestEmailWithNegocio } = require('../lib/email-negocio');
 const reputacionPro = require('../lib/reputacion-pro');
 const googleCalendar = require('../lib/google-calendar');
+const publicDemo = require('../lib/public-demo');
 
 // Textos legales de ejemplo (finlandés por defecto — demos FI)
 const TEXTOS_LEGALES_EJEMPLO = {
@@ -54,6 +55,32 @@ router.use(requireAuth);
 // Dashboard principal (ruta absoluta para Vercel)
 router.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'views', 'dashboard.html'));
+});
+
+router.get('/api/session', async (req, res) => {
+  res.json({
+    publicDemo: publicDemo.isEnabled() || !!req.session.publicDemo,
+    user: {
+      id: req.session.userId,
+      email: req.session.userEmail,
+      name: req.session.userName || 'Demo'
+    },
+    negocioId: req.negocioId
+  });
+});
+
+router.post('/api/demo-reset', async (req, res) => {
+  try {
+    if (!publicDemo.isEnabled()) {
+      return res.status(403).json({ error: 'Solo en demo pública' });
+    }
+    const result = await publicDemo.resetDemo();
+    await publicDemo.attachSession(req);
+    res.json({ success: true, ...result, message: 'Demo restablecida' });
+  } catch (err) {
+    console.error('demo-reset:', err);
+    res.status(500).json({ error: err.message || 'Error al resetear' });
+  }
 });
 
 // Obtener todas las citas

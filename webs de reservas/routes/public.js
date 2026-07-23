@@ -10,6 +10,7 @@ const negocioService = require('../lib/negocio');
 const tenant = require('../lib/tenant');
 const reputacionPro = require('../lib/reputacion-pro');
 const landingStats = require('../lib/landing-stats');
+const publicDemo = require('../lib/public-demo');
 
 const DEFAULT_NEGOCIO_ID = 1;
 
@@ -28,6 +29,10 @@ async function resolveNegocioId(req) {
     }
     return n.id;
   }
+  if (publicDemo.isEnabled()) {
+    const demo = await publicDemo.ensureReady();
+    return demo.negocioId;
+  }
   return DEFAULT_NEGOCIO_ID;
 }
 
@@ -35,8 +40,11 @@ function landingFile(res) {
   return res.sendFile(path.join(__dirname, '..', 'views', 'landing.html'));
 }
 
-// Home: panel demos (ventas) o landing del negocio por defecto
+// Home: demo pública → landing; o panel demos; o landing por defecto
 router.get('/', async (req, res) => {
+  if (publicDemo.isEnabled()) {
+    return landingFile(res);
+  }
   if (process.env.MULTI_TENANT_HOME === 'demos') {
     return res.redirect('/demos');
   }
@@ -250,16 +258,20 @@ router.post('/api/book', async (req, res) => {
       negocio_id: negocioId
     };
     let emailSent = false;
-    try {
-      await sendConfirmationEmail(appointment);
-      emailSent = true;
-    } catch (err) {
-      console.error('Error enviando confirmación:', err.message);
-    }
-    try {
-      await sendNotificationToPsychologist(appointment);
-    } catch (err) {
-      console.error('Error notificación psicólogo:', err.message);
+    if (publicDemo.isEnabled()) {
+      emailSent = false; // demo pública: no se envían correos reales
+    } else {
+      try {
+        await sendConfirmationEmail(appointment);
+        emailSent = true;
+      } catch (err) {
+        console.error('Error enviando confirmación:', err.message);
+      }
+      try {
+        await sendNotificationToPsychologist(appointment);
+      } catch (err) {
+        console.error('Error notificación psicólogo:', err.message);
+      }
     }
 
     res.json({

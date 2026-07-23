@@ -12,6 +12,9 @@ const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const demosRoutes = require('./routes/demos');
 const cronRoutes = require('./routes/cron');
+const chatRoutes = require('./routes/chat');
+const publicDemo = require('./lib/public-demo');
+const { ensurePublicDemo } = require('./middleware/auth');
 
 function buildApp() {
   const app = express();
@@ -53,16 +56,32 @@ function buildApp() {
   app.use(express.static(path.join(__dirname, 'public')));
   app.use('/views', express.static(path.join(__dirname, 'views')));
 
+  // Demo pública: sesión automática solo en rutas de app (no estáticos)
+  app.use((req, res, next) => {
+    if (
+      req.path.startsWith('/js/') ||
+      req.path.startsWith('/css/') ||
+      req.path.startsWith('/views/') ||
+      req.path === '/favicon.ico'
+    ) {
+      return next();
+    }
+    return ensurePublicDemo(req, res, next);
+  });
+
   app.use('/', cronRoutes);
+  app.use('/', chatRoutes);
   app.use('/', demosRoutes);
   app.use('/', publicRoutes);
   app.use('/', authRoutes);
   app.use('/dashboard', dashboardRoutes);
 
   app.get('/login', (req, res) => {
+    if (publicDemo.isEnabled()) return res.redirect('/dashboard');
     res.sendFile(path.join(__dirname, 'views', 'login.html'));
   });
   app.get('/setup', (req, res) => {
+    if (publicDemo.isEnabled()) return res.redirect('/dashboard');
     res.sendFile(path.join(__dirname, 'views', 'setup.html'));
   });
   app.get('/reset-password', (req, res) => {
@@ -72,6 +91,9 @@ function buildApp() {
     res.sendFile(path.join(__dirname, 'views', 'demos.html'));
   });
   app.get('/dashboard', (req, res) => {
+    if (publicDemo.isEnabled()) {
+      return res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
+    }
     if (!req.session || !req.session.userId) {
       return res.redirect('/login');
     }
@@ -96,6 +118,10 @@ function ensureBoot() {
       await runMigrations();
       const { runQuery } = require('./utils/db');
       await runQuery('ALTER TABLE appointments ADD COLUMN client_phone TEXT').catch(() => {});
+      if (publicDemo.isEnabled()) {
+        await publicDemo.ensureReady();
+        console.log('✅ PUBLIC_DEMO listo (slug public-demo)');
+      }
     })().catch((err) => {
       console.error('Error boot app:', err);
       bootPromise = null;

@@ -140,7 +140,9 @@
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <div x-html="langHtml"></div>
-                        <button @click="logout()" class="btn-ghost text-gray-600 hover:text-gray-900 min-h-[44px] py-2 px-3 text-sm sm:text-base" x-text="t('dash_logout')"></button>
+                        <a href="/" target="_blank" rel="noopener" class="btn-ghost text-gray-600 hover:text-gray-900 min-h-[44px] py-2 px-3 text-sm sm:text-base" x-text="t('demo_view_landing')"></a>
+                        <button x-show="publicDemo" @click="resetPublicDemo()" :disabled="resettingDemo" class="btn-ghost text-amber-800 hover:text-amber-950 min-h-[44px] py-2 px-3 text-sm sm:text-base" x-text="resettingDemo ? t('demo_resetting') : t('demo_reset')"></button>
+                        <button x-show="!publicDemo" @click="logout()" class="btn-ghost text-gray-600 hover:text-gray-900 min-h-[44px] py-2 px-3 text-sm sm:text-base" x-text="t('dash_logout')"></button>
                     </div>
                 </div>
             </div>
@@ -160,16 +162,16 @@
                     <button @click="activeTab = 'config'" class="nav-tab" :class="activeTab === 'config' && 'nav-tab-active'" x-text="t('tab_config')"></button>
                     <button @click="activeTab = 'hours'" class="nav-tab" :class="activeTab === 'hours' && 'nav-tab-active'" x-text="t('tab_hours')"></button>
                     <button @click="activeTab = 'blocked'" class="nav-tab" :class="activeTab === 'blocked' && 'nav-tab-active'" x-text="t('tab_blocked')"></button>
-                    <button @click="activeTab = 'users'" class="nav-tab" :class="activeTab === 'users' && 'nav-tab-active'" x-text="t('tab_users')"></button>
+                    <button x-show="!publicDemo" @click="activeTab = 'users'" class="nav-tab" :class="activeTab === 'users' && 'nav-tab-active'" x-text="t('tab_users')"></button>
                 </nav>
             </div>
         </div>
 
-        <!-- Aviso demo: no es el producto final -->
+        <!-- Aviso demo pública -->
         <div class="safe-area-padding border-b border-amber-200/80 bg-amber-50">
             <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-3.5">
-                <p class="text-sm sm:text-base font-semibold text-amber-950" x-text="t('demo_banner_title')"></p>
-                <p class="text-xs sm:text-sm text-amber-900/90 mt-1 leading-relaxed" x-text="t('demo_banner_body')"></p>
+                <p class="text-sm sm:text-base font-semibold text-amber-950" x-text="publicDemo ? t('public_demo_banner_title') : t('demo_banner_title')"></p>
+                <p class="text-xs sm:text-sm text-amber-900/90 mt-1 leading-relaxed" x-text="publicDemo ? t('public_demo_banner_body') : t('demo_banner_body')"></p>
             </div>
         </div>
 
@@ -1052,7 +1054,7 @@
             </div>
 
             <!-- Tab: Users -->
-            <div x-show="activeTab === 'users'">
+            <div x-show="activeTab === 'users' && !publicDemo">
                 <div class="card bg-white p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold text-gray-900" x-text="t('users_title')"></h2>
@@ -1239,9 +1241,15 @@
                 resumenFactura: { precioBase: '0,00 €', ivaPct: 25.5, ivaEur: '0,00 €', total: '0,00 €' },
                 savingFactura: false,
                 facturaMessage: '',
+                publicDemo: false,
+                resettingDemo: false,
 
                 async init() {
                     this.setCalendarWeekToNow();
+                    try {
+                        const s = await fetch('/dashboard/api/session').then((r) => r.json());
+                        this.publicDemo = !!s.publicDemo;
+                    } catch (_) {}
                     await this.loadStats();
                     await Promise.all([
                         this.loadCitas(),
@@ -1249,7 +1257,7 @@
                         this.loadLanding(),
                         this.loadHours(),
                         this.loadBlockedSlots(),
-                        this.loadUsers(),
+                        this.publicDemo ? Promise.resolve() : this.loadUsers(),
                         this.loadGoogleCalendarStatus()
                     ]);
                     this.applyDemoLandingTexts();
@@ -1264,6 +1272,23 @@
                         this.googleCalendarMessage = decodeURIComponent(params.get('message') || this.t('msg_gc_connect_error'));
                         this.activeTab = 'config';
                         window.history.replaceState({}, '', '/dashboard');
+                    }
+                },
+
+                async resetPublicDemo() {
+                    if (!this.publicDemo) return;
+                    const ok = window.confirm(this.t('demo_reset_confirm'));
+                    if (!ok) return;
+                    this.resettingDemo = true;
+                    try {
+                        const r = await fetch('/dashboard/api/demo-reset', { method: 'POST' });
+                        const data = await r.json();
+                        if (!r.ok) throw new Error(data.error || 'Error');
+                        window.location.reload();
+                    } catch (e) {
+                        alert(e.message || this.t('demo_reset_error'));
+                    } finally {
+                        this.resettingDemo = false;
                     }
                 },
 

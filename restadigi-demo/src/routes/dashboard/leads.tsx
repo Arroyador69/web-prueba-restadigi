@@ -236,7 +236,7 @@ function DashboardLeadsPage() {
           {t.leads.empty}
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+        <div className="grid gap-4 lg:grid-cols-[340px_1fr] lg:gap-6">
           <div className="space-y-2">
             {filtered.map((lead) => (
               <button

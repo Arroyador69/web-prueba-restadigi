@@ -228,7 +228,7 @@ function ChatDialog({
   return (
     <div
       className={cn(
-        "flex w-[min(100vw-2.5rem,22.5rem)] flex-col overflow-hidden rounded-2xl text-white shadow-2xl",
+        "flex w-[min(100vw-1.25rem,22.5rem)] flex-col overflow-hidden rounded-2xl text-white shadow-2xl",
         "animate-in fade-in slide-in-from-bottom-4 duration-200",
         panelClassName,
       )}
@@ -453,14 +453,14 @@ function ChatbotPanel({ mode, placement, className, demoContext = false }: Chatb
         />
       )}
 
-      <div className={cn("fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3", className)}>
+      <div className={cn("fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6", className)}>
         <ChatDialog panel={panel} />
 
         <Button
           type="button"
           size="lg"
           onClick={() => setOpen((v) => !v)}
-          className="h-14 rounded-full px-5 text-white shadow-lg hover:opacity-90"
+          className="h-12 rounded-full px-4 text-white shadow-lg hover:opacity-90 sm:h-14 sm:px-5"
           style={{ backgroundColor: accentColor }}
           aria-expanded={open}
           aria-label={open ? copy.closeAria : copy.openAria}

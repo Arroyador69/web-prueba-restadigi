@@ -50,25 +50,25 @@ export function DashboardShell({
   return (
     <div className="dashboard-app min-h-screen text-[#2a2018]">
       <header className="dashboard-app__header sticky top-0 z-30">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 px-3 py-2.5 sm:gap-4 sm:px-6 sm:py-3.5 lg:px-8">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <img
               src={restadigiIcon}
               alt=""
-              className="size-10 shrink-0 rounded-full border border-white/15 object-cover shadow-md"
+              className="size-8 shrink-0 rounded-full border border-white/15 object-cover shadow-md sm:size-10"
             />
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#c46a32]">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#c46a32] sm:text-[10px] sm:tracking-[0.22em]">
                 {publicDemo ? labels.demo : labels.admin}
               </p>
-              <h1 className="truncate font-serif text-xl tracking-tight text-white sm:text-[1.35rem]">
+              <h1 className="truncate font-serif text-base tracking-tight text-white sm:text-xl sm:text-[1.35rem]">
                 {labels.title}
               </h1>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <label className="dashboard-app__lang flex items-center gap-2 px-2.5 py-1.5 text-xs text-white/80">
+          <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
+            <label className="dashboard-app__lang flex items-center gap-1.5 px-2 py-1.5 text-xs text-white/80 sm:gap-2 sm:px-2.5">
               <LocaleFlag locale={locale} className="size-4 rounded-[2px] ring-1 ring-white/25" />
               <span className="sr-only sm:not-sr-only sm:text-white/55">{t.common.language}</span>
               <select
@@ -92,7 +92,7 @@ export function DashboardShell({
               variant="outline"
               size="sm"
               asChild
-              className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+              className="h-9 border-white/20 bg-white/5 px-2.5 text-xs text-white hover:bg-white/10 hover:text-white sm:px-3 sm:text-sm"
             >
               <Link to="/">{labels.landing}</Link>
             </Button>
@@ -101,19 +101,19 @@ export function DashboardShell({
                 variant="outline"
                 size="sm"
                 onClick={() => void logout()}
-                className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                className="h-9 border-white/20 bg-white/5 px-2.5 text-white hover:bg-white/10 hover:text-white"
               >
                 <LogOut className="size-4" />
-                {labels.logout}
+                <span className="hidden sm:inline">{labels.logout}</span>
               </Button>
             ) : null}
           </div>
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1400px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[248px_1fr] lg:gap-8 lg:px-8 lg:py-8">
-        <aside className="dashboard-app__sidebar lg:sticky lg:top-[5.25rem] lg:self-start">
-          <nav className="flex flex-row gap-1.5 overflow-x-auto p-2 lg:flex-col lg:gap-1 lg:overflow-visible lg:p-3">
+      <div className="mx-auto grid max-w-[1400px] gap-3 px-3 py-3 pb-[5.5rem] sm:gap-6 sm:px-6 sm:py-6 sm:pb-6 lg:grid-cols-[248px_1fr] lg:gap-8 lg:px-8 lg:py-8">
+        <aside className="dashboard-app__sidebar dashboard-app__sidebar--mobile-sticky lg:sticky lg:top-[5.25rem] lg:self-start">
+          <nav className="dashboard-app__nav-scroll flex flex-row gap-1 overflow-x-auto overscroll-x-contain p-1.5 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-col lg:gap-1 lg:overflow-visible lg:p-3 [&::-webkit-scrollbar]:hidden">
             {nav.map((item) => {
               const active =
                 "exact" in item && item.exact
@@ -126,7 +126,7 @@ export function DashboardShell({
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "dashboard-app__nav-item flex items-center gap-2.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
+                    "dashboard-app__nav-item flex shrink-0 snap-start items-center gap-2 rounded-xl px-2.5 py-2 text-sm font-medium transition-all sm:gap-2.5 sm:px-3 sm:py-2.5 lg:w-full",
                     active
                       ? "dashboard-app__nav-item--active"
                       : "text-[#5c534c] hover:bg-[#f3eee8] hover:text-[#2a2018]",
@@ -140,7 +140,7 @@ export function DashboardShell({
                   >
                     <Icon className="size-4" />
                   </span>
-                  {label}
+                  <span className="max-w-[7.5rem] truncate lg:max-w-none">{label}</span>
                 </Link>
               );
             })}

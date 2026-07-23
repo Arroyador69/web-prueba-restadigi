@@ -109,7 +109,6 @@ function DemoLandingPage() {
 
   const accent = liveAccent || settings?.accentColor || "#c46a32";
   const name = settings?.restaurantName || copy.heroTitle;
-  const phone = "";
   const description = copy.heroSub;
 
   useEffect(() => {
@@ -171,25 +170,28 @@ function DemoLandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800" style={cssVars}>
+    <div className="demo-landing min-h-screen bg-slate-50 text-slate-800" style={cssVars}>
       <div className="border-b border-amber-200 bg-amber-50 text-amber-950">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm sm:px-6">
-          <p className="font-medium">{copy.banner}</p>
-          <Link to="/dashboard" className="shrink-0 font-semibold underline">
+        <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-2.5 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6">
+          <p className="font-medium leading-snug">{copy.banner}</p>
+          <Link
+            to="/dashboard"
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-[#432f24] px-4 text-sm font-semibold text-white sm:w-auto sm:min-h-0 sm:rounded-none sm:bg-transparent sm:px-0 sm:text-[#432f24] sm:underline"
+          >
             {copy.openDash}
           </Link>
         </div>
       </div>
 
-      <header className="border-b border-slate-200/80 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
-          <h1 className="truncate text-lg font-bold sm:text-xl" style={{ color: "#432f24" }}>
+      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-2.5 sm:gap-3 sm:px-6 sm:py-4">
+          <h1 className="min-w-0 truncate text-base font-bold sm:text-xl" style={{ color: "#432f24" }}>
             {name}
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <label className="sr-only">{copy.lang}</label>
             <select
-              className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm"
+              className="min-h-10 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm"
               value={locale}
               onChange={(e) => setLocale(e.target.value as "fi" | "en" | "es")}
             >
@@ -197,42 +199,40 @@ function DemoLandingPage() {
               <option value="en">EN</option>
               <option value="es">ES</option>
             </select>
-            {phone ? (
-              <a href={`tel:${phone}`} className="hidden text-sm text-slate-600 sm:inline">
-                {phone}
-              </a>
-            ) : null}
           </div>
         </div>
       </header>
 
-      <main>
-        <section className="mx-auto max-w-5xl px-4 py-12 text-center sm:px-6 sm:py-16">
-          <h2 className="mb-3 text-3xl font-bold sm:text-4xl" style={{ color: "#432f24" }}>
+      <main className="pb-[5.5rem] sm:pb-8">
+        <section className="mx-auto max-w-5xl px-4 py-8 text-center sm:px-6 sm:py-16">
+          <h2
+            className="mb-3 text-[1.75rem] font-bold leading-tight sm:text-4xl"
+            style={{ color: "#432f24" }}
+          >
             {name}
           </h2>
-          <p className="mx-auto max-w-2xl whitespace-pre-line text-base text-slate-600 sm:text-lg">
+          <p className="mx-auto max-w-2xl whitespace-pre-line text-[0.95rem] leading-relaxed text-slate-600 sm:text-lg">
             {description}
           </p>
           <a
             href="#reservar"
-            className="mt-8 inline-flex min-h-12 items-center justify-center rounded-xl px-6 font-semibold text-white"
+            className="mt-6 inline-flex min-h-12 w-full max-w-xs items-center justify-center rounded-xl px-6 font-semibold text-white sm:mt-8 sm:w-auto"
             style={{ background: accent }}
           >
             {copy.bookTitle}
           </a>
         </section>
 
-        <section className="bg-white py-12 sm:py-16">
-          <div className="mx-auto grid max-w-5xl gap-8 px-4 sm:px-6 md:grid-cols-2 md:items-center">
+        <section className="bg-white py-8 sm:py-16">
+          <div className="mx-auto grid max-w-5xl gap-5 px-4 sm:gap-8 sm:px-6 md:grid-cols-2 md:items-center">
             <div>
-              <h3 className="mb-3 text-2xl font-bold" style={{ color: "#432f24" }}>
+              <h3 className="mb-2 text-xl font-bold sm:mb-3 sm:text-2xl" style={{ color: "#432f24" }}>
                 {copy.aboutTitle}
               </h3>
-              <p className="leading-relaxed text-slate-600">{copy.aboutText}</p>
+              <p className="text-[0.95rem] leading-relaxed text-slate-600 sm:text-base">{copy.aboutText}</p>
             </div>
             <div
-              className="flex min-h-48 items-center justify-center rounded-2xl border border-slate-100 p-8 text-center text-sm text-slate-500"
+              className="flex min-h-28 items-center justify-center rounded-2xl border border-slate-100 p-6 text-center text-sm text-slate-500 sm:min-h-48 sm:p-8"
               style={{ background: `${accent}14` }}
             >
               Restadigi · public demo
@@ -240,18 +240,20 @@ function DemoLandingPage() {
           </div>
         </section>
 
-        <section id="reservar" className="mx-auto max-w-2xl scroll-mt-8 px-4 py-12 sm:px-6 sm:py-16">
-          <div className="rounded-2xl bg-white p-5 shadow-sm sm:p-8">
-            <h3 className="mb-1 text-2xl font-bold" style={{ color: "#432f24" }}>
+        <section id="reservar" className="mx-auto max-w-2xl scroll-mt-20 px-4 py-8 sm:scroll-mt-8 sm:px-6 sm:py-16">
+          <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-8">
+            <h3 className="mb-1 text-xl font-bold sm:text-2xl" style={{ color: "#432f24" }}>
               {copy.bookTitle}
             </h3>
-            <p className="mb-6 text-slate-600">{copy.bookIntro}</p>
+            <p className="mb-5 text-sm text-slate-600 sm:mb-6 sm:text-base">{copy.bookIntro}</p>
             <form className="space-y-4" onSubmit={(e) => void onSubmit(e)}>
               <div className="space-y-2">
                 <Label htmlFor="name">{copy.name}</Label>
                 <Input
                   id="name"
                   required
+                  className="min-h-11"
+                  autoComplete="name"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                 />
@@ -262,6 +264,9 @@ function DemoLandingPage() {
                   <Input
                     id="email"
                     type="email"
+                    className="min-h-11"
+                    autoComplete="email"
+                    inputMode="email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                   />
@@ -271,18 +276,22 @@ function DemoLandingPage() {
                   <Input
                     id="phone"
                     required
+                    className="min-h-11"
+                    autoComplete="tel"
+                    inputMode="tel"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   />
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-2 sm:col-span-1">
+              <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-3">
+                <div className="space-y-2">
                   <Label htmlFor="date">{copy.date}</Label>
                   <Input
                     id="date"
                     type="date"
                     required
+                    className="min-h-11"
                     value={form.date}
                     onChange={(e) => setForm({ ...form, date: e.target.value })}
                   />
@@ -293,6 +302,7 @@ function DemoLandingPage() {
                     id="time"
                     type="time"
                     required
+                    className="min-h-11"
                     value={form.time}
                     onChange={(e) => setForm({ ...form, time: e.target.value })}
                   />
@@ -305,6 +315,8 @@ function DemoLandingPage() {
                     min={1}
                     max={80}
                     required
+                    className="min-h-11"
+                    inputMode="numeric"
                     value={form.partySize}
                     onChange={(e) => setForm({ ...form, partySize: e.target.value })}
                   />
@@ -315,7 +327,7 @@ function DemoLandingPage() {
               <Button
                 type="submit"
                 disabled={busy}
-                className="min-h-12 w-full text-white"
+                className="min-h-12 w-full text-base text-white"
                 style={{ background: accent }}
               >
                 {busy ? copy.sending : copy.submit}

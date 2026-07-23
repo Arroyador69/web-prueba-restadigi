@@ -285,7 +285,7 @@ function DashboardCallsPage() {
         <p className="mt-2 max-w-2xl text-sm text-foreground/70">{t.calls.subtitle}</p>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.9fr]">
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.9fr] xl:gap-6">
         <section className="rounded-sm border border-border bg-card p-4 sm:p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <Button type="button" variant="outline" size="sm" onClick={() => shiftMonth(-1)}>

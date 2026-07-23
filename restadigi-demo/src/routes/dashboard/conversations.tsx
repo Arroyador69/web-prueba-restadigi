@@ -58,7 +58,7 @@ function DashboardConversationsPage() {
 
       {error && <p className="text-destructive">{error}</p>}
 
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[320px_1fr] lg:gap-6">
         <div className="space-y-2">
           {sessions.map((session) => (
             <button

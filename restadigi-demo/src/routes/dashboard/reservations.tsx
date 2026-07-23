@@ -242,7 +242,7 @@ function DashboardReservationsPage() {
             {fillDashboardUi(t.reservations.summary, { n: activeReservations.length })}
           </p>
 
-          <div className="grid gap-6 lg:grid-cols-[auto_1fr]">
+          <div className="grid gap-4 lg:grid-cols-[auto_1fr] lg:gap-6">
             <div className="rounded-sm border border-border bg-card p-4">
               <Calendar
                 mode="single"

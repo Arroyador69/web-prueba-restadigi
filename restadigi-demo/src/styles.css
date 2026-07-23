@@ -2607,6 +2607,71 @@ a.dashboard-app__stat-card:hover {
 
 @media (max-width: 1023px) {
   .dashboard-app__sidebar {
-    position: relative;
+    position: sticky;
+    top: 3.4rem;
+    z-index: 20;
+  }
+
+  .dashboard-app__sidebar--mobile-sticky {
+    margin-left: -0.15rem;
+    margin-right: -0.15rem;
+  }
+
+  .dashboard-app__nav-scroll {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dashboard-app__banner {
+    padding: 0.9rem 1rem;
+  }
+
+  .dashboard-app__main h2.text-2xl,
+  .dashboard-app__page-head .font-serif {
+    font-size: 1.45rem;
+  }
+
+  .dashboard-app__stat-card,
+  .dashboard-app__panel {
+    padding: 1rem;
+  }
+
+  .dashboard-app__main .grid.lg\\:grid-cols-2,
+  .dashboard-app__main .grid.lg\\:grid-cols-\\[auto_1fr\\],
+  .dashboard-app__main .grid.lg\\:grid-cols-\\[320px_1fr\\] {
+    gap: 1rem;
+  }
+
+  /* Tables: allow swipe without breaking layout */
+  .dashboard-app__main .overflow-x-auto {
+    margin-inline: -0.15rem;
+    padding-bottom: 0.25rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .dashboard-app {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .dashboard-app__header {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  .dashboard-app__nav-item {
+    font-size: 0.8rem;
+  }
+}
+
+/* Landing mobile polish */
+.demo-landing input,
+.demo-landing select,
+.demo-landing button {
+  touch-action: manipulation;
+}
+
+@media (max-width: 639px) {
+  .demo-landing {
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 }

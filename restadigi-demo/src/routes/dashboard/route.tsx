@@ -54,20 +54,22 @@ function DashboardLayout() {
   return (
     <DashboardShell publicDemo={publicDemo}>
       {publicDemo ? (
-        <div className="dashboard-app__banner mb-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="dashboard-app__banner mb-4 sm:mb-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c46a32]">
                 Restadigi
               </p>
-              <p className="mt-1 font-serif text-lg text-[#2a2018]">{t.layout.demoTitle}</p>
-              <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-[#5c534c]">
+              <p className="mt-1 font-serif text-base leading-snug text-[#2a2018] sm:text-lg">
+                {t.layout.demoTitle}
+              </p>
+              <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-[#5c534c] sm:text-sm">
                 {t.layout.demoBody}
               </p>
             </div>
             <Link
               to="/"
-              className="shrink-0 rounded-full border border-[#432f24]/15 bg-white px-3.5 py-1.5 text-xs font-semibold text-[#432f24] shadow-sm transition hover:border-[#c46a32]/40 hover:text-[#c46a32]"
+              className="inline-flex min-h-10 w-full shrink-0 items-center justify-center rounded-full border border-[#432f24]/15 bg-white px-3.5 py-2 text-xs font-semibold text-[#432f24] shadow-sm transition hover:border-[#c46a32]/40 hover:text-[#c46a32] sm:w-auto sm:min-h-0 sm:py-1.5"
             >
               {t.layout.viewLanding}
             </Link>

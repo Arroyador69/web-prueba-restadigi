@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { ChatbotWidget } from "../components/chatbot-widget";
+import { HostProductGuard } from "../components/host-product-guard";
 import { PageTracker } from "../components/page-tracker";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LocaleProvider, useMessages } from "../i18n";
@@ -145,6 +146,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <HostProductGuard />
       <PageTracker />
       <Outlet />
       <ChatbotWidget />

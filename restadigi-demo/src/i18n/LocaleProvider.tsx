@@ -53,6 +53,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     const current = detectLocale(host, window.location.search);
 
     if (shouldJumpToLocaleDomain(host) && next !== current) {
+      // Keep web↔web or demo↔demo while switching .fi / .com / .es
       const url = localeDomainUrl(next, window.location.pathname, window.location.search);
       window.location.assign(url);
       return;

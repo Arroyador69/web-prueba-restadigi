@@ -13,6 +13,60 @@
     { "source": "/yhteys", "destination": "/", "permanent": false },
     { "source": "/yllapito", "destination": "/", "permanent": false },
     { "source": "/login", "destination": "/dashboard", "permanent": false },
-    { "source": "/demos", "destination": "/dashboard", "permanent": false }
+    { "source": "/demos", "destination": "/dashboard", "permanent": false },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "demo.restadigi.fi" }],
+      "destination": "/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "demo.restadigi.com" }],
+      "destination": "/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "demo.restadigi.es" }],
+      "destination": "/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard",
+      "has": [{ "type": "host", "value": "web.restadigi.fi" }],
+      "destination": "https://demo.restadigi.fi/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard/:path*",
+      "has": [{ "type": "host", "value": "web.restadigi.fi" }],
+      "destination": "https://demo.restadigi.fi/dashboard/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard",
+      "has": [{ "type": "host", "value": "web.restadigi.com" }],
+      "destination": "https://demo.restadigi.com/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard/:path*",
+      "has": [{ "type": "host", "value": "web.restadigi.com" }],
+      "destination": "https://demo.restadigi.com/dashboard/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard",
+      "has": [{ "type": "host", "value": "web.restadigi.es" }],
+      "destination": "https://demo.restadigi.es/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard/:path*",
+      "has": [{ "type": "host", "value": "web.restadigi.es" }],
+      "destination": "https://demo.restadigi.es/dashboard/:path*",
+      "permanent": false
+    }
   ]
 }

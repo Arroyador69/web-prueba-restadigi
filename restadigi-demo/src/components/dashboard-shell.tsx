@@ -15,7 +15,7 @@ import type { ReactNode } from "react";
 
 import restadigiIcon from "@/assets/restadigi-logo-icon.png";
 import { Button } from "@/components/ui/button";
-import { LocaleFlag, useDashboardUi, useLocale, type Locale } from "@/i18n";
+import { LocaleFlag, landingUrl, useDashboardUi, useLocale, type Locale } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -94,7 +94,7 @@ export function DashboardShell({
               asChild
               className="h-9 border-white/20 bg-white/5 px-2.5 text-xs text-white hover:bg-white/10 hover:text-white sm:px-3 sm:text-sm"
             >
-              <Link to="/">{labels.landing}</Link>
+              <a href={landingUrl(locale)}>{labels.landing}</a>
             </Button>
             {!publicDemo ? (
               <Button

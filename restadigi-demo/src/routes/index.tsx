@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLocale } from "@/i18n";
+import { dashboardUrl, useLocale } from "@/i18n";
 import { readDemoTheme, subscribeDemoTheme } from "@/lib/demo-theme";
 import type { PublicRestaurantSettings } from "@/lib/restaurant-settings-types";
 
@@ -174,12 +174,12 @@ function DemoLandingPage() {
       <div className="border-b border-amber-200 bg-amber-50 text-amber-950">
         <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-2.5 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6">
           <p className="font-medium leading-snug">{copy.banner}</p>
-          <Link
-            to="/dashboard"
+          <a
+            href={dashboardUrl("/dashboard", locale)}
             className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-[#432f24] px-4 text-sm font-semibold text-white sm:w-auto sm:min-h-0 sm:rounded-none sm:bg-transparent sm:px-0 sm:text-[#432f24] sm:underline"
           >
             {copy.openDash}
-          </Link>
+          </a>
         </div>
       </div>
 

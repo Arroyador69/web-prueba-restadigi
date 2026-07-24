@@ -1,9 +1,9 @@
-import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { DashboardShell } from "@/components/dashboard-shell";
 import { Toaster } from "@/components/ui/sonner";
-import { useDashboardUi } from "@/i18n";
+import { landingUrl, useDashboardUi, useLocale } from "@/i18n";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
@@ -16,6 +16,7 @@ function DashboardLayout() {
   const [ready, setReady] = useState(isLogin);
   const [publicDemo, setPublicDemo] = useState(false);
   const t = useDashboardUi();
+  const { locale } = useLocale();
 
   useEffect(() => {
     if (isLogin) {
@@ -67,12 +68,12 @@ function DashboardLayout() {
                 {t.layout.demoBody}
               </p>
             </div>
-            <Link
-              to="/"
+            <a
+              href={landingUrl(locale)}
               className="inline-flex min-h-10 w-full shrink-0 items-center justify-center rounded-full border border-[#432f24]/15 bg-white px-3.5 py-2 text-xs font-semibold text-[#432f24] shadow-sm transition hover:border-[#c46a32]/40 hover:text-[#c46a32] sm:w-auto sm:min-h-0 sm:py-1.5"
             >
               {t.layout.viewLanding}
-            </Link>
+            </a>
           </div>
         </div>
       ) : null}

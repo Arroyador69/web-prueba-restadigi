@@ -30,3 +30,5 @@ export {
   fill as fillDashboardUi,
 } from "./dashboard-ui";
 export { getMessages, messages } from "./messages";
+export { getShowcaseCopy, SHOWCASE_BRAND, SHOWCASE_COPY } from "./showcase-landing";
+export type { ShowcaseCopy } from "./showcase-landing";

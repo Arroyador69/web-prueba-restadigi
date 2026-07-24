@@ -3302,78 +3302,13 @@ a.dashboard-app__stat-card:hover {
     var(--sa-ink);
 }
 
-.sa-reserve__panel {
-  max-width: 640px;
-}
-
-.sa-form {
-  display: grid;
-  gap: 1rem;
-  margin-top: 0.5rem;
-}
-
-.sa-form label {
-  display: grid;
-  gap: 0.4rem;
-}
-
-.sa-form label span {
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.sa-reserve .sa-section__head .sa-body {
   color: var(--sa-muted);
 }
 
-.sa-form input,
-.sa-form textarea,
-.sa-form select {
-  width: 100%;
-  min-height: 2.85rem;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--sa-paper) 18%, transparent);
-  background: color-mix(in srgb, var(--sa-paper) 4%, transparent);
-  color: var(--sa-paper);
-  font: inherit;
-  font-size: 1rem;
-  touch-action: manipulation;
-}
-
-.sa-form textarea {
-  min-height: 5.5rem;
-  resize: vertical;
-}
-
-.sa-form input:focus,
-.sa-form textarea:focus {
-  outline: none;
-  border-color: color-mix(in srgb, var(--sa-brass) 70%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sa-brass) 18%, transparent);
-}
-
-.sa-form input::placeholder,
-.sa-form textarea::placeholder {
-  color: color-mix(in srgb, var(--sa-muted) 80%, transparent);
-}
-
-.sa-form__row--2,
-.sa-form__row--3 {
-  display: grid;
-  gap: 1rem;
-}
-
-@media (min-width: 560px) {
-  .sa-form__row--2 {
-    grid-template-columns: 1fr 1fr;
-  }
-  .sa-form__row--3 {
-    grid-template-columns: 1.1fr 0.9fr 0.7fr;
-  }
-}
-
-.sa-form__error {
-  margin: 0;
-  color: #e8a0a0;
-  font-size: 0.9rem;
+.sa-reserve .TableBookingWidget,
+.sa-reserve > .sa-wrap > section {
+  color: #2a2018;
 }
 
 .sa-footer {

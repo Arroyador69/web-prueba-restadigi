@@ -433,6 +433,48 @@ export type Messages = {
       priceNote: string;
       button: string;
     };
+    demo: {
+      sectionEyebrow: string;
+      sectionTitleBefore: string;
+      sectionTitleAccent: string;
+      sectionTitleAfter: string;
+      sectionBody: string;
+      bannerEyebrow: string;
+      bannerBody: string;
+      liveBadge: string;
+      stepperAria: string;
+      stepInfo: string;
+      stepGuests: string;
+      stepDate: string;
+      stepTime: string;
+      stepConfirm: string;
+      infoTitle: string;
+      infoBody: string;
+      guestsTitle: string;
+      guestsLabel: string;
+      continue: string;
+      back: string;
+      prevMonth: string;
+      nextMonth: string;
+      prevDay: string;
+      nextDay: string;
+      noSlots: string;
+      confirmTitle: string;
+      place: string;
+      type: string;
+      when: string;
+      normalType: string;
+      name: string;
+      phone: string;
+      email: string;
+      comment: string;
+      termsFallback: string;
+      submit: string;
+      sending: string;
+      successTitle: string;
+      successBody: string;
+      tryAgain: string;
+    };
   };
   hosting: {
     meta: {

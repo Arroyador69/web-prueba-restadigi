@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import heroDining from "@/assets/hero-fine-dining.jpg";
 import imgKitchen from "@/assets/restaurant-kitchen.jpg";
@@ -7,7 +7,8 @@ import imgTable from "@/assets/restaurant-table.jpg";
 import imgTerrace from "@/assets/restaurant-terrace.jpg";
 import imgInterior from "@/assets/restaurant-interior.jpg";
 import imgDining from "@/assets/restaurant-dining.jpg";
-import { dashboardUrl, useLocale, type Locale } from "@/i18n";
+import { TableBookingWidget } from "@/components/table-booking-widget";
+import { dashboardUrl, useLocale, useMessages, type Locale } from "@/i18n";
 import { getShowcaseCopy, SHOWCASE_BRAND } from "@/i18n/showcase-landing";
 
 export const Route = createFileRoute("/")({
@@ -65,20 +66,9 @@ function Reveal({
 function ShowcaseLandingPage() {
   const { locale, setLocale } = useLocale();
   const t = getShowcaseCopy(locale);
+  const bookingDemo = useMessages().booking.demo;
   const [navSolid, setNavSolid] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successOpen, setSuccessOpen] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    date: "",
-    time: "19:30",
-    partySize: "2",
-    notes: "",
-  });
 
   useEffect(() => {
     document.title = t.metaTitle;
@@ -92,45 +82,6 @@ function ShowcaseLandingPage() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  useEffect(() => {
-    if (!successOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [successOpen]);
-
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/restaurant/book", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          guestName: form.name,
-          guestEmail: form.email || undefined,
-          guestPhone: form.phone,
-          partySize: Number(form.partySize),
-          reservationDate: form.date,
-          reservationTime: form.time,
-          notes: form.notes || undefined,
-          locale,
-        }),
-      });
-      const data = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(data.error || t.errorGeneric);
-      setSuccessOpen(true);
-      setForm((f) => ({ ...f, name: "", email: "", phone: "", notes: "" }));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t.errorGeneric);
-    } finally {
-      setBusy(false);
-    }
-  }
 
   function closeMenu() {
     setMenuOpen(false);
@@ -315,95 +266,19 @@ function ShowcaseLandingPage() {
         </Reveal>
 
         <Reveal as="section" id="reserve" className="sa-section sa-reserve">
-          <div className="sa-wrap sa-reserve__panel">
-            <header className="sa-section__head">
-              <p className="sa-eyebrow">{t.nav.reserve}</p>
-              <h2 className="sa-heading">{t.reserveTitle}</h2>
-              <p className="sa-body">{t.reserveLead}</p>
+          <div className="sa-wrap">
+            <header className="sa-section__head sa-section__head--center" style={{ maxWidth: "40rem", marginInline: "auto" }}>
+              <p className="sa-eyebrow">{bookingDemo.sectionEyebrow}</p>
+              <h2 className="sa-heading">
+                {bookingDemo.sectionTitleBefore}
+                <span style={{ color: "var(--sa-brass)" }}>{bookingDemo.sectionTitleAccent}</span>
+                {bookingDemo.sectionTitleAfter}
+              </h2>
+              <p className="sa-body" style={{ marginInline: "auto" }}>
+                {bookingDemo.sectionBody}
+              </p>
             </header>
-
-            <form className="sa-form" onSubmit={(e) => void onSubmit(e)}>
-              <div className="sa-form__row">
-                <label>
-                  <span>{t.fields.name}</span>
-                  <input
-                    required
-                    autoComplete="name"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  />
-                </label>
-              </div>
-              <div className="sa-form__row sa-form__row--2">
-                <label>
-                  <span>{t.fields.email}</span>
-                  <input
-                    type="email"
-                    autoComplete="email"
-                    inputMode="email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  />
-                </label>
-                <label>
-                  <span>{t.fields.phone}</span>
-                  <input
-                    required
-                    autoComplete="tel"
-                    inputMode="tel"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  />
-                </label>
-              </div>
-              <div className="sa-form__row sa-form__row--3">
-                <label>
-                  <span>{t.fields.date}</span>
-                  <input
-                    type="date"
-                    required
-                    value={form.date}
-                    onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  />
-                </label>
-                <label>
-                  <span>{t.fields.time}</span>
-                  <input
-                    type="time"
-                    required
-                    value={form.time}
-                    onChange={(e) => setForm({ ...form, time: e.target.value })}
-                  />
-                </label>
-                <label>
-                  <span>{t.fields.party}</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={12}
-                    required
-                    inputMode="numeric"
-                    value={form.partySize}
-                    onChange={(e) => setForm({ ...form, partySize: e.target.value })}
-                  />
-                </label>
-              </div>
-              <div className="sa-form__row">
-                <label>
-                  <span>{t.fields.notes}</span>
-                  <textarea
-                    rows={3}
-                    placeholder={t.fields.notesPlaceholder}
-                    value={form.notes}
-                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  />
-                </label>
-              </div>
-              {error ? <p className="sa-form__error">{error}</p> : null}
-              <button type="submit" className="sa-btn sa-btn--gold sa-btn--block" disabled={busy}>
-                {busy ? t.sending : t.submit}
-              </button>
-            </form>
+            <TableBookingWidget />
           </div>
         </Reveal>
       </main>
@@ -421,28 +296,6 @@ function ShowcaseLandingPage() {
         </div>
       </footer>
 
-      {successOpen ? (
-        <div
-          className="sa-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="sa-success-title"
-          onClick={() => setSuccessOpen(false)}
-        >
-          <div className="sa-modal__card" onClick={(e) => e.stopPropagation()}>
-            <div className="sa-modal__check" aria-hidden>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <h3 id="sa-success-title">{t.successTitle}</h3>
-            <p>{t.successBody}</p>
-            <button type="button" className="sa-btn sa-btn--gold" onClick={() => setSuccessOpen(false)}>
-              {t.successClose}
-            </button>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

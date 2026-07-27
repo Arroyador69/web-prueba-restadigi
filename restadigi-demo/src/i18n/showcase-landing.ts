@@ -8,7 +8,15 @@ export type ShowcaseCopy = {
   demoRibbon: string;
   openPanel: string;
   lang: string;
-  nav: { experience: string; menu: string; atmosphere: string; reserve: string };
+  nav: {
+    about: string;
+    menu: string;
+    lunch: string;
+    groups: string;
+    contact: string;
+    reserve: string;
+    gift: string;
+  };
   heroEyebrow: string;
   heroTitle: string;
   heroLead: string;
@@ -17,11 +25,24 @@ export type ShowcaseCopy = {
   experienceTitle: string;
   experienceLead: string;
   experienceBody: string;
-  pillars: { title: string; body: string }[];
+  foodTitle: string;
+  foodLead: string;
+  foodBody: string;
   menuTitle: string;
   menuLead: string;
   dishes: { name: string; desc: string; tag: string }[];
   menuNote: string;
+  lunchTitle: string;
+  lunchLead: string;
+  lunchBody: string;
+  lunchItems: { name: string; desc: string; price: string }[];
+  drinksTitle: string;
+  drinksLead: string;
+  drinksBody: string;
+  groupsTitle: string;
+  groupsLead: string;
+  groupsBody: string;
+  groupsCta: string;
   atmosphereTitle: string;
   atmosphereLead: string;
   hoursTitle: string;
@@ -30,42 +51,31 @@ export type ShowcaseCopy = {
   address: string;
   phoneLabel: string;
   phone: string;
-  reserveTitle: string;
-  reserveLead: string;
-  fields: {
-    name: string;
-    email: string;
-    phone: string;
-    date: string;
-    time: string;
-    party: string;
-    notes: string;
-    notesPlaceholder: string;
-  };
-  submit: string;
-  sending: string;
-  successTitle: string;
-  successBody: string;
-  successClose: string;
-  errorGeneric: string;
+  giftTitle: string;
+  giftLead: string;
+  giftBody: string;
+  giftCta: string;
   footerCredit: string;
   footerDemo: string;
 };
 
 const fi: ShowcaseCopy = {
-  metaTitle: "Maison Aurelia — Pöytävaraus",
+  metaTitle: "Maison Aurelia — Restadigi showcase",
   metaDescription:
     "Maison Aurelia: moderni fine dining Helsingissä. Varaa pöytä verkossa — Restadigi-esittelysivusto.",
   demoRibbon: "Restadigi-esittely · tämä on esimerkki ravintolasivustosta",
   openPanel: "Avaa hallintapaneeli",
   lang: "Kieli",
   nav: {
-    experience: "Kokemus",
-    menu: "Menu",
-    atmosphere: "Tunnelma",
+    about: "Meistä",
+    menu: "À la carte",
+    lunch: "Lounas",
+    groups: "Ryhmät & tilaisuudet",
+    contact: "Yhteystiedot & aukioloajat",
     reserve: "Varaa",
+    gift: "Lahjakortti",
   },
-  heroEyebrow: "Helsinki · fine dining",
+  heroEyebrow: "Helsinki · Bulevardi",
   heroTitle: "Illallinen, joka jää mieleen",
   heroLead:
     "Kausiluontoisia makuja, rauhallinen sali ja palvelu joka tuntuu henkilökohtaiselta — varaa pöytäsi muutamassa sekunnissa.",
@@ -74,22 +84,12 @@ const fi: ShowcaseCopy = {
   experienceTitle: "Talomme",
   experienceLead: "Hiljainen luksus, tarkka keittiö.",
   experienceBody:
-    "Maison Aurelia yhdistää pohjoisen raaka-aineet ja eurooppalaisen tekniikan. Illallinen on kokonaisuus: valo, tempo, maku ja seura.",
-  pillars: [
-    {
-      title: "Kausi edellä",
-      body: "Menu vaihtuu luonnon rytmissä. Jokainen lautanen kertoo, mitä juuri nyt kannattaa syödä.",
-    },
-    {
-      title: "Viinit huolella",
-      body: "Sommelierimme rakentaa paritukset lautaselle — myös alkoholittomat vaihtoehdot kuuluvat asiaan.",
-    },
-    {
-      title: "Yksityinen tunnelma",
-      body: "Pieni sali, pehmeä valaistus ja tilaa keskustelulle. Sopii juhlaan tai hiljaiseen iltaan kahdestaan.",
-    },
-  ],
-  menuTitle: "Maistiaisia",
+    "Maison Aurelia yhdistää pohjoisen raaka-aineet ja eurooppalaisen tekniikan. Illallinen on kokonaisuus: valo, tempo, maku ja seura. Rakennamme lautaselle muhkeita makuja ilman turhia muodollisuuksia.",
+  foodTitle: "Ruoka",
+  foodLead: "Parhaista raaka-aineista, intohimolla.",
+  foodBody:
+    "Emme sitoudu yhteen tyyliin — yhdistämme rohkeasti vaikutteita. Listalta löytyy aina vaihtoehtoja kasvis-, kala- ja liharuokien ystäville. Kerro erityisruokavaliosta varatessa.",
+  menuTitle: "À la carte",
   menuLead: "Muutama merkki nykyisestä menusta.",
   dishes: [
     {
@@ -108,12 +108,31 @@ const fi: ShowcaseCopy = {
       tag: "Jälkiruoka",
     },
   ],
-  menuNote: "Koko menu ja allergeenit esitetään salissa. Kerro erityisruokavaliosta varauksessa.",
+  menuNote: "Koko menu ja allergeenit esitetään salissa.",
+  lunchTitle: "Lounas",
+  lunchLead: "Arkisin kevyt, huolella tehty.",
+  lunchBody:
+    "Tiistaista perjantaihin tarjoamme vaihtuvan lounaskokonaisuuden — sopii nopeaan taukoon ilman kiireen tuntua.",
+  lunchItems: [
+    { name: "Päivän keitto", desc: "Kausivihanneksia, yrttiöljy", price: "9 €" },
+    { name: "Lounaspääruoka", desc: "Kala tai kasvis — vaihtuu päivittäin", price: "16 €" },
+    { name: "Kahvi & makea", desc: "Espresso ja pieni jälkiruoka", price: "6 €" },
+  ],
+  drinksTitle: "Juoma",
+  drinksLead: "Match made in Maison.",
+  drinksBody:
+    "Viinit maailmalta, cocktaileja ja huolella valittuja alkoholittomia — juoma kruunaa illallisen.",
+  groupsTitle: "Ryhmät & tilaisuudet",
+  groupsLead: "Yksityinen illallinen, yritystilaisuus tai juhla.",
+  groupsBody:
+    "Sali sopii 8–28 hengen tilaisuuksiin. Autamme menun, juomien ja aikataulun suunnittelussa.",
+  groupsCta: "Kysy tarjousta",
   atmosphereTitle: "Tunnelma",
   atmosphereLead: "Tummaa puuta, pehmeää valoa, tilaa hengittää.",
   hoursTitle: "Aukiolo",
   hours: [
-    { day: "Ti–To", time: "17:00–23:00" },
+    { day: "Lounas Ti–Pe", time: "11:30–14:00" },
+    { day: "Illallinen Ti–To", time: "17:00–23:00" },
     { day: "Pe–La", time: "17:00–00:00" },
     { day: "Su–Ma", time: "Suljettu" },
   ],
@@ -121,44 +140,32 @@ const fi: ShowcaseCopy = {
   address: "Bulevardi 12, 00120 Helsinki",
   phoneLabel: "Puhelin",
   phone: "+358 40 000 0000",
-  reserveTitle: "Varaa pöytä",
-  reserveLead:
-    "Täytä tiedot — saat heti vahvistuksen. Tämä on Restadigi-demo: varaus ei tallennu oikeaan järjestelmään.",
-  fields: {
-    name: "Nimi",
-    email: "Sähköposti",
-    phone: "Puhelin",
-    date: "Päivä",
-    time: "Aika",
-    party: "Henkilöä",
-    notes: "Toiveet",
-    notesPlaceholder: "Esim. juhla, allergiat, ikkuna…",
-  },
-  submit: "Vahvista varaus",
-  sending: "Vahvistetaan…",
-  successTitle: "Varaus vastaanotettu",
-  successBody:
-    "Kiitos — tämä demo näyttää onnistuneen varauksen. Oikeassa Restadigi-sivustossa vahvistus menisi ravintolaan ja asiakkaalle.",
-  successClose: "Sulje",
-  errorGeneric: "Jotain meni pieleen. Kokeile uudelleen.",
+  giftTitle: "Lahjakortti",
+  giftLead: "Anna illallinen, joka jää mieleen.",
+  giftBody:
+    "Digitaalinen lahjakortti 50–300 €. Voimassa vuoden — lunastetaan varauksen yhteydessä. Demoesimerkki.",
+  giftCta: "Osta lahjakortti",
   footerCredit: "Suunniteltu esittelyksi Restadigille",
   footerDemo: "Esimerkkisivusto · ei oikea ravintola",
 };
 
 const en: ShowcaseCopy = {
-  metaTitle: "Maison Aurelia — Table reservation",
+  metaTitle: "Maison Aurelia — Restadigi showcase",
   metaDescription:
     "Maison Aurelia: modern fine dining in Helsinki. Reserve a table online — a Restadigi showcase site.",
   demoRibbon: "Restadigi showcase · sample restaurant website",
   openPanel: "Open dashboard",
   lang: "Language",
   nav: {
-    experience: "Experience",
-    menu: "Menu",
-    atmosphere: "Atmosphere",
+    about: "About",
+    menu: "À la carte",
+    lunch: "Lunch",
+    groups: "Groups & events",
+    contact: "Contact & hours",
     reserve: "Reserve",
+    gift: "Gift card",
   },
-  heroEyebrow: "Helsinki · fine dining",
+  heroEyebrow: "Helsinki · Bulevardi",
   heroTitle: "An evening worth remembering",
   heroLead:
     "Seasonal flavours, a calm dining room and service that feels personal — reserve your table in seconds.",
@@ -167,22 +174,12 @@ const en: ShowcaseCopy = {
   experienceTitle: "Our house",
   experienceLead: "Quiet luxury, precise cooking.",
   experienceBody:
-    "Maison Aurelia brings northern produce and European craft together. Dinner is a whole: light, pace, flavour and company.",
-  pillars: [
-    {
-      title: "Season first",
-      body: "The menu follows the land and sea. Every plate answers what is best to eat right now.",
-    },
-    {
-      title: "Wine with care",
-      body: "Our sommelier pairs each course — including thoughtful alcohol-free options.",
-    },
-    {
-      title: "Intimate room",
-      body: "A small hall, soft light and space to talk. Ideal for celebrations or a quiet evening for two.",
-    },
-  ],
-  menuTitle: "Signatures",
+    "Maison Aurelia brings northern produce and European craft together. Dinner is a whole: light, pace, flavour and company — big flavours without unnecessary formality.",
+  foodTitle: "Food",
+  foodLead: "The best ingredients, made with passion.",
+  foodBody:
+    "We don’t stick to one style — we mix influences boldly. The menu always has options for vegetable, fish and meat lovers. Mention dietary needs when booking.",
+  menuTitle: "À la carte",
   menuLead: "A few notes from the current menu.",
   dishes: [
     {
@@ -201,12 +198,31 @@ const en: ShowcaseCopy = {
       tag: "Dessert",
     },
   ],
-  menuNote: "Full menu and allergens are presented in the room. Mention dietary needs when booking.",
+  menuNote: "Full menu and allergens are presented in the room.",
+  lunchTitle: "Lunch",
+  lunchLead: "Weekday lunch, carefully made.",
+  lunchBody:
+    "Tuesday to Friday we serve a changing lunch set — a proper break without the rush.",
+  lunchItems: [
+    { name: "Soup of the day", desc: "Seasonal vegetables, herb oil", price: "9 €" },
+    { name: "Lunch main", desc: "Fish or vegetables — changes daily", price: "16 €" },
+    { name: "Coffee & sweet", desc: "Espresso and a small dessert", price: "6 €" },
+  ],
+  drinksTitle: "Drinks",
+  drinksLead: "Match made in Maison.",
+  drinksBody:
+    "Wines from around the world, cocktails and thoughtful alcohol-free options — drinks crown the dinner.",
+  groupsTitle: "Groups & events",
+  groupsLead: "Private dinner, company event or celebration.",
+  groupsBody:
+    "The room suits groups of 8–28. We help plan the menu, drinks and timing.",
+  groupsCta: "Request a quote",
   atmosphereTitle: "Atmosphere",
   atmosphereLead: "Dark wood, soft light, room to breathe.",
   hoursTitle: "Hours",
   hours: [
-    { day: "Tue–Thu", time: "17:00–23:00" },
+    { day: "Lunch Tue–Fri", time: "11:30–14:00" },
+    { day: "Dinner Tue–Thu", time: "17:00–23:00" },
     { day: "Fri–Sat", time: "17:00–00:00" },
     { day: "Sun–Mon", time: "Closed" },
   ],
@@ -214,44 +230,32 @@ const en: ShowcaseCopy = {
   address: "Bulevardi 12, 00120 Helsinki",
   phoneLabel: "Phone",
   phone: "+358 40 000 0000",
-  reserveTitle: "Reserve a table",
-  reserveLead:
-    "Fill in your details — you’ll see an instant confirmation. This is a Restadigi demo: the booking is not saved to a live system.",
-  fields: {
-    name: "Name",
-    email: "Email",
-    phone: "Phone",
-    date: "Date",
-    time: "Time",
-    party: "Guests",
-    notes: "Requests",
-    notesPlaceholder: "e.g. celebration, allergies, window seat…",
-  },
-  submit: "Confirm reservation",
-  sending: "Confirming…",
-  successTitle: "Reservation received",
-  successBody:
-    "Thank you — this demo shows a successful booking flow. On a real Restadigi site, confirmation would reach the restaurant and the guest.",
-  successClose: "Close",
-  errorGeneric: "Something went wrong. Please try again.",
+  giftTitle: "Gift card",
+  giftLead: "Give an evening to remember.",
+  giftBody:
+    "Digital gift cards from 50–300 €. Valid for one year — redeemed when booking. Demo example.",
+  giftCta: "Buy a gift card",
   footerCredit: "Designed as a Restadigi showcase",
   footerDemo: "Sample website · not a real restaurant",
 };
 
 const es: ShowcaseCopy = {
-  metaTitle: "Maison Aurelia — Reserva de mesa",
+  metaTitle: "Maison Aurelia — Restadigi showcase",
   metaDescription:
     "Maison Aurelia: fine dining moderno en Helsinki. Reserva mesa online — web de muestra Restadigi.",
   demoRibbon: "Muestra Restadigi · ejemplo de web de restaurante",
   openPanel: "Abrir panel",
   lang: "Idioma",
   nav: {
-    experience: "Experiencia",
-    menu: "Carta",
-    atmosphere: "Ambiente",
+    about: "Nosotros",
+    menu: "À la carte",
+    lunch: "Menú del día",
+    groups: "Grupos y eventos",
+    contact: "Contacto y horario",
     reserve: "Reservar",
+    gift: "Tarjeta regalo",
   },
-  heroEyebrow: "Helsinki · fine dining",
+  heroEyebrow: "Helsinki · Bulevardi",
   heroTitle: "Una cena que se recuerda",
   heroLead:
     "Sabores de temporada, un salón sereno y un servicio cercano — reserva tu mesa en segundos.",
@@ -260,22 +264,12 @@ const es: ShowcaseCopy = {
   experienceTitle: "Nuestra casa",
   experienceLead: "Lujo discreto, cocina precisa.",
   experienceBody:
-    "Maison Aurelia une producto nórdico y oficio europeo. La cena es un conjunto: luz, ritmo, sabor y compañía.",
-  pillars: [
-    {
-      title: "La temporada manda",
-      body: "La carta sigue la tierra y el mar. Cada plato responde a lo mejor del momento.",
-    },
-    {
-      title: "Vinos con criterio",
-      body: "Nuestro sommelier armoniza cada pase — también con opciones sin alcohol pensadas.",
-    },
-    {
-      title: "Salón íntimo",
-      body: "Espacio pequeño, luz suave y sitio para conversar. Ideal para celebrar o una noche en pareja.",
-    },
-  ],
-  menuTitle: "Firmas",
+    "Maison Aurelia une producto nórdico y oficio europeo. La cena es un conjunto: luz, ritmo, sabor y compañía — sabores generosos sin formalidades innecesarias.",
+  foodTitle: "Comida",
+  foodLead: "Los mejores ingredientes, con pasión.",
+  foodBody:
+    "No nos ceñimos a un solo estilo — mezclamos influencias con valentía. Siempre hay opciones vegetales, de pescado y de carne. Indica dietas especiales al reservar.",
+  menuTitle: "À la carte",
   menuLead: "Algunas notas de la carta actual.",
   dishes: [
     {
@@ -294,39 +288,43 @@ const es: ShowcaseCopy = {
       tag: "Postre",
     },
   ],
-  menuNote: "La carta completa y alérgenos se presentan en sala. Indica dietas especiales al reservar.",
+  menuNote: "La carta completa y alérgenos se presentan en sala.",
+  lunchTitle: "Menú del día",
+  lunchLead: "Comida de diario, hecha con cuidado.",
+  lunchBody:
+    "De martes a viernes ofrecemos un menú cambiante — una pausa sin prisas.",
+  lunchItems: [
+    { name: "Sopa del día", desc: "Verduras de temporada, aceite de hierbas", price: "9 €" },
+    { name: "Plato principal", desc: "Pescado o verduras — cambia a diario", price: "16 €" },
+    { name: "Café y dulce", desc: "Espresso y un pequeño postre", price: "6 €" },
+  ],
+  drinksTitle: "Bebidas",
+  drinksLead: "Match made in Maison.",
+  drinksBody:
+    "Vinos del mundo, cócteles y opciones sin alcohol — la bebida corona la cena.",
+  groupsTitle: "Grupos y eventos",
+  groupsLead: "Cena privada, evento de empresa o celebración.",
+  groupsBody:
+    "El salón encaja con grupos de 8–28. Ayudamos con el menú, bebidas y horarios.",
+  groupsCta: "Pedir presupuesto",
   atmosphereTitle: "Ambiente",
   atmosphereLead: "Madera oscura, luz suave, espacio para respirar.",
   hoursTitle: "Horario",
   hours: [
-    { day: "Mar–Jue", time: "17:00–23:00" },
-    { day: "Vie–Sáb", time: "17:00–00:00" },
-    { day: "Dom–Lun", time: "Cerrado" },
+    { day: "Comida mar–vie", time: "11:30–14:00" },
+    { day: "Cena mar–jue", time: "17:00–23:00" },
+    { day: "Vie–sáb", time: "17:00–00:00" },
+    { day: "Dom–lun", time: "Cerrado" },
   ],
   addressLabel: "Dirección",
   address: "Bulevardi 12, 00120 Helsinki",
   phoneLabel: "Teléfono",
   phone: "+358 40 000 0000",
-  reserveTitle: "Reservar mesa",
-  reserveLead:
-    "Completa los datos — verás la confirmación al instante. Es una demo Restadigi: la reserva no se guarda en un sistema real.",
-  fields: {
-    name: "Nombre",
-    email: "Email",
-    phone: "Teléfono",
-    date: "Fecha",
-    time: "Hora",
-    party: "Comensales",
-    notes: "Preferencias",
-    notesPlaceholder: "p. ej. celebración, alergias, mesa junto a la ventana…",
-  },
-  submit: "Confirmar reserva",
-  sending: "Confirmando…",
-  successTitle: "Reserva recibida",
-  successBody:
-    "Gracias — esta demo muestra un flujo de reserva exitoso. En una web Restadigi real, la confirmación llegaría al restaurante y al cliente.",
-  successClose: "Cerrar",
-  errorGeneric: "Algo ha fallado. Inténtalo de nuevo.",
+  giftTitle: "Tarjeta regalo",
+  giftLead: "Regala una cena para recordar.",
+  giftBody:
+    "Tarjetas digitales de 50–300 €. Válidas un año — se canjean al reservar. Ejemplo de demo.",
+  giftCta: "Comprar tarjeta",
   footerCredit: "Diseñado como muestra de Restadigi",
   footerDemo: "Web de ejemplo · no es un restaurante real",
 };

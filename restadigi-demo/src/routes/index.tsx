@@ -1,16 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-import heroDining from "@/assets/hero-fine-dining.jpg";
-import imgKitchen from "@/assets/restaurant-kitchen.jpg";
-import imgTable from "@/assets/restaurant-table.jpg";
-import imgTerrace from "@/assets/restaurant-terrace.jpg";
-import imgInterior from "@/assets/restaurant-interior.jpg";
-import imgDining from "@/assets/restaurant-dining.jpg";
-import imgCafe from "@/assets/restaurant-cafe.jpg";
-import imgDrink from "@/assets/freddos-ice-latte.jpg";
-import imgDrink2 from "@/assets/freddos-layered-coffee.jpg";
-import imgGroups from "@/assets/mock-ryhmille.jpg";
+import heroPeople from "@/assets/success-busy-terrace.jpg";
+import imgDish from "@/assets/mock-erikoismenut.jpg";
+import imgWine from "@/assets/restaurant-dining.jpg";
+import imgGuests from "@/assets/success-guests-arriving.jpg";
 import { TableBookingWidget } from "@/components/table-booking-widget";
 import { dashboardUrl, useLocale, useMessages, type Locale } from "@/i18n";
 import { getShowcaseCopy, SHOWCASE_BRAND } from "@/i18n/showcase-landing";
@@ -64,6 +58,27 @@ function Reveal({
     <Tag ref={ref as never} id={id} className={`sa-reveal ${className}`}>
       {children}
     </Tag>
+  );
+}
+
+function WineMark() {
+  return (
+    <svg className="sa-wine-mark" viewBox="0 0 120 140" aria-hidden>
+      <path
+        d="M48 18h12c2 0 4 2 4 5v28c0 14-8 24-10 36h0c-2 12-2 18-2 28h6v8H50v-8h6c0-10 0-16-2-28C52 75 44 65 44 51V23c0-3 2-5 4-5z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+      />
+      <path
+        d="M72 42c14 2 24 14 24 30 0 18-12 30-28 32"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+      />
+      <path d="M68 104h28" stroke="currentColor" strokeWidth="2.2" />
+      <ellipse cx="82" cy="78" rx="11" ry="16" fill="none" stroke="currentColor" strokeWidth="2.2" />
+    </svg>
   );
 }
 
@@ -173,7 +188,7 @@ function ShowcaseLandingPage() {
       <main id="top">
         <section className="sa-hero">
           <div className="sa-hero__media" aria-hidden>
-            <img src={heroDining} alt="" className="sa-hero__img" />
+            <img src={heroPeople} alt="" className="sa-hero__img" />
             <div className="sa-hero__veil" />
           </div>
           <div className="sa-hero__content">
@@ -191,140 +206,7 @@ function ShowcaseLandingPage() {
           </div>
         </section>
 
-        <Reveal as="section" id="experience" className="sa-section sa-intro">
-          <div className="sa-wrap sa-intro__inner">
-            <p className="sa-eyebrow">{t.experienceTitle}</p>
-            <h2 className="sa-heading sa-heading--xl">{t.experienceLead}</h2>
-            <p className="sa-body sa-body--lg">{t.experienceBody}</p>
-          </div>
-        </Reveal>
-
-        <div className="sa-bleed" aria-hidden>
-          <img src={imgDining} alt="" />
-        </div>
-
-        <Reveal as="section" id="menu" className="sa-section sa-food">
-          <div className="sa-wrap">
-            <header className="sa-section__head sa-section__head--wide">
-              <p className="sa-eyebrow">{t.foodTitle}</p>
-              <h2 className="sa-heading">{t.foodLead}</h2>
-              <p className="sa-body">{t.foodBody}</p>
-            </header>
-
-            <div className="sa-feature-grid">
-              <article className="sa-feature sa-feature--tall">
-                <img src={imgTable} alt="" loading="lazy" />
-                <div className="sa-feature__cap">
-                  <span>{t.dishes[0]?.tag}</span>
-                  <h3>{t.dishes[0]?.name}</h3>
-                  <p>{t.dishes[0]?.desc}</p>
-                </div>
-              </article>
-              <article className="sa-feature">
-                <img src={imgKitchen} alt="" loading="lazy" />
-                <div className="sa-feature__cap">
-                  <span>{t.dishes[1]?.tag}</span>
-                  <h3>{t.dishes[1]?.name}</h3>
-                  <p>{t.dishes[1]?.desc}</p>
-                </div>
-              </article>
-              <article className="sa-feature">
-                <img src={imgCafe} alt="" loading="lazy" />
-                <div className="sa-feature__cap">
-                  <span>{t.dishes[2]?.tag}</span>
-                  <h3>{t.dishes[2]?.name}</h3>
-                  <p>{t.dishes[2]?.desc}</p>
-                </div>
-              </article>
-            </div>
-
-            <p className="sa-menu__note">{t.menuNote}</p>
-            <p className="sa-menu-label">{t.menuTitle}</p>
-          </div>
-        </Reveal>
-
-        <Reveal as="section" id="lunch" className="sa-section sa-split">
-          <div className="sa-wrap sa-split__grid">
-            <div className="sa-split__media">
-              <img src={imgTerrace} alt="" loading="lazy" />
-            </div>
-            <div className="sa-split__copy">
-              <p className="sa-eyebrow">{t.lunchTitle}</p>
-              <h2 className="sa-heading">{t.lunchLead}</h2>
-              <p className="sa-body">{t.lunchBody}</p>
-              <ul className="sa-price-list">
-                {t.lunchItems.map((item) => (
-                  <li key={item.name}>
-                    <div>
-                      <strong>{item.name}</strong>
-                      <span>{item.desc}</span>
-                    </div>
-                    <em>{item.price}</em>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </Reveal>
-
-        <Reveal as="section" className="sa-section sa-drinks">
-          <div className="sa-wrap">
-            <header className="sa-section__head sa-section__head--center">
-              <p className="sa-eyebrow">{t.drinksTitle}</p>
-              <h2 className="sa-heading">{t.drinksLead}</h2>
-              <p className="sa-body">{t.drinksBody}</p>
-            </header>
-            <div className="sa-drink-row">
-              <figure>
-                <img src={imgDrink} alt="" loading="lazy" />
-              </figure>
-              <figure>
-                <img src={imgDrink2} alt="" loading="lazy" />
-              </figure>
-              <figure>
-                <img src={imgCafe} alt="" loading="lazy" />
-              </figure>
-            </div>
-          </div>
-        </Reveal>
-
-        <Reveal as="section" id="groups" className="sa-section sa-split sa-split--flip">
-          <div className="sa-wrap sa-split__grid">
-            <div className="sa-split__copy">
-              <p className="sa-eyebrow">{t.groupsTitle}</p>
-              <h2 className="sa-heading">{t.groupsLead}</h2>
-              <p className="sa-body">{t.groupsBody}</p>
-              <a href="#contact" className="sa-btn sa-btn--solid">
-                {t.groupsCta}
-              </a>
-            </div>
-            <div className="sa-split__media">
-              <img src={imgGroups} alt="" loading="lazy" />
-            </div>
-          </div>
-        </Reveal>
-
-        <Reveal as="section" id="atmosphere" className="sa-section sa-atmosphere">
-          <div className="sa-wrap">
-            <header className="sa-section__head sa-section__head--center">
-              <p className="sa-eyebrow">{t.atmosphereTitle}</p>
-              <h2 className="sa-heading">{t.atmosphereLead}</h2>
-            </header>
-            <div className="sa-gallery">
-              <figure className="sa-gallery__item sa-gallery__item--wide">
-                <img src={imgInterior} alt="" loading="lazy" />
-              </figure>
-              <figure className="sa-gallery__item">
-                <img src={imgTerrace} alt="" loading="lazy" />
-              </figure>
-              <figure className="sa-gallery__item">
-                <img src={imgDining} alt="" loading="lazy" />
-              </figure>
-            </div>
-          </div>
-        </Reveal>
-
-        <Reveal as="section" id="gift" className="sa-section sa-gift">
+        <section id="gift" className="sa-gift">
           <div className="sa-wrap sa-gift__inner">
             <div>
               <p className="sa-eyebrow">{t.giftTitle}</p>
@@ -333,6 +215,70 @@ function ShowcaseLandingPage() {
             </div>
             <a href="#reserve" className="sa-btn sa-btn--solid">
               {t.giftCta}
+            </a>
+          </div>
+        </section>
+
+        <Reveal as="section" id="experience" className="sa-section sa-intro">
+          <div className="sa-wrap sa-intro__inner">
+            <p className="sa-eyebrow">{t.experienceTitle}</p>
+            <h2 className="sa-heading sa-heading--xl">{t.experienceLead}</h2>
+            <p className="sa-body sa-body--lg">{t.experienceBody}</p>
+          </div>
+        </Reveal>
+
+        <Reveal as="section" id="menu" className="sa-panel">
+          <div className="sa-panel__media">
+            <img src={imgDish} alt="" loading="lazy" />
+          </div>
+          <div className="sa-panel__copy">
+            <h2 className="sa-panel__title">{t.foodTitle}</h2>
+            <p className="sa-panel__text">{t.foodBody}</p>
+            <div className="sa-panel__links">
+              <a href="#menu">{t.menuLink}</a>
+              <a href="#lunch">{t.lunchLink}</a>
+            </div>
+          </div>
+        </Reveal>
+
+        <Reveal as="section" id="lunch" className="sa-section sa-lunch">
+          <div className="sa-wrap sa-lunch__inner">
+            <h2 className="sa-panel__title">{t.lunchTitle}</h2>
+            <p className="sa-panel__text">{t.lunchBody}</p>
+            <ul className="sa-price-list sa-price-list--center">
+              {t.lunchItems.map((item) => (
+                <li key={item.name}>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <span>{item.desc}</span>
+                  </div>
+                  <em>{item.price}</em>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
+
+        <Reveal as="section" id="drinks" className="sa-panel sa-panel--flip">
+          <div className="sa-panel__copy">
+            <h2 className="sa-panel__title">{t.drinksTitle}</h2>
+            <p className="sa-panel__text">{t.drinksBody}</p>
+            <WineMark />
+          </div>
+          <div className="sa-panel__media">
+            <img src={imgWine} alt="" loading="lazy" />
+          </div>
+        </Reveal>
+
+        <Reveal as="section" id="groups" className="sa-panel">
+          <div className="sa-panel__media">
+            <img src={imgGuests} alt="" loading="lazy" />
+          </div>
+          <div className="sa-panel__copy">
+            <h2 className="sa-panel__title">{t.groupsTitle}</h2>
+            <p className="sa-panel__text">{t.groupsBody}</p>
+            <a href="#contact" className="sa-btn sa-btn--solid">
+              {t.groupsCta}
             </a>
           </div>
         </Reveal>

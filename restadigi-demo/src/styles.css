@@ -3356,10 +3356,7 @@ a.dashboard-app__stat-card:hover {
   transform: scale(1.04);
 }
 
-.sa-gift {
-  background: var(--sa-ink);
-  color: #fff;
-}
+.sa-gift { background: var(--sa-ink); color: #fff; padding: clamp(2rem, 4vw, 3rem) 0; }
 
 .sa-gift .sa-eyebrow {
   color: #f0c9a8;
@@ -3592,6 +3589,134 @@ a.dashboard-app__stat-card:hover {
   }
 }
 
+
+
+/* Roster-style full-bleed content panels */
+.sa-panel {
+  display: grid;
+  min-height: min(92vh, 900px);
+  background: #fff;
+}
+
+@media (min-width: 900px) {
+  .sa-panel {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sa-panel--flip .sa-panel__copy {
+    order: 1;
+  }
+  .sa-panel--flip .sa-panel__media {
+    order: 2;
+  }
+}
+
+.sa-panel__media {
+  position: relative;
+  min-height: 320px;
+  overflow: hidden;
+  background: #ddd;
+}
+
+.sa-panel__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (min-width: 900px) {
+  .sa-panel__media {
+    min-height: 100%;
+  }
+  .sa-panel__media img {
+    position: absolute;
+    inset: 0;
+  }
+}
+
+.sa-panel__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+  padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1.5rem, 4vw, 3.5rem);
+  background: #fff;
+  color: var(--sa-ink);
+}
+
+.sa-panel__title {
+  margin: 0;
+  font-family: var(--sa-serif);
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.sa-panel__text {
+  margin: 0;
+  max-width: 34rem;
+  font-size: clamp(0.95rem, 1.6vw, 1.05rem);
+  line-height: 1.7;
+  color: #2a2724;
+}
+
+.sa-panel__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.25rem 2rem;
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.sa-panel__links a {
+  text-decoration: underline;
+  text-underline-offset: 0.28em;
+}
+
+.sa-panel__links a:hover {
+  color: var(--sa-accent);
+}
+
+.sa-wine-mark {
+  width: 5.5rem;
+  height: auto;
+  margin-top: 0.75rem;
+  color: var(--sa-ink);
+}
+
+.sa-gift {
+  background: var(--sa-ink);
+  color: #fff;
+  padding: clamp(2rem, 4vw, 3rem) 0;
+}
+
+.sa-lunch {
+  background: #fff;
+  border-block: 1px solid var(--sa-line);
+}
+
+.sa-lunch__inner {
+  max-width: 36rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.sa-lunch .sa-panel__title {
+  margin-bottom: 0.75rem;
+}
+
+.sa-price-list--center {
+  max-width: 28rem;
+  margin-inline: auto;
+  text-align: left;
+}
 
 /* legacy touch helpers kept for any leftover demo-landing class */
 .demo-landing input,

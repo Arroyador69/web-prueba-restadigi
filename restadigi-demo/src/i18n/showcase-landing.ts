@@ -28,6 +28,8 @@ export type ShowcaseCopy = {
   foodTitle: string;
   foodLead: string;
   foodBody: string;
+  menuLink: string;
+  lunchLink: string;
   menuTitle: string;
   menuLead: string;
   dishes: { name: string; desc: string; tag: string }[];
@@ -88,7 +90,9 @@ const fi: ShowcaseCopy = {
   foodTitle: "Ruoka",
   foodLead: "Parhaista raaka-aineista, intohimolla.",
   foodBody:
-    "Emme sitoudu yhteen tyyliin — yhdistämme rohkeasti vaikutteita. Listalta löytyy aina vaihtoehtoja kasvis-, kala- ja liharuokien ystäville. Kerro erityisruokavaliosta varatessa.",
+    "Maison Aurelia tekee ruokaa intohimolla parhaista raaka-aineista kansainvälisellä twistillä. Emme sitoudu yhteen tyyliin — yhdistämme rohkeasti vaikutteita. Haluamme tarjota muhkeita makuja lautasella ilman turhia muodollisuuksia. Listalta löytyy aina vaihtoehtoja kasvis-, kala- ja liharuokien ystäville. Erityisruokavaliot eivät ole haaste — kerro niistä varatessa.",
+  menuLink: "À la carte — Menu",
+  lunchLink: "Lounas",
   menuTitle: "À la carte",
   menuLead: "Muutama merkki nykyisestä menusta.",
   dishes: [
@@ -121,7 +125,7 @@ const fi: ShowcaseCopy = {
   drinksTitle: "Juoma",
   drinksLead: "Match made in Maison.",
   drinksBody:
-    "Viinit maailmalta, cocktaileja ja huolella valittuja alkoholittomia — juoma kruunaa illallisen.",
+    "Maison Aureliassa juomien tehtävä on kruunata illallinen. Ruokien kylkeen istuvat viinit maailman eri kolkista — sekä huolella valitut alkoholittomat vaihtoehdot.",
   groupsTitle: "Ryhmät & tilaisuudet",
   groupsLead: "Yksityinen illallinen, yritystilaisuus tai juhla.",
   groupsBody:
@@ -178,7 +182,9 @@ const en: ShowcaseCopy = {
   foodTitle: "Food",
   foodLead: "The best ingredients, made with passion.",
   foodBody:
-    "We don’t stick to one style — we mix influences boldly. The menu always has options for vegetable, fish and meat lovers. Mention dietary needs when booking.",
+    "Maison Aurelia cooks with passion from the best ingredients with an international twist. We don’t stick to one style — we mix influences boldly. Big flavours on the plate, without unnecessary formality. The menu always has options for vegetable, fish and meat lovers. Special diets are welcome — tell us when you book.",
+  menuLink: "À la carte — Menu",
+  lunchLink: "Lunch",
   menuTitle: "À la carte",
   menuLead: "A few notes from the current menu.",
   dishes: [
@@ -211,7 +217,7 @@ const en: ShowcaseCopy = {
   drinksTitle: "Drinks",
   drinksLead: "Match made in Maison.",
   drinksBody:
-    "Wines from around the world, cocktails and thoughtful alcohol-free options — drinks crown the dinner.",
+    "At Maison Aurelia, drinks crown the dinner. Wines from around the world pair with each plate — plus thoughtfully chosen alcohol-free options.",
   groupsTitle: "Groups & events",
   groupsLead: "Private dinner, company event or celebration.",
   groupsBody:
@@ -268,7 +274,9 @@ const es: ShowcaseCopy = {
   foodTitle: "Comida",
   foodLead: "Los mejores ingredientes, con pasión.",
   foodBody:
-    "No nos ceñimos a un solo estilo — mezclamos influencias con valentía. Siempre hay opciones vegetales, de pescado y de carne. Indica dietas especiales al reservar.",
+    "Maison Aurelia cocina con pasión a partir de los mejores ingredientes y un twist internacional. No nos ceñimos a un solo estilo — mezclamos influencias con valentía. Sabores generosos en el plato, sin formalidades innecesarias. Siempre hay opciones vegetales, de pescado y de carne. Las dietas especiales son bienvenidas — indícalas al reservar.",
+  menuLink: "À la carte — Menú",
+  lunchLink: "Menú del día",
   menuTitle: "À la carte",
   menuLead: "Algunas notas de la carta actual.",
   dishes: [
@@ -301,7 +309,7 @@ const es: ShowcaseCopy = {
   drinksTitle: "Bebidas",
   drinksLead: "Match made in Maison.",
   drinksBody:
-    "Vinos del mundo, cócteles y opciones sin alcohol — la bebida corona la cena.",
+    "En Maison Aurelia, las bebidas coronan la cena. Vinos de todo el mundo acompañan cada plato — también con opciones sin alcohol pensadas.",
   groupsTitle: "Grupos y eventos",
   groupsLead: "Cena privada, evento de empresa o celebración.",
   groupsBody:

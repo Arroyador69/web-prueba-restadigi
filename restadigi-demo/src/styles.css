@@ -3030,6 +3030,17 @@ a.dashboard-app__stat-card:hover {
   background: var(--sa-accent);
 }
 
+.sa-btn--outline {
+  background: #fff;
+  color: var(--sa-ink);
+  border-color: var(--sa-ink);
+}
+
+.sa-btn--outline:hover {
+  background: var(--sa-ink);
+  color: #fff;
+}
+
 .sa-hero .sa-btn--solid {
   background: #fff;
   color: var(--sa-ink);

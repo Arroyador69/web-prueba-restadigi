@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-import heroPeople from "@/assets/success-busy-terrace.jpg";
+import heroDish from "@/assets/restaurant-dining.jpg";
 import imgDish from "@/assets/mock-erikoismenut.jpg";
 import imgWine from "@/assets/restaurant-dining.jpg";
 import imgGuests from "@/assets/success-guests-arriving.jpg";
@@ -188,22 +188,13 @@ function ShowcaseLandingPage() {
       <main id="top">
         <section className="sa-hero">
           <div className="sa-hero__media" aria-hidden>
-            <img src={heroPeople} alt="" className="sa-hero__img" />
+            <img src={heroDish} alt="" className="sa-hero__img" />
             <div className="sa-hero__veil" />
           </div>
-          <div className="sa-hero__content">
-            <p className="sa-eyebrow">{t.heroEyebrow}</p>
-            <h1 className="sa-hero__title">{t.heroTitle}</h1>
-            <p className="sa-hero__lead">{t.heroLead}</p>
-            <div className="sa-hero__actions">
-              <a href="#reserve" className="sa-btn sa-btn--solid">
-                {t.heroCta}
-              </a>
-              <a href="#menu" className="sa-btn sa-btn--ghost">
-                {t.nav.menu}
-              </a>
-            </div>
-          </div>
+          <h1 className="sa-hero__brand">
+            <span>Maison</span>
+            <span>Aurelia</span>
+          </h1>
         </section>
 
         <section id="gift" className="sa-gift">
@@ -277,7 +268,7 @@ function ShowcaseLandingPage() {
           <div className="sa-panel__copy">
             <h2 className="sa-panel__title">{t.groupsTitle}</h2>
             <p className="sa-panel__text">{t.groupsBody}</p>
-            <a href="#contact" className="sa-btn sa-btn--solid">
+            <a href="#reserve" className="sa-btn sa-btn--outline">
               {t.groupsCta}
             </a>
           </div>

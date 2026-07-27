@@ -130,7 +130,7 @@ const fi: ShowcaseCopy = {
   groupsLead: "Yksityinen illallinen, yritystilaisuus tai juhla.",
   groupsBody:
     "Sali sopii 8–28 hengen tilaisuuksiin. Autamme menun, juomien ja aikataulun suunnittelussa.",
-  groupsCta: "Kysy tarjousta",
+  groupsCta: "Ryhmävaraukset",
   atmosphereTitle: "Tunnelma",
   atmosphereLead: "Tummaa puuta, pehmeää valoa, tilaa hengittää.",
   hoursTitle: "Aukiolo",
@@ -222,7 +222,7 @@ const en: ShowcaseCopy = {
   groupsLead: "Private dinner, company event or celebration.",
   groupsBody:
     "The room suits groups of 8–28. We help plan the menu, drinks and timing.",
-  groupsCta: "Request a quote",
+  groupsCta: "Group bookings",
   atmosphereTitle: "Atmosphere",
   atmosphereLead: "Dark wood, soft light, room to breathe.",
   hoursTitle: "Hours",
@@ -314,7 +314,7 @@ const es: ShowcaseCopy = {
   groupsLead: "Cena privada, evento de empresa o celebración.",
   groupsBody:
     "El salón encaja con grupos de 8–28. Ayudamos con el menú, bebidas y horarios.",
-  groupsCta: "Pedir presupuesto",
+  groupsCta: "Reservas de grupo",
   atmosphereTitle: "Ambiente",
   atmosphereLead: "Madera oscura, luz suave, espacio para respirar.",
   hoursTitle: "Horario",

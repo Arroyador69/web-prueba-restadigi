@@ -134,7 +134,7 @@ function ShowcaseLandingPage() {
                 {link.label}
               </a>
             ))}
-            <a href="#gift" className="sa-nav__cta sa-nav__cta--ghost">
+            <a href="/lahjakortti" className="sa-nav__cta sa-nav__cta--ghost">
               {t.nav.gift}
             </a>
             <a href="#reserve" className="sa-nav__cta">
@@ -175,7 +175,7 @@ function ShowcaseLandingPage() {
                 {link.label}
               </a>
             ))}
-            <a href="#gift" onClick={closeMenu}>
+            <a href="/lahjakortti" onClick={closeMenu}>
               {t.nav.gift}
             </a>
             <a href="#reserve" className="sa-nav__cta" onClick={closeMenu}>
@@ -204,7 +204,7 @@ function ShowcaseLandingPage() {
               <h2 className="sa-heading sa-heading--sm">{t.giftLead}</h2>
               <p className="sa-body">{t.giftBody}</p>
             </div>
-            <a href="#reserve" className="sa-btn sa-btn--solid">
+            <a href="/lahjakortti" className="sa-btn sa-btn--solid">
               {t.giftCta}
             </a>
           </div>

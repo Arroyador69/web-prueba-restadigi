@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AiAsiakaspalveluRouteImport } from './routes/ai-asiakaspalvelu'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as HinnastoRouteImport } from './routes/hinnasto'
+import { Route as LahjakorttiRouteImport } from './routes/lahjakortti'
 import { Route as MeistaRouteImport } from './routes/meista'
 import { Route as NakyvyysJaSuunnitteluRouteImport } from './routes/nakyvyys-ja-suunnittelu'
 import { Route as PoytavaraupalveluRouteImport } from './routes/poytavaraupalvelu'
@@ -71,6 +72,11 @@ const DashboardRouteRoute = DashboardRouteRouteImport.update({
 const HinnastoRoute = HinnastoRouteImport.update({
   id: '/hinnasto',
   path: '/hinnasto',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LahjakorttiRoute = LahjakorttiRouteImport.update({
+  id: '/lahjakortti',
+  path: '/lahjakortti',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeistaRoute = MeistaRouteImport.update({
@@ -279,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/ai-asiakaspalvelu': typeof AiAsiakaspalveluRoute
   '/hinnasto': typeof HinnastoRoute
+  '/lahjakortti': typeof LahjakorttiRoute
   '/meista': typeof MeistaRoute
   '/nakyvyys-ja-suunnittelu': typeof NakyvyysJaSuunnitteluRoute
   '/poytavaraupalvelu': typeof PoytavaraupalveluRoute
@@ -323,6 +330,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai-asiakaspalvelu': typeof AiAsiakaspalveluRoute
   '/hinnasto': typeof HinnastoRoute
+  '/lahjakortti': typeof LahjakorttiRoute
   '/meista': typeof MeistaRoute
   '/nakyvyys-ja-suunnittelu': typeof NakyvyysJaSuunnitteluRoute
   '/poytavaraupalvelu': typeof PoytavaraupalveluRoute
@@ -369,6 +377,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/ai-asiakaspalvelu': typeof AiAsiakaspalveluRoute
   '/hinnasto': typeof HinnastoRoute
+  '/lahjakortti': typeof LahjakorttiRoute
   '/meista': typeof MeistaRoute
   '/nakyvyys-ja-suunnittelu': typeof NakyvyysJaSuunnitteluRoute
   '/poytavaraupalvelu': typeof PoytavaraupalveluRoute
@@ -416,6 +425,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/ai-asiakaspalvelu'
     | '/hinnasto'
+    | '/lahjakortti'
     | '/meista'
     | '/nakyvyys-ja-suunnittelu'
     | '/poytavaraupalvelu'
@@ -460,6 +470,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ai-asiakaspalvelu'
     | '/hinnasto'
+    | '/lahjakortti'
     | '/meista'
     | '/nakyvyys-ja-suunnittelu'
     | '/poytavaraupalvelu'
@@ -505,6 +516,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/ai-asiakaspalvelu'
     | '/hinnasto'
+    | '/lahjakortti'
     | '/meista'
     | '/nakyvyys-ja-suunnittelu'
     | '/poytavaraupalvelu'
@@ -551,6 +563,7 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   AiAsiakaspalveluRoute: typeof AiAsiakaspalveluRoute
   HinnastoRoute: typeof HinnastoRoute
+  LahjakorttiRoute: typeof LahjakorttiRoute
   MeistaRoute: typeof MeistaRoute
   NakyvyysJaSuunnitteluRoute: typeof NakyvyysJaSuunnitteluRoute
   PoytavaraupalveluRoute: typeof PoytavaraupalveluRoute
@@ -604,6 +617,13 @@ declare module '@tanstack/react-router' {
       path: '/hinnasto'
       fullPath: '/hinnasto'
       preLoaderRoute: typeof HinnastoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lahjakortti': {
+      id: '/lahjakortti'
+      path: '/lahjakortti'
+      fullPath: '/lahjakortti'
+      preLoaderRoute: typeof LahjakorttiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meista': {
@@ -981,6 +1001,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   AiAsiakaspalveluRoute: AiAsiakaspalveluRoute,
   HinnastoRoute: HinnastoRoute,
+  LahjakorttiRoute: LahjakorttiRoute,
   MeistaRoute: MeistaRoute,
   NakyvyysJaSuunnitteluRoute: NakyvyysJaSuunnitteluRoute,
   PoytavaraupalveluRoute: PoytavaraupalveluRoute,

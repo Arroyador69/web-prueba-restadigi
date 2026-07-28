@@ -57,6 +57,27 @@ export type ShowcaseCopy = {
   giftLead: string;
   giftBody: string;
   giftCta: string;
+  giftPage: {
+    metaTitle: string;
+    metaDescription: string;
+    eyebrow: string;
+    title: string;
+    intro: string;
+    amountsLabel: string;
+    amounts: { value: number; label: string }[];
+    recipientLabel: string;
+    recipientPlaceholder: string;
+    emailLabel: string;
+    emailPlaceholder: string;
+    messageLabel: string;
+    messagePlaceholder: string;
+    submit: string;
+    demoNote: string;
+    successTitle: string;
+    successBody: string;
+    backHome: string;
+    buyAnother: string;
+  };
   footerCredit: string;
   footerDemo: string;
 };
@@ -149,6 +170,35 @@ const fi: ShowcaseCopy = {
   giftBody:
     "Digitaalinen lahjakortti 50–300 €. Voimassa vuoden — lunastetaan varauksen yhteydessä. Demoesimerkki.",
   giftCta: "Osta lahjakortti",
+  giftPage: {
+    metaTitle: "Lahjakortti — Maison Aurelia",
+    metaDescription: "Osta digitaalinen lahjakortti Maison Aureliaan — demoesimerkki.",
+    eyebrow: "Maison Aurelia",
+    title: "Voit ostaa tästä lahjakortin ravintolaan",
+    intro:
+      "Valitse summa, lisää vastaanottajan tiedot ja lähetä digitaalinen lahjakortti. Tämä on demoesimerkki — maksua ei veloiteta eikä tietoja tallenneta.",
+    amountsLabel: "Valitse summa",
+    amounts: [
+      { value: 50, label: "50 €" },
+      { value: 100, label: "100 €" },
+      { value: 150, label: "150 €" },
+      { value: 200, label: "200 €" },
+      { value: 300, label: "300 €" },
+    ],
+    recipientLabel: "Vastaanottajan nimi",
+    recipientPlaceholder: "Esim. Anna Korhonen",
+    emailLabel: "Sähköposti",
+    emailPlaceholder: "anna@esimerkki.fi",
+    messageLabel: "Tervehdys (valinnainen)",
+    messagePlaceholder: "Hyvää syntymäpäivää — nähdään Bulevardilla.",
+    submit: "Lähetä lahjakortti",
+    demoNote: "Demoesimerkki · ei oikeaa maksua",
+    successTitle: "Lahjakortti valmis",
+    successBody:
+      "Kiitos! Demossa lahjakorttia ei lähetetty oikeasti. Oikeassa toteutuksessa vastaanottaja saisi kortin sähköpostiin heti.",
+    backHome: "Takaisin etusivulle",
+    buyAnother: "Tee uusi lahjakortti",
+  },
   footerCredit: "Suunniteltu esittelyksi Restadigille",
   footerDemo: "Esimerkkisivusto · ei oikea ravintola",
 };
@@ -241,6 +291,35 @@ const en: ShowcaseCopy = {
   giftBody:
     "Digital gift cards from 50–300 €. Valid for one year — redeemed when booking. Demo example.",
   giftCta: "Buy a gift card",
+  giftPage: {
+    metaTitle: "Gift card — Maison Aurelia",
+    metaDescription: "Buy a digital gift card for Maison Aurelia — demo example.",
+    eyebrow: "Maison Aurelia",
+    title: "You can buy a restaurant gift card here",
+    intro:
+      "Choose an amount, add the recipient details and send a digital gift card. This is a demo — nothing is charged and no data is stored.",
+    amountsLabel: "Choose amount",
+    amounts: [
+      { value: 50, label: "50 €" },
+      { value: 100, label: "100 €" },
+      { value: 150, label: "150 €" },
+      { value: 200, label: "200 €" },
+      { value: 300, label: "300 €" },
+    ],
+    recipientLabel: "Recipient name",
+    recipientPlaceholder: "e.g. Anna Korhonen",
+    emailLabel: "Email",
+    emailPlaceholder: "anna@example.com",
+    messageLabel: "Message (optional)",
+    messagePlaceholder: "Happy birthday — see you on Bulevardi.",
+    submit: "Send gift card",
+    demoNote: "Demo example · no real payment",
+    successTitle: "Gift card ready",
+    successBody:
+      "Thank you! In this demo the gift card was not actually sent. In a live build the recipient would receive it by email right away.",
+    backHome: "Back to home",
+    buyAnother: "Create another gift card",
+  },
   footerCredit: "Designed as a Restadigi showcase",
   footerDemo: "Sample website · not a real restaurant",
 };
@@ -333,6 +412,35 @@ const es: ShowcaseCopy = {
   giftBody:
     "Tarjetas digitales de 50–300 €. Válidas un año — se canjean al reservar. Ejemplo de demo.",
   giftCta: "Comprar tarjeta",
+  giftPage: {
+    metaTitle: "Tarjeta regalo — Maison Aurelia",
+    metaDescription: "Compra una tarjeta regalo digital para Maison Aurelia — ejemplo de demo.",
+    eyebrow: "Maison Aurelia",
+    title: "Aquí puedes comprar una tarjeta regalo del restaurante",
+    intro:
+      "Elige el importe, añade los datos del destinatario y envía una tarjeta digital. Esto es una demo: no se cobra nada y no se guarda información.",
+    amountsLabel: "Elige el importe",
+    amounts: [
+      { value: 50, label: "50 €" },
+      { value: 100, label: "100 €" },
+      { value: 150, label: "150 €" },
+      { value: 200, label: "200 €" },
+      { value: 300, label: "300 €" },
+    ],
+    recipientLabel: "Nombre del destinatario",
+    recipientPlaceholder: "p. ej. Anna Korhonen",
+    emailLabel: "Email",
+    emailPlaceholder: "anna@ejemplo.com",
+    messageLabel: "Mensaje (opcional)",
+    messagePlaceholder: "Feliz cumpleaños — nos vemos en Bulevardi.",
+    submit: "Enviar tarjeta",
+    demoNote: "Ejemplo de demo · sin pago real",
+    successTitle: "Tarjeta lista",
+    successBody:
+      "¡Gracias! En esta demo la tarjeta no se envió de verdad. En una versión real el destinatario la recibiría por email al momento.",
+    backHome: "Volver al inicio",
+    buyAnother: "Crear otra tarjeta",
+  },
   footerCredit: "Diseñado como muestra de Restadigi",
   footerDemo: "Web de ejemplo · no es un restaurante real",
 };

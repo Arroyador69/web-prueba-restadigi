@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
+  BedDouble,
   CalendarCheck2,
   CalendarDays,
   ContactRound,
@@ -28,6 +29,7 @@ const nav = [
   { to: "/dashboard/conversations", labelKey: "conversations", icon: MessageSquare },
   { to: "/dashboard/reservations", labelKey: "reservations", icon: CalendarDays },
   { to: "/dashboard/booking-widget", labelKey: "bookingWidget", icon: CalendarCheck2 },
+  { to: "/dashboard/stay-booking-widget", labelKey: "stayBookingWidget", icon: BedDouble },
   { to: "/dashboard/floor-plan", labelKey: "floor", icon: Map },
   { to: "/dashboard/settings", labelKey: "settings", icon: Settings },
 ] as const;

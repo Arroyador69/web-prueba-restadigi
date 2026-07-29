@@ -6,6 +6,8 @@ export {
   LOCALE_DOMAINS,
   WEB_LOCALE_DOMAINS,
   DEMO_LOCALE_DOMAINS,
+  CHAT_LOCALE_DOMAINS,
+  HOTEL_LOCALE_DOMAINS,
   LOCALE_META,
   isLocale,
 } from "./types";
@@ -17,6 +19,8 @@ export {
   productFromHostname,
   productUrl,
   landingUrl,
+  chatShowcaseUrl,
+  hotelShowcaseUrl,
   dashboardUrl,
   hostProductRedirect,
   shouldJumpToLocaleDomain,

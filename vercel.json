@@ -6,12 +6,13 @@
   "redirects": [
     { "source": "/verkkosivut", "destination": "/", "permanent": false },
     { "source": "/poytavaraupalvelu", "destination": "/", "permanent": false },
-    { "source": "/ai-asiakaspalvelu", "destination": "/", "permanent": false },
+    { "source": "/ai-asiakaspalvelu", "destination": "/restachat", "permanent": false },
     { "source": "/nakyvyys-ja-suunnittelu", "destination": "/", "permanent": false },
     { "source": "/hinnasto", "destination": "/", "permanent": false },
     { "source": "/meista", "destination": "/", "permanent": false },
     { "source": "/yhteys", "destination": "/", "permanent": false },
     { "source": "/yllapito", "destination": "/", "permanent": false },
+    { "source": "/majoitusvaraus", "destination": "/hotel", "permanent": false },
     { "source": "/login", "destination": "/dashboard", "permanent": false },
     { "source": "/demos", "destination": "/dashboard", "permanent": false },
     {
@@ -30,6 +31,42 @@
       "source": "/",
       "has": [{ "type": "host", "value": "demo.restadigi.es" }],
       "destination": "/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "chat.restadigi.fi" }],
+      "destination": "/restachat",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "chat.restadigi.com" }],
+      "destination": "/restachat",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "chat.restadigi.es" }],
+      "destination": "/restachat",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "hotel.restadigi.fi" }],
+      "destination": "/hotel",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "hotel.restadigi.com" }],
+      "destination": "/hotel",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "hotel.restadigi.es" }],
+      "destination": "/hotel",
       "permanent": false
     },
     {
@@ -65,6 +102,78 @@
     {
       "source": "/dashboard/:path*",
       "has": [{ "type": "host", "value": "web.restadigi.es" }],
+      "destination": "https://demo.restadigi.es/dashboard/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard",
+      "has": [{ "type": "host", "value": "chat.restadigi.fi" }],
+      "destination": "https://demo.restadigi.fi/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard/:path*",
+      "has": [{ "type": "host", "value": "chat.restadigi.fi" }],
+      "destination": "https://demo.restadigi.fi/dashboard/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard",
+      "has": [{ "type": "host", "value": "chat.restadigi.com" }],
+      "destination": "https://demo.restadigi.com/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard/:path*",
+      "has": [{ "type": "host", "value": "chat.restadigi.com" }],
+      "destination": "https://demo.restadigi.com/dashboard/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard",
+      "has": [{ "type": "host", "value": "chat.restadigi.es" }],
+      "destination": "https://demo.restadigi.es/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard/:path*",
+      "has": [{ "type": "host", "value": "chat.restadigi.es" }],
+      "destination": "https://demo.restadigi.es/dashboard/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard",
+      "has": [{ "type": "host", "value": "hotel.restadigi.fi" }],
+      "destination": "https://demo.restadigi.fi/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard/:path*",
+      "has": [{ "type": "host", "value": "hotel.restadigi.fi" }],
+      "destination": "https://demo.restadigi.fi/dashboard/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard",
+      "has": [{ "type": "host", "value": "hotel.restadigi.com" }],
+      "destination": "https://demo.restadigi.com/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard/:path*",
+      "has": [{ "type": "host", "value": "hotel.restadigi.com" }],
+      "destination": "https://demo.restadigi.com/dashboard/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard",
+      "has": [{ "type": "host", "value": "hotel.restadigi.es" }],
+      "destination": "https://demo.restadigi.es/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard/:path*",
+      "has": [{ "type": "host", "value": "hotel.restadigi.es" }],
       "destination": "https://demo.restadigi.es/dashboard/:path*",
       "permanent": false
     }

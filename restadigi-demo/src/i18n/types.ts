@@ -4,27 +4,41 @@ export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "fi";
 
-/** Landing showcase hosts (web.*). */
+/** Restatable — restaurant table booking showcase (web.*). */
 export const WEB_LOCALE_DOMAINS: Record<Locale, string> = {
   fi: "https://web.restadigi.fi",
   en: "https://web.restadigi.com",
   es: "https://web.restadigi.es",
 };
 
-/** Dashboard demo hosts (demo.*). */
+/** Shared demo dashboard (demo.*). */
 export const DEMO_LOCALE_DOMAINS: Record<Locale, string> = {
   fi: "https://demo.restadigi.fi",
   en: "https://demo.restadigi.com",
   es: "https://demo.restadigi.es",
 };
 
+/** Restachat — customer-service chatbot showcase (chat.*). */
+export const CHAT_LOCALE_DOMAINS: Record<Locale, string> = {
+  fi: "https://chat.restadigi.fi",
+  en: "https://chat.restadigi.com",
+  es: "https://chat.restadigi.es",
+};
+
+/** Restabooking — hotel / lodging showcase (hotel.*). */
+export const HOTEL_LOCALE_DOMAINS: Record<Locale, string> = {
+  fi: "https://hotel.restadigi.fi",
+  en: "https://hotel.restadigi.com",
+  es: "https://hotel.restadigi.es",
+};
+
 /**
- * Default locale domains (landing). Kept for callers that only need language hosts.
- * Prefer WEB_LOCALE_DOMAINS / DEMO_LOCALE_DOMAINS when the product matters.
+ * Default locale domains (restaurant landing).
+ * Prefer product-specific maps when the product matters.
  */
 export const LOCALE_DOMAINS: Record<Locale, string> = WEB_LOCALE_DOMAINS;
 
-export type DemoProduct = "web" | "demo";
+export type DemoProduct = "web" | "demo" | "chat" | "hotel";
 
 export const LOCALE_META: Record<
   Locale,

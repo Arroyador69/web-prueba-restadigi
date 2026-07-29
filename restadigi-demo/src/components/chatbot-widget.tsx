@@ -482,10 +482,25 @@ export function openSalesChatbot() {
 
 export function ChatbotWidget() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  if (pathname === "/" || pathname.startsWith("/dashboard")) {
-    if (pathname === "/dashboard/login") return null;
+  if (pathname === "/dashboard/login") return null;
+
+  const host =
+    typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
+  const isChatShowcase =
+    pathname.startsWith("/restachat") || host.startsWith("chat.");
+
+  if (isChatShowcase) {
+    return <ChatbotPanel mode="sales" placement="floating" demoContext />;
+  }
+
+  if (
+    pathname === "/" ||
+    pathname.startsWith("/hotel") ||
+    pathname.startsWith("/dashboard")
+  ) {
     return <ChatbotPanel mode="reservation" placement="floating" demoContext />;
   }
+
   return <ChatbotPanel mode="sales" placement="floating" />;
 }
 

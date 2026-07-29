@@ -1,6 +1,8 @@
 import {
+  CHAT_LOCALE_DOMAINS,
   DEFAULT_LOCALE,
   DEMO_LOCALE_DOMAINS,
+  HOTEL_LOCALE_DOMAINS,
   isLocale,
   WEB_LOCALE_DOMAINS,
   type DemoProduct,
@@ -9,18 +11,24 @@ import {
 
 const STORAGE_KEY = "restadigi-locale";
 
-/** Canonical hosts → language (web.*, demo.*, and apex reserved for later). */
+/** Canonical hosts → language. */
 const HOST_TO_LOCALE: Record<string, Locale> = {
   "web.restadigi.fi": "fi",
   "demo.restadigi.fi": "fi",
+  "chat.restadigi.fi": "fi",
+  "hotel.restadigi.fi": "fi",
   "restadigi.fi": "fi",
   "www.restadigi.fi": "fi",
   "web.restadigi.com": "en",
   "demo.restadigi.com": "en",
+  "chat.restadigi.com": "en",
+  "hotel.restadigi.com": "en",
   "restadigi.com": "en",
   "www.restadigi.com": "en",
   "web.restadigi.es": "es",
   "demo.restadigi.es": "es",
+  "chat.restadigi.es": "es",
+  "hotel.restadigi.es": "es",
   "restadigi.es": "es",
   "www.restadigi.es": "es",
 };
@@ -34,34 +42,60 @@ export function normalizeHostname(hostname: string): string {
   );
 }
 
-/** Map hostname to locale for web/demo/apex .fi / .com / .es. */
 export function localeFromHostname(hostname: string): Locale | null {
   const host = normalizeHostname(hostname);
   if (HOST_TO_LOCALE[host]) return HOST_TO_LOCALE[host];
-  // Fallback by TLD when host is known restadigi.*
   if (host.endsWith(".restadigi.fi") || host === "restadigi.fi") return "fi";
   if (host.endsWith(".restadigi.com") || host === "restadigi.com") return "en";
   if (host.endsWith(".restadigi.es") || host === "restadigi.es") return "es";
   return null;
 }
 
-/** web.* = landing, demo.* = dashboard. Apex treated as web. */
+/**
+ * web.* = Restatable (restaurant)
+ * chat.* = Restachat
+ * hotel.* = Restabooking
+ * demo.* = shared dashboard
+ */
 export function productFromHostname(hostname: string): DemoProduct | null {
   const host = normalizeHostname(hostname);
   if (host.startsWith("demo.")) return "demo";
+  if (host.startsWith("chat.")) return "chat";
+  if (host.startsWith("hotel.")) return "hotel";
   if (host.startsWith("web.")) return "web";
-  if (
-    host === "restadigi.fi" ||
-    host === "restadigi.com" ||
-    host === "restadigi.es"
-  ) {
+  if (host === "restadigi.fi" || host === "restadigi.com" || host === "restadigi.es") {
     return "web";
   }
   return null;
 }
 
 export function domainsForProduct(product: DemoProduct): Record<Locale, string> {
-  return product === "demo" ? DEMO_LOCALE_DOMAINS : WEB_LOCALE_DOMAINS;
+  switch (product) {
+    case "demo":
+      return DEMO_LOCALE_DOMAINS;
+    case "chat":
+      return CHAT_LOCALE_DOMAINS;
+    case "hotel":
+      return HOTEL_LOCALE_DOMAINS;
+    case "web":
+    default:
+      return WEB_LOCALE_DOMAINS;
+  }
+}
+
+/** Home path for each public product (dashboard uses /dashboard). */
+export function productHomePath(product: DemoProduct): string {
+  switch (product) {
+    case "chat":
+      return "/restachat";
+    case "hotel":
+      return "/hotel";
+    case "demo":
+      return "/dashboard";
+    case "web":
+    default:
+      return "/";
+  }
 }
 
 export function readStoredLocale(): Locale | null {
@@ -92,7 +126,6 @@ export function clearStoredLocale() {
   }
 }
 
-/** Optional ?lang=fi|en|es for preview hosts (Vercel / Lovable). */
 export function localeFromSearch(search: string): Locale | null {
   try {
     const params = new URLSearchParams(search.startsWith("?") ? search : `?${search}`);
@@ -118,13 +151,6 @@ export function isPreviewHost(hostname: string): boolean {
   );
 }
 
-/**
- * Resolve active locale:
- * 1) Domain web/demo/apex .fi / .com / .es (wins)
- * 2) ?lang= on preview
- * 3) localStorage on preview
- * 4) Default Finnish
- */
 export function detectLocale(hostname?: string, search?: string): Locale {
   const host = hostname ?? (typeof window !== "undefined" ? window.location.hostname : "");
   const fromHost = host ? localeFromHostname(host) : null;
@@ -140,15 +166,10 @@ export function detectLocale(hostname?: string, search?: string): Locale {
   return DEFAULT_LOCALE;
 }
 
-/** True when we are on a language production domain. */
 export function shouldNavigateToLocaleDomain(hostname: string): boolean {
   return localeFromHostname(hostname) !== null;
 }
 
-/**
- * Jump between .fi / .com / .es when already on those domains.
- * Preview hosts keep in-page language switching.
- */
 export function shouldJumpToLocaleDomain(hostname: string): boolean {
   if (isPreviewHost(hostname)) return false;
   return localeFromHostname(hostname) !== null;
@@ -165,9 +186,6 @@ function stripLangParam(search: string): string {
   }
 }
 
-/**
- * Absolute URL on the matching locale domain, keeping web↔web or demo↔demo.
- */
 export function localeDomainUrl(
   locale: Locale,
   pathname: string,
@@ -182,10 +200,6 @@ export function localeDomainUrl(
   return `${base}${path}${qs}`;
 }
 
-/**
- * Cross-link between landing (web) and dashboard (demo) for the current locale.
- * On preview hosts returns a relative path so local/Vercel previews still work.
- */
 export function productUrl(
   target: DemoProduct,
   pathname: string,
@@ -218,15 +232,21 @@ export function landingUrl(locale?: Locale): string {
   return productUrl("web", "/", "", locale);
 }
 
+export function chatShowcaseUrl(locale?: Locale): string {
+  return productUrl("chat", "/restachat", "", locale);
+}
+
+export function hotelShowcaseUrl(locale?: Locale): string {
+  return productUrl("hotel", "/hotel", "", locale);
+}
+
 export function dashboardUrl(pathname = "/dashboard", locale?: Locale): string {
   const path = pathname.startsWith("/dashboard") ? pathname : `/dashboard${pathname}`;
   return productUrl("demo", path, "", locale);
 }
 
 /**
- * If the current host/path combo is wrong for the product, return where to go.
- * - demo.* + `/` → `/dashboard`
- * - web.* + `/dashboard…` → demo.* same path
+ * Keep each product host on its intended surface.
  */
 export function hostProductRedirect(
   hostname: string,
@@ -235,15 +255,44 @@ export function hostProductRedirect(
 ): string | null {
   const product = productFromHostname(hostname);
   if (!product) return null;
+  const qs = search || "";
 
-  if (product === "demo" && (pathname === "/" || pathname === "")) {
-    return `/dashboard${search || ""}`;
+  if (product === "demo") {
+    if (pathname === "/" || pathname === "") return `/dashboard${qs}`;
+    return null;
   }
 
-  if (product === "web" && pathname.startsWith("/dashboard")) {
-    const loc = localeFromHostname(hostname) ?? DEFAULT_LOCALE;
-    const base = DEMO_LOCALE_DOMAINS[loc].replace(/\/$/, "");
-    return `${base}${pathname}${search || ""}`;
+  if (product === "web") {
+    if (pathname.startsWith("/dashboard")) {
+      const loc = localeFromHostname(hostname) ?? DEFAULT_LOCALE;
+      return `${DEMO_LOCALE_DOMAINS[loc].replace(/\/$/, "")}${pathname}${qs}`;
+    }
+    if (pathname === "/restachat" || pathname.startsWith("/hotel")) {
+      return `/${qs}`;
+    }
+    return null;
+  }
+
+  if (product === "chat") {
+    if (pathname.startsWith("/dashboard")) {
+      const loc = localeFromHostname(hostname) ?? DEFAULT_LOCALE;
+      return `${DEMO_LOCALE_DOMAINS[loc].replace(/\/$/, "")}${pathname}${qs}`;
+    }
+    if (pathname === "/" || pathname === "" || pathname === "/hotel") {
+      return `/restachat${qs}`;
+    }
+    return null;
+  }
+
+  if (product === "hotel") {
+    if (pathname.startsWith("/dashboard")) {
+      const loc = localeFromHostname(hostname) ?? DEFAULT_LOCALE;
+      return `${DEMO_LOCALE_DOMAINS[loc].replace(/\/$/, "")}${pathname}${qs}`;
+    }
+    if (pathname === "/" || pathname === "" || pathname === "/restachat") {
+      return `/hotel${qs}`;
+    }
+    return null;
   }
 
   return null;
